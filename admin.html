@@ -1802,6 +1802,36 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             </div>
         </div>
 
+
+        <!-- BLOCO: SEGURANÇA DA CONTA -->
+        <div style="background:white; border-radius:16px; border:1.5px solid #f1f5f9; box-shadow:0 1px 6px rgba(0,0,0,.04); padding:24px 28px; margin-bottom:18px;">
+            <div style="font-size:12px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:20px;">Segurança da Conta</div>
+            <div style="max-width:420px;">
+                <div style="font-size:13px; color:#475569; margin-bottom:18px; line-height:1.6;">
+                    Altere a senha de acesso ao painel. Você precisará digitar a senha atual e a nova senha duas vezes para confirmar.
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;">Senha Atual</label>
+                    <input id="cfg-senha-atual" type="password" placeholder="Digite sua senha atual"
+                        style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:14px;">
+                    <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;">Nova Senha</label>
+                    <input id="cfg-senha-nova" type="password" placeholder="Mínimo 6 caracteres"
+                        style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:18px;">
+                    <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;">Confirmar Nova Senha</label>
+                    <input id="cfg-senha-confirma" type="password" placeholder="Repita a nova senha"
+                        style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                </div>
+                <div id="cfg-senha-msg" style="display:none; padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:14px;"></div>
+                <button onclick="cfgAlterarSenha()" style="padding:11px 24px; background:#1e293b; color:white; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:8px;">
+                    <i class="fas fa-lock"></i> Alterar Senha
+                </button>
+            </div>
+        </div>
+
     </div>
     <div id="sec-horarios" class="section">
         <div style="margin-bottom:28px;">
@@ -8298,6 +8328,74 @@ function fidelAjustar(phone) {
     localStorage.setItem(FIDEL_CLI_KEY, JSON.stringify(clientes));
     fidelRenderClientes();
     cupToast('Pontos de ' + cli.nome + ' atualizados!', '#16a34a');
+}
+
+
+// ── ALTERAR SENHA ─────────────────────────────────────────
+async function cfgAlterarSenha() {
+    const atual    = document.getElementById('cfg-senha-atual').value;
+    const nova     = document.getElementById('cfg-senha-nova').value;
+    const confirma = document.getElementById('cfg-senha-confirma').value;
+    const msg      = document.getElementById('cfg-senha-msg');
+
+    function mostrarMsg(txt, ok) {
+        msg.textContent = txt;
+        msg.style.display = 'block';
+        msg.style.background  = ok ? '#f0fdf4' : '#fff0f0';
+        msg.style.border      = '1px solid ' + (ok ? '#86efac' : '#fca5a5');
+        msg.style.color       = ok ? '#15803d' : '#dc2626';
+    }
+
+    if (!atual)    { mostrarMsg('Digite sua senha atual.', false); return; }
+    if (!nova)     { mostrarMsg('Digite a nova senha.', false); return; }
+    if (nova.length < 6) { mostrarMsg('A nova senha precisa ter pelo menos 6 caracteres.', false); return; }
+    if (nova !== confirma) { mostrarMsg('As senhas não coincidem.', false); return; }
+
+    // Re-autenticar com senha atual para confirmar identidade
+    try {
+        const sessaoRaw = localStorage.getItem('supa_session');
+        if (!sessaoRaw) { mostrarMsg('Sessão expirada. Faça login novamente.', false); return; }
+        const sessao = JSON.parse(sessaoRaw);
+
+        // Buscar email do usuário logado
+        const rUser = await fetch(SUPA_URL + '/auth/v1/user', {
+            headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_TOKEN }
+        });
+        const dUser = await rUser.json();
+        const email = dUser.email;
+        if (!email) throw new Error('Não foi possível identificar o usuário.');
+
+        // Verificar senha atual fazendo login
+        const rLogin = await fetch(SUPA_URL + '/auth/v1/token?grant_type=password', {
+            method: 'POST',
+            headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: atual })
+        });
+        if (!rLogin.ok) { mostrarMsg('Senha atual incorreta.', false); return; }
+
+        // Atualizar para nova senha
+        const rUpd = await fetch(SUPA_URL + '/auth/v1/user', {
+            method: 'PUT',
+            headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': 'Bearer ' + SUPA_TOKEN,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: nova })
+        });
+        if (!rUpd.ok) {
+            const e = await rUpd.json();
+            throw new Error(e.message || 'Erro ao atualizar senha.');
+        }
+
+        mostrarMsg('✓ Senha alterada com sucesso!', true);
+        document.getElementById('cfg-senha-atual').value    = '';
+        document.getElementById('cfg-senha-nova').value     = '';
+        document.getElementById('cfg-senha-confirma').value = '';
+
+    } catch(e) {
+        mostrarMsg(e.message || 'Erro ao alterar senha.', false);
+    }
 }
 
 </script>
