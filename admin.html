@@ -5479,7 +5479,14 @@ function salvarProdutoGeral() {
         imagem: produtoData.img||'', complementos: produtoData.comps||[], ativo: produtoData.active!==false };
     const _isSupaId = typeof currentId === 'string' && currentId.includes('-');
     if (currentId && _isSupaId) supaUpdate('produtos', currentId, _sp).catch(e => console.warn('Supa upd prod:', e.message));
-    else supaInsert('produtos', _sp).then(r => { if(r&&r[0]){const p=db.prods.find(x=>x.id===produtoData.id);if(p){p.id=r[0].id;p._supa=true;}} }).catch(e => console.warn('Supa ins prod:', e.message));
+    else supaInsert('produtos', _sp).then(r => {
+        if(r&&r[0]){
+            const p=db.prods.find(x=>x.id==produtoData.id);
+            if(p){ p.id=r[0].id; p._supa=true; }
+            localStorage.setItem('f_prods', JSON.stringify(db.prods));
+            renderProds(); // re-renderiza com UUID correto
+        }
+    }).catch(e => console.warn('Supa ins prod:', e.message));
     currentId = null; tempImg = "";
     closeProdForm();
     alert("Produto salvo com sucesso!");
@@ -5532,11 +5539,24 @@ function deleteProd(id) {
 function duplicarProd(id) {
     const original = db.prods.find(p => p.id == id);
     if (!original) return;
-    db.prods.push({ ...original, id: Date.now(), name: original.name + " (Cópia)" });
+    const tmpId = Date.now();
+    const copia = { ...original, id: tmpId, name: original.name + ' (Cópia)', _supa: false };
+    db.prods.push(copia);
     localStorage.setItem('f_prods', JSON.stringify(db.prods));
-    cardapioSync();
-    renderProds();
-    alert("Produto duplicado com sucesso!");
+    cardapioSync(); renderProds();
+    // Salvar no Supabase e atualizar ID
+    const _sp = { nome: copia.name, preco: parseFloat(copia.price)||0,
+        categoria_nome: copia.category, descricao: copia.desc||'',
+        imagem: copia.img||'', complementos: copia.comps||[], ativo: true };
+    supaInsert('produtos', _sp).then(r => {
+        if(r&&r[0]){
+            const p = db.prods.find(x => x.id == tmpId);
+            if(p){ p.id=r[0].id; p._supa=true; }
+            localStorage.setItem('f_prods', JSON.stringify(db.prods));
+            renderProds();
+        }
+    }).catch(e => console.warn('Supa dup prod:', e.message));
+    alert('Produto duplicado com sucesso!');
 }
 
 function triggerInput() {
@@ -5546,34 +5566,18 @@ function triggerInput() {
 
 function previewImage(input) {
     if (input.files && input.files[0]) {
-        const file = input.files[0];
         const reader = new FileReader();
         reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                // Comprimir via canvas — máx 800x800, qualidade 0.75
-                const MAX = 800;
-                let w = img.width, h = img.height;
-                if (w > MAX || h > MAX) {
-                    if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-                    else       { w = Math.round(w * MAX / h); h = MAX; }
-                }
-                const canvas = document.createElement('canvas');
-                canvas.width = w; canvas.height = h;
-                canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                const compressed = canvas.toDataURL('image/jpeg', 0.75);
-                const preview     = document.getElementById('img-preview');
-                const placeholder = document.getElementById('placeholder-content');
-                if (preview && placeholder) {
-                    preview.src            = compressed;
-                    preview.style.display  = 'block';
-                    placeholder.style.display = 'none';
-                    tempImg = compressed;
-                }
-            };
-            img.src = e.target.result;
+            const preview     = document.getElementById('img-preview');
+            const placeholder = document.getElementById('placeholder-content');
+            if (preview && placeholder) {
+                preview.src            = e.target.result;
+                preview.style.display  = 'block';
+                placeholder.style.display = 'none';
+                tempImg = e.target.result;
+            }
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(input.files[0]);
     }
 }
 
@@ -7996,21 +8000,9 @@ function cfgPreviewImagem(input, previewId, placeholderId, base64Id) {
     if (!file) return;
     var reader = new FileReader();
     reader.onload = function(e) {
-        var imgEl = new Image();
-        imgEl.onload = function() {
-            var MAX = 800, w = imgEl.width, h = imgEl.height;
-            if (w > MAX || h > MAX) {
-                if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-                else       { w = Math.round(w * MAX / h); h = MAX; }
-            }
-            var cv = document.createElement('canvas');
-            cv.width = w; cv.height = h;
-            cv.getContext('2d').drawImage(imgEl, 0, 0, w, h);
-            var compressed = cv.toDataURL('image/jpeg', 0.75);
-            document.getElementById(base64Id).value = compressed;
-            cfgMostrarImagem(previewId, placeholderId, compressed);
-        };
-        imgEl.src = e.target.result;
+        var data = e.target.result;
+        document.getElementById(base64Id).value = data;
+        cfgMostrarImagem(previewId, placeholderId, data);
     };
     reader.readAsDataURL(file);
 }
