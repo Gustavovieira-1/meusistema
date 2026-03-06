@@ -3387,7 +3387,7 @@ function renderizarCardsPdv(lista) {
         return;
     }
     container.innerHTML = lista.map(p =>
-        '<div class="pdv-card-prod" onclick="abrirModalCompProd(' + p.id + ')">' +
+        '<div class="pdv-card-prod" onclick="abrirModalCompProd(\'' + p.id + '\')">' +
         '<img src="' + (p.img || 'https://via.placeholder.com/100') + '" alt="' + p.name + '" onerror="this.src=\'https://via.placeholder.com/100\'">' +
         '<div class="prod-name">' + p.name + '</div>' +
         '<div class="prod-price">A partir de <span>R$ ' + parseFloat(p.price||0).toFixed(2).replace('.',',') + '</span></div>' +
@@ -3413,7 +3413,7 @@ var _mcpItemIdx   = null; // null = novo, número = editando item existente
 var _mcpQtd       = 1;
 
 function abrirModalCompProd(prodId, itemIdx) {
-    const prod = db.prods.find(p => p.id === prodId);
+    const prod = db.prods.find(p => p.id == prodId);
     if (!prod) return;
     _mcpProdId  = prodId;
     _mcpItemIdx = (itemIdx !== undefined) ? itemIdx : null;
@@ -5415,7 +5415,7 @@ function closeProdForm() {
 }
 
 function editProd(id) {
-    const p = db.prods.find(item => item.id === id);
+    const p = db.prods.find(item => item.id == id);
     if (!p) return;
     openProdForm();
     currentId = id;
@@ -5471,7 +5471,7 @@ function salvarProdutoGeral() {
         comps:    compsSelect
     };
 
-    if (currentId) db.prods = db.prods.map(p => p.id === currentId ? produtoData : p);
+    if (currentId) db.prods = db.prods.map(p => p.id == currentId ? produtoData : p);
     else           db.prods.push(produtoData);
     localStorage.setItem('f_prods', JSON.stringify(db.prods));
     cardapioSync(); renderProds(); closeProdForm();
@@ -5511,9 +5511,9 @@ function renderProdsLista(lista) {
                 </div>
             </div>
             <div style="display:flex; gap:8px; align-items:center;">
-                <button onclick="duplicarProd(${p.id})" title="Duplicar" style="background:#e3f2fd; border:none; color:#1976d2; padding:8px 12px; border-radius:6px; cursor:pointer;"><i class="fas fa-copy"></i></button>
-                <button onclick="editProd(${p.id})" style="background:#f8f9fa; border:1px solid #ddd; color:#666; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold;">Editar</button>
-                <button onclick="deleteProd(${p.id})" title="Apagar" style="background:#ffebee; border:none; color:#c62828; padding:8px 12px; border-radius:6px; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                <button onclick="duplicarProd('${p.id}')" title="Duplicar" style="background:#e3f2fd; border:none; color:#1976d2; padding:8px 12px; border-radius:6px; cursor:pointer;"><i class="fas fa-copy"></i></button>
+                <button onclick="editProd('${p.id}')" style="background:#f8f9fa; border:1px solid #ddd; color:#666; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold;">Editar</button>
+                <button onclick="deleteProd('${p.id}')" title="Apagar" style="background:#ffebee; border:none; color:#c62828; padding:8px 12px; border-radius:6px; cursor:pointer;"><i class="fas fa-trash"></i></button>
             </div>
         </div>
     `).join('');
@@ -5521,8 +5521,8 @@ function renderProdsLista(lista) {
 
 function deleteProd(id) {
     if (confirm("Tem certeza que deseja apagar este produto?")) {
-        const _prod = db.prods.find(p => p.id === id);
-        db.prods = db.prods.filter(p => p.id !== id);
+        const _prod = db.prods.find(p => p.id == id);
+        db.prods = db.prods.filter(p => p.id != id);
         localStorage.setItem('f_prods', JSON.stringify(db.prods));
         cardapioSync(); renderProds();
         if (_prod && _prod._supa) supaDelete('produtos', id).catch(e => console.warn('Supa del prod:', e.message));
@@ -5530,7 +5530,7 @@ function deleteProd(id) {
 }
 
 function duplicarProd(id) {
-    const original = db.prods.find(p => p.id === id);
+    const original = db.prods.find(p => p.id == id);
     if (!original) return;
     db.prods.push({ ...original, id: Date.now(), name: original.name + " (Cópia)" });
     localStorage.setItem('f_prods', JSON.stringify(db.prods));
