@@ -3126,7 +3126,7 @@ function inicializarSistema() {
     renderProds();
     renderOrders();
     aplicarStatusLoja();
-    cfgAplicarLimpeza();  // 🧹 Aplicar limpeza ao iniciar
+    // NÃO chamar cfgAplicarLimpeza aqui (orders ainda está vazio)
     
     // Atualiza só os textos de tempo nos cards a cada 30s (sem re-renderizar tudo)
     setInterval(function() {
@@ -3140,6 +3140,9 @@ function inicializarSistema() {
     setInterval(function() {
         supaCarregarPedidos();
     }, 5000);
+    
+    // 🧹 Aplicar limpeza a cada minuto (após pedidos estarem carregados)
+    setInterval(cfgAplicarLimpeza, 60000);
 }
 
 // Inicialização: verificar sessão salva primeiro
@@ -8416,9 +8419,6 @@ function cfgAplicarLimpeza() {
     localStorage.setItem('f_orders', JSON.stringify(orders));
     renderOrders();
 }
-
-// Verifica limpeza a cada minuto
-setInterval(cfgAplicarLimpeza, 60000);
 
 // HORARIOS
 var HOR_KEY="f_horarios",horDiaEditando=-1,_horP=[];
