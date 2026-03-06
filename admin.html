@@ -6138,14 +6138,29 @@ async function supaCarregarPedidos() {
     try {
         const rows = await supaGet('pedidos', 'status=neq.finalizado&status=neq.cancelado&order=criado_em.desc');
         if (rows && rows.length) {
-            const mapped = rows.map(r => ({
-                id: r.numero || r.id, _supa_id: r.id,
-                client: r.cliente, phone: r.telefone,
-                address: r.endereco, bairro: r.bairro,
-                tipo: r.tipo, pagamento: r.pagamento, troco: r.troco,
-                total: r.total, status: r.status,
-                items: r.itens || [], timestamp: r.criado_em
-            }));
+            const mapped = rows.map(r => {
+                // Parse itens se for string JSON
+                let itens = r.itens || [];
+                if (typeof itens === 'string') {
+                    try { itens = JSON.parse(itens); } catch(e) { itens = []; }
+                }
+                
+                return {
+                    id: r.numero || r.id, 
+                    _supa_id: r.id,
+                    client: r.cliente, 
+                    phone: r.telefone,
+                    address: r.endereco, 
+                    bairro: r.bairro,
+                    tipo: r.tipo, 
+                    pagamento: r.pagamento, 
+                    troco: r.troco,
+                    total: r.total, 
+                    status: r.status,
+                    items: itens, 
+                    timestamp: r.criado_em
+                };
+            });
             const idsNuvem = new Set(mapped.map(o => o.id));
             orders = [...mapped, ...orders.filter(o => !idsNuvem.has(o.id))];
             renderOrders();
