@@ -3088,6 +3088,11 @@ function inicializarSistema() {
             if (ts) el.textContent = tempoRelativo(ts);
         });
     }, 30000);
+
+    // 🔄 POLLING em tempo real: atualizar pedidos a cada 5 segundos
+    setInterval(function() {
+        supaCarregarPedidos();
+    }, 5000);
 }
 
 // Inicialização: verificar sessão salva primeiro
