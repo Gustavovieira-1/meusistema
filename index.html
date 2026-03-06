@@ -653,38 +653,70 @@ async function finalizarPedido(){
     pedido.id = _numPed;
     pedido.restaurante_id = REST_ID;
 
-    // Tentar servidor local primeiro; fallback para Supabase
+    // Tentar servidor local primeiro
     let _enviado = false;
     if (SERVIDOR) {
         try {
             var r=await fetch(SERVIDOR+'/pedido/novo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pedido)});
             var d=await r.json();
             if(d.ok){ pedido.id = d.id || _numPed; _enviado = true; }
-        } catch(e) {}
+        } catch(e) { console.warn('[Local Server] Não disponível:', e.message); }
     }
+    
+    // Se não conseguiu enviar para servidor local, tentar Supabase
     if (!_enviado) {
-        // Salvar direto no Supabase
         try {
+            const bodyObj = {
+                restaurante_id: REST_ID, 
+                numero: pedido.id,
+                cliente: pedido.client, 
+                telefone: pedido.phone,
+                tipo: pedido.tipo, 
+                endereco: pedido.address,
+                bairro: pedido.bairro||'', 
+                complemento: pedido.complemento||'',
+                cidade: pedido.cidade||'', 
+                pagamento: pedido.pagamento,
+                troco: pedido.troco||0, 
+                itens: JSON.stringify(pedido.items||[]),
+                subtotal: parseFloat(pedido.subtotal||pedido.total), 
+                taxa_entrega: parseFloat(pedido.taxaEntrega||0),
+                desconto_pontos: parseFloat(pedido.descontoPontos||0), 
+                total: parseFloat(pedido.total), 
+                status: 'analise'
+            };
+            
+            console.log('[DEBUG] Enviando para Supabase:', bodyObj);
+            
             const sr = await fetch(SUPA_URL+'/rest/v1/pedidos', {
                 method:'POST',
-                headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=representation'},
-                body: JSON.stringify({
-                    restaurante_id: REST_ID, numero: pedido.id,
-                    cliente: pedido.client, telefone: pedido.phone,
-                    tipo: pedido.tipo, endereco: pedido.address,
-                    bairro: pedido.bairro||'', complemento: pedido.complemento||'',
-                    cidade: pedido.cidade||'', pagamento: pedido.pagamento,
-                    troco: pedido.troco||0, itens: pedido.items||[],
-                    subtotal: pedido.subtotal||pedido.total,
-                    taxa_entrega: pedido.taxaEntrega||0,
-                    desconto_pontos: pedido.descontoPontos||0,
-                    total: pedido.total, status: 'analise'
-                })
+                headers:{
+                    'apikey': SUPA_KEY,
+                    'Authorization': 'Bearer '+SUPA_KEY,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                },
+                body: JSON.stringify(bodyObj)
             });
-            if (!sr.ok) throw new Error('Erro Supabase');
+            
+            const respText = await sr.text();
+            console.log('[DEBUG] Status Supabase:', sr.status);
+            console.log('[DEBUG] Resposta:', respText);
+            
+            if (!sr.ok) { 
+                throw new Error('HTTP '+sr.status+': '+respText); 
+            }
+            console.log('[SUCCESS] Pedido salvo com sucesso!');
             _enviado = true;
-        } catch(e) { alert('Não foi possível enviar o pedido. Tente novamente.'); btn.disabled=false; btn.textContent='Fazer pedido'; return; }
+        } catch(e) { 
+            console.error('[ERROR]', e);
+            alert('❌ Não foi possível enviar o pedido.\n\nErro: ' + e.message + '\n\nVerifique se:\n1. Sua chave de API do Supabase está correta\n2. A tabela "pedidos" existe e está acessível\n3. RLS está desativado OU tem policies de INSERT públicas');
+            btn.disabled=false; 
+            btn.textContent='Fazer pedido'; 
+            return; 
+        }
     }
+    
     fecharCarrinho();
     document.getElementById('suc-id').textContent=pedido.id;
     var msgs={Entrega:'Pedido recebido! Tempo estimado: ~'+(tx.tempoEntrega||40)+' min.',Retirada:'Pedido recebido! Retire em ~'+(tx.tempoRetirada||20)+' min.',Balcão:'Pedido registrado! Em breve ficará pronto.'};
