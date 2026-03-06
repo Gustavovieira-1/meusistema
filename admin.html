@@ -3087,7 +3087,7 @@ function inicializarSistema() {
             var ts = el.getAttribute('data-ts');
             if (ts) el.textContent = tempoRelativo(ts);
         });
-    }, 30000);
+    }, 60000);  // Atualizar a cada 60 segundos (1 minuto) ao invés de 30
 
     // 🔄 POLLING em tempo real: atualizar pedidos a cada 5 segundos
     setInterval(function() {
@@ -3977,7 +3977,20 @@ let valoresVisiveis = true;
 
 function tempoRelativo(timestamp) {
     if (!timestamp) return '—';
-    var criado = new Date(timestamp);
+    
+    // Tentar parsear de diferentes formas
+    var criado;
+    if (typeof timestamp === 'string') {
+        // Remove microsegundos se existirem (Supabase às vezes retorna com .123456Z)
+        var ts = timestamp.split('.')[0] + 'Z';
+        criado = new Date(ts);
+    } else {
+        criado = new Date(timestamp);
+    }
+    
+    // Se não conseguir parsear, retorna '—'
+    if (isNaN(criado.getTime())) return '—';
+    
     var agora  = new Date();
     var diff   = Math.floor((agora - criado) / 1000); // segundos
 
