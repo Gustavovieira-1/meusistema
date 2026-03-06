@@ -404,7 +404,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 .pgto-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-top: 6px; }
 /* ── TELA DE LOGIN ── */
 #tela-login {
-    display:none; position:fixed; inset:0; z-index:9999;
+    display:flex; position:fixed; inset:0; z-index:9999;
     background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
     align-items:center; justify-content:center;
 }
@@ -483,7 +483,6 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             </div>
             <div>
                 <div id="sidebar-nome-loja" style="font-weight:800; font-size:15px; color:#111; letter-spacing:-0.3px; line-height:1.1;">Meu Restaurante</div>
-                <script>try{var _cn=JSON.parse(localStorage.getItem('f_cfg_loja')||'{}');if(_cn.nomeMarca){document.getElementById('sidebar-nome-loja').textContent=_cn.nomeMarca;document.title=_cn.nomeMarca+' — Admin';}}catch(e){}</script>
                 <div style="font-size:11px; color:#aaa; font-weight:400;">Painel Admin</div>
             </div>
         </div>
@@ -6144,6 +6143,15 @@ function mostrarTelaLogin() {
 function esconderTelaLogin() {
     document.getElementById('tela-login').style.display = 'none';
     document.getElementById('app-wrapper').style.display = 'flex';
+    // Carregar nome da loja do localStorage
+    try {
+        var _cfg = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
+        if (_cfg.nomeMarca) {
+            var _sn = document.getElementById('sidebar-nome-loja');
+            if (_sn) _sn.textContent = _cfg.nomeMarca;
+            document.title = _cfg.nomeMarca + ' — Admin';
+        }
+    } catch(e) {}
 }
 
 async function supaCarregarConfigs() {
