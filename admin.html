@@ -3137,30 +3137,27 @@ function inicializarSistema() {
     }, 60000);  // Atualizar a cada 60 segundos (1 minuto) ao invés de 30
 
     // 🔄 POLLING em tempo real: atualizar pedidos a cada 5 segundos
-    console.log('[ADMIN] Iniciando polling de pedidos a cada 5 segundos...');
     setInterval(function() {
-        console.log('[ADMIN] Polling... chamando supaCarregarPedidos()');
         supaCarregarPedidos();
     }, 5000);
     
     // 🧹 Aplicar limpeza a cada minuto (após pedidos estarem carregados)
     setInterval(cfgAplicarLimpeza, 60000);
+    
+    // 🔄 Renovar token a cada 50 minutos (antes de expirar em 1 hora)
+    setInterval(authRenovarToken, 50 * 60 * 1000);
 }
 
 // Inicialização: verificar sessão salva primeiro
 async function iniciarApp() {
-    console.log('[ADMIN] iniciarApp() iniciada');
     const temSessao = await authVerificarSessao();
     if (temSessao) {
-        console.log('[ADMIN] ✅ Sessão encontrada, inicializando...');
         esconderTelaLogin();
         inicializarSistema();
         supaCarregarCardapio();
         supaCarregarConfigs();
-        console.log('[ADMIN] Carregando pedidos iniciais...');
         supaCarregarPedidos();
     } else {
-        console.log('[ADMIN] ❌ Sem sessão, mostrando login');
         mostrarTelaLogin();
     }
 }
@@ -6241,10 +6238,7 @@ async function supaCarregarCardapio() {
 
 async function supaCarregarPedidos() {
     try {
-        console.log('[SUPA] Carregando pedidos do Supabase...');
         const rows = await supaGet('pedidos', 'status=neq.finalizado&status=neq.cancelado&order=criado_em.desc');
-        console.log('[SUPA] ✅ Pedidos recebidos:', rows ? rows.length : 0);
-        
         if (rows && rows.length) {
             const mapped = rows.map(r => {
                 // Parse itens se for string JSON
@@ -6395,6 +6389,49 @@ function authSalvarSessao(token, restId, nomeUsuario, role) {
         token, restId, nomeUsuario, role,
         salvoEm: Date.now()
     }));
+}
+
+// 🔄 Renovar token automaticamente a cada 50 minutos
+// (Tokens Supabase expiram em 1 hora, renovamos antes)
+async function authRenovarToken() {
+    try {
+        const raw = localStorage.getItem('supa_session');
+        if (!raw) return; // Sem sessão, nada a fazer
+        
+        const sess = JSON.parse(raw);
+        if (!sess.token) return;
+        
+        console.log('[AUTH] Renovando token...');
+        
+        // Chamar refresh_token do Supabase
+        const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
+            method: 'POST',
+            headers: {
+                'apikey': SUPA_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                refresh_token: sess.token
+            })
+        });
+        
+        if (!r.ok) {
+            console.warn('[AUTH] Falha ao renovar, fazendo logout...');
+            authFazerLogout();
+            return;
+        }
+        
+        const data = await r.json();
+        SUPA_TOKEN = data.access_token;
+        
+        // Salvar novo token
+        authSalvarSessao(data.access_token, sess.restId, sess.nomeUsuario, sess.role);
+        console.log('[AUTH] ✅ Token renovado com sucesso');
+        
+    } catch(e) {
+        console.warn('[AUTH] Erro ao renovar token:', e.message);
+        authFazerLogout();
+    }
 }
 
 async function authVerificarSessao() {
