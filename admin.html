@@ -3026,10 +3026,7 @@ var db = {
     comps:      JSON.parse(localStorage.getItem('f_comps')) || []
 };
 
-let orders = JSON.parse(localStorage.getItem('f_orders')) || [
-    { id: 'B-1001', client: 'Mateus', phone: '(18) 99638-1886', address: 'Retirada no local', total: 62.00, status: 'analise', tipo: 'Retirada', pagamento: 'Pix',     timestamp: new Date(Date.now() - 5  * 60000).toISOString() },
-    { id: 'B-1002', client: 'Thais',  phone: '(18) 99718-0388', address: 'Residencial Pedro Marin Berbel, 28...', total: 41.00, status: 'preparo', tipo: 'Entrega', pagamento: 'Dinheiro', timestamp: new Date(Date.now() - 12 * 60000).toISOString() }
-];
+let orders = JSON.parse(localStorage.getItem('f_orders')) || [];
 
 // Migração: garante que todo pedido tenha timestamp real
 (function migrarTimestamps() {
