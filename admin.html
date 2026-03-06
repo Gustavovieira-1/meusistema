@@ -5395,7 +5395,7 @@ function renderProdCompSelector(selectedIds) {
     container.innerHTML = db.comps.map(c => {
         const ativo = selectedIds.includes(c.id);
         return `
-        <div class="comp-link-card ${ativo ? 'active' : ''}" onclick="toggleCompProd(this, ${c.id})">
+        <div class="comp-link-card ${ativo ? 'active' : ''}" onclick="toggleCompProd(this, '${c.id}')" data-comp-id="${c.id}">
             <div class="circle"></div>
             <div>
                 <span style="font-size:13px; font-weight:600; color:#333;">${c.title}</span>
@@ -5454,9 +5454,8 @@ function salvarProdutoGeral() {
     // Coleta complementos selecionados
     const compsSelect = [];
     document.querySelectorAll('#prod-comp-selector .comp-link-card.active').forEach(el => {
-        const onclick = el.getAttribute('onclick');
-        const match   = onclick && onclick.match(/toggleCompProd\(this,\s*(\d+)\)/);
-        if (match) compsSelect.push(parseInt(match[1]));
+        const cid = el.dataset.compId;
+        if (cid) compsSelect.push(cid);
     });
 
     const produtoData = {
