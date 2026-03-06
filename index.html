@@ -459,11 +459,12 @@ async function init(){
 
         const cfg = (cfgRows&&cfgRows[0]) || {};
         db.cfg    = {
+            nomeMarca: cfg.nome_marca || rest.nome,
             nomeUnidade: cfg.nome_unidade || rest.nome,
             cidade: cfg.cidade || '',
-            logoUrl: cfg.logo_url || '',
-            heroImg: cfg.imagem_hero || '',
-            minPedido: parseFloat(cfg.valor_minimo) || 0,
+            logo: cfg.logo || '',
+            capa: cfg.capa || '',
+            minPedido: parseFloat(cfg.valor_minimo || cfg.delivery_minimo) || 0,
             taxaEntrega: parseFloat(cfg.taxa_entrega) || 0
         };
         db.txCfg  = (txRows&&txRows[0]) ? {
@@ -521,7 +522,7 @@ function renderHeader(){
     document.getElementById('info-entrega').textContent=(tx.tempoEntrega||40)+' min';
     var taxa=parseFloat(tx.taxaPadrao||0);
     document.getElementById('info-taxa').textContent=taxa>0?money(taxa):'Grátis';
-    var min=parseFloat(c.deliveryMinimo||0);
+    var min=parseFloat(c.minPedido||0);
     document.getElementById('info-minimo').textContent=min>0?money(min):'Sem mínimo';
     // Pill de fidelidade
     var fidCfg=fidelGetCfg();
