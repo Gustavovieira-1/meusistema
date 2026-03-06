@@ -787,12 +787,17 @@ async function saCarregarTudo() {
 
 async function saCarregarRestaurantes() {
     try {
-        // Buscar restaurantes + dados de pagamento
-        const [rests, pgtos, pedidos] = await Promise.all([
-            saFetch('GET', 'restaurantes?select=*&order=criado_em.desc'),
-            saFetch('GET', 'pagamentos?select=*'),
-            saFetch('GET', 'pedidos?select=restaurante_id&status=neq.cancelado')
+        // Buscar restaurantes + dados de pagamento (pedidos é opcional)
+        const [rests, pgtos] = await Promise.all([
+            saFetch('GET', 'restaurantes?select=*&order=nome.asc'),
+            saFetch('GET', 'pagamentos?select=*')
         ]);
+
+        // Buscar pedidos separado para não travar se tabela tiver estrutura diferente
+        let pedidos = [];
+        try {
+            pedidos = await saFetch('GET', 'pedidos?select=restaurante_id') || [];
+        } catch(e) { pedidos = []; }
 
         const pgtoMap = {};
         (pgtos || []).forEach(p => { pgtoMap[p.restaurante_id] = p; });
@@ -815,8 +820,9 @@ async function saCarregarRestaurantes() {
 
         saRenderRestaurantes(_restaurantes);
     } catch(e) {
+        console.error('Erro saCarregarRestaurantes:', e);
         document.getElementById('tabela-rest-body').innerHTML =
-            `<div class="vazio"><div class="vazio-icon">⚠️</div>Erro ao carregar: ${e.message}<br><small>Verifique se as tabelas existem no Supabase.</small></div>`;
+            `<div class="vazio"><div class="vazio-icon">⚠️</div>Erro ao carregar: ${e.message}<br><small>Abra o console (F12) para mais detalhes.</small></div>`;
     }
 }
 
