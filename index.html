@@ -644,6 +644,13 @@ async function finalizarPedido(){
     var nome=document.getElementById('ch-nome').value.trim(),tel=document.getElementById('ch-tel').value.trim();
     if(!nome){alert('Informe seu nome.');return;}if(!tel){alert('Informe seu celular.');return;}
     if(tipoAtual==='Entrega'&&!document.getElementById('ch-rua').value.trim()){alert('Informe o endereço.');return;}
+    
+    // ✅ VERIFICAR SE REST_ID ESTÁ CARREGADO
+    if (!REST_ID) {
+        alert('⚠️ Restaurante não carregado ainda. Aguarde um momento e tente novamente.');
+        return;
+    }
+    
     var cfg=db.cfg||{},tx=db.txCfg||{},sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0),taxa=tipoAtual==='Entrega'?parseFloat(tx.taxaPadrao||cfg.taxaEntrega||0):0,troco=pgtoAtual==='Dinheiro'?parseFloat(document.getElementById('ch-troco').value||0):0;
     var desc=fidelGetDesconto();
     var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value:'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:cfg.cidade||'',subtotal:sub,taxaEntrega:taxa,descontoPontos:desc,resgPontos:fidelResgSel,total:Math.max(0,sub+taxa-desc),items:carrinho.slice()};
