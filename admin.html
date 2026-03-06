@@ -5542,7 +5542,7 @@ function duplicarProd(id) {
     const tmpId = Date.now();
     const copia = { ...original, id: tmpId, name: original.name + ' (Cópia)', _supa: false };
     db.prods.push(copia);
-    localStorage.setItem('f_prods', JSON.stringify(db.prods));
+    try { localStorage.setItem('f_prods', JSON.stringify(db.prods)); } catch(e) {}
     cardapioSync(); renderProds();
     // Salvar no Supabase e atualizar ID
     const _sp = { nome: copia.name, preco: parseFloat(copia.price)||0,
@@ -5552,7 +5552,7 @@ function duplicarProd(id) {
         if(r&&r[0]){
             const p = db.prods.find(x => x.id == tmpId);
             if(p){ p.id=r[0].id; p._supa=true; }
-            localStorage.setItem('f_prods', JSON.stringify(db.prods));
+            try { localStorage.setItem('f_prods', JSON.stringify(db.prods)); } catch(e) {}
             renderProds();
         }
     }).catch(e => console.warn('Supa dup prod:', e.message));
