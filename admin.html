@@ -4010,7 +4010,7 @@ function salvarPedidoPDV() {
             });
         }
     } else {
-        orders.unshift({
+        const novoPedido = {
             id: 'B-' + Date.now(),
             client: nome, phone: telefone || '(00) 00000-0000',
             address: enderecoFinal, numero, bairro, complemento, cidade,
@@ -4019,7 +4019,14 @@ function salvarPedidoPDV() {
             pagamento, previsao: previsaoStr,
             items: carrinhoPDV.map(i => Object.assign({}, i)),
             timestamp: new Date().toISOString()
-        });
+        };
+        orders.unshift(novoPedido);
+        
+        // 🔊 Tocar som quando novo pedido é criado no PDV
+        tocarSomNotificacao();
+        
+        // 💾 Salvar na Supabase
+        supaSalvarPedido(novoPedido);
     }
 
     localStorage.setItem('f_orders', JSON.stringify(orders));
