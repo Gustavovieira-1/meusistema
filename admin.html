@@ -3004,18 +3004,15 @@ function cardapioSyncManual() {
 }
 
 function cardapioSync() {
-    if (!REST_ID) return;  // ✅ Não sincroniza sem restaurante definido
-    
     clearTimeout(_syncTimer);
     _syncTimer = setTimeout(function() {
-        // ✅ Use chaves de localStorage ESPECÍFICAS DO RESTAURANTE
-        var prefixo = 'rest_' + REST_ID + '_';
-        var cats  = JSON.parse(localStorage.getItem(prefixo + 'f_cats')  || '[]');
-        var prods = JSON.parse(localStorage.getItem(prefixo + 'f_prods') || '[]');
-        var comps = JSON.parse(localStorage.getItem(prefixo + 'f_comps') || '[]');
-        var cfg   = JSON.parse(localStorage.getItem(prefixo + 'f_cfg_loja') || '{}');
-        var txCfg = JSON.parse(localStorage.getItem(prefixo + 'f_taxas_config') || '{}');
-        var pausada = JSON.parse(localStorage.getItem(prefixo + 'f_loja_pausada') || 'false');
+        // Lê sempre do localStorage para garantir dados mais recentes
+        var cats  = JSON.parse(localStorage.getItem('f_cats')  || '[]');
+        var prods = JSON.parse(localStorage.getItem('f_prods') || '[]');
+        var comps = JSON.parse(localStorage.getItem('f_comps') || '[]');
+        var cfg   = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
+        var txCfg = JSON.parse(localStorage.getItem('f_taxas_config') || '{}');
+        var pausada = JSON.parse(localStorage.getItem('f_loja_pausada') || 'false');
 
         var dados = {
             categories: cats,
@@ -3125,8 +3122,7 @@ let editandoPedidoId      = null;
 // Conecta SSE para receber pedidos online em tempo real
 setTimeout(sseConectar, 1500);
 // Sync inicial do cardápio ao abrir o admin (após tudo carregar)
-// Sincronização será chamada APENAS após login com REST_ID definido
-// setTimeout(cardapioSync, 3000);  // ❌ REMOVIDO - executava sem contexto
+setTimeout(cardapioSync, 3000);
 function inicializarSistema() {
     renderCategories();
     renderProds();
@@ -3143,12 +3139,9 @@ function inicializarSistema() {
     }, 60000);  // Atualizar a cada 60 segundos (1 minuto) ao invés de 30
 
     // 🔄 POLLING em tempo real: atualizar pedidos a cada 5 segundos
-    // ✅ MAS SÓ APÓS REST_ID ESTAR DEFINIDO
-    if (REST_ID) {
-        setInterval(function() {
-            if (REST_ID) supaCarregarPedidos();  // Verifica novamente no intervalo
-        }, 5000);
-    }
+    setInterval(function() {
+        supaCarregarPedidos();
+    }, 5000);
     
     // 🧹 Aplicar limpeza a cada minuto (após pedidos estarem carregados)
     setInterval(cfgAplicarLimpeza, 60000);
@@ -6112,25 +6105,7 @@ const SUPA_KEY = 'sb_publishable_XtEWScp1E8Nfs2Oujdp93Q_Q59CSihV';
 let REST_ID    = null;   // preenchido após login
 let SUPA_TOKEN = null;   // JWT do usuário logado
 
-// ✅ HELPER FUNCTIONS PARA LOCALSTORAGE COM ISOLAMENTO POR RESTAURANTE
-function getStorageKey(key) {
-    if (!REST_ID) return key;  // Fallback para chave simples se sem REST_ID
-    return 'rest_' + REST_ID + '_' + key;
-}
-
-function lsSet(key, value) {
-    localStorage.setItem(getStorageKey(key), value);
-}
-
-function lsGet(key) {
-    return localStorage.getItem(getStorageKey(key));
-}
-
-function lsRemove(key) {
-    localStorage.removeItem(getStorageKey(key));
-}
-
-// ────────────────────────────────────────────────────────────────────
+// ── DRAG AND DROP — ORDENAÇÃO ──────────────────────────────
 let _dragSrcIdx  = null;
 let _dragType    = null;
 
@@ -6221,10 +6196,10 @@ async function supaInsert(table, obj) {
     return supaReq('POST', table, { ...obj, restaurante_id: REST_ID });
 }
 async function supaUpdate(table, id, obj) {
-    return supaReq('PATCH', table + '?id=eq.' + id, obj);
+    return supaReq('PATCH', table + '?id=eq.' + id + '&restaurante_id=eq.' + REST_ID, obj);
 }
 async function supaDelete(table, id) {
-    return supaReq('DELETE', table + '?id=eq.' + id, null);
+    return supaReq('DELETE', table + '?id=eq.' + id + '&restaurante_id=eq.' + REST_ID, null);
 }
 async function supaUpsert(table, obj, onConflict) {
     const body = { ...obj, restaurante_id: REST_ID };
@@ -6244,7 +6219,6 @@ async function supaUpsert(table, obj, onConflict) {
 }
 
 async function supaCarregarCardapio() {
-    if (!REST_ID) { console.warn('[Supabase] Tentativa de carregar cardápio sem REST_ID'); return; }
     try {
         const [cats, prods, comps] = await Promise.all([
             supaGet('categorias',   'order=ordem.asc'),
@@ -6258,22 +6232,16 @@ async function supaCarregarCardapio() {
             status: p.ativo ? 'ativo' : 'inativo', active: p.ativo, _supa: true
         }));
         db.comps = (comps || []).map(c => ({ id: c.id, title: c.titulo, type: c.tipo, options: c.opcoes || [], _supa: true }));
-        
-        // ✅ USE CHAVES ESPECÍFICAS DO RESTAURANTE
-        var prefixo = 'rest_' + REST_ID + '_';
-        localStorage.setItem(prefixo + 'f_cats',  JSON.stringify(db.categories));
-        localStorage.setItem(prefixo + 'f_prods', JSON.stringify(db.prods));
-        localStorage.setItem(prefixo + 'f_comps', JSON.stringify(db.comps));
-        
+        localStorage.setItem('f_cats',  JSON.stringify(db.categories));
+        localStorage.setItem('f_prods', JSON.stringify(db.prods));
+        localStorage.setItem('f_comps', JSON.stringify(db.comps));
         renderCategories(); renderProds(); renderComps(); cardapioSync();
-        console.log('[Supabase] Cardápio carregado para REST_ID:', REST_ID, '—', db.categories.length, 'cats,', db.prods.length, 'prods');
+        console.log('[Supabase] Cardápio:', db.categories.length, 'cats,', db.prods.length, 'prods');
     } catch(e) {
         console.warn('[Supabase] Cardápio offline:', e.message);
-        // ✅ CARREGAR DO LOCALSTORAGE COM CHAVE ESPECÍFICA
-        var prefixo = 'rest_' + REST_ID + '_';
-        db.categories = JSON.parse(localStorage.getItem(prefixo + 'f_cats'))  || [];
-        db.prods      = JSON.parse(localStorage.getItem(prefixo + 'f_prods')) || [];
-        db.comps      = JSON.parse(localStorage.getItem(prefixo + 'f_comps')) || [];
+        db.categories = JSON.parse(localStorage.getItem('f_cats'))  || [];
+        db.prods      = JSON.parse(localStorage.getItem('f_prods')) || [];
+        db.comps      = JSON.parse(localStorage.getItem('f_comps')) || [];
     }
 }
 
@@ -6418,27 +6386,8 @@ async function authLogout() {
             headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_TOKEN }
         });
     } catch(e) {}
-    
     // Limpar sessão e dados locais
     localStorage.removeItem('supa_session');
-    
-    // ✅ LIMPAR DADOS ESPECÍFICOS DO RESTAURANTE (com prefixo) E GERAIS
-    if (REST_ID) {
-        var prefixo = 'rest_' + REST_ID + '_';
-        localStorage.removeItem(prefixo + 'f_cats');
-        localStorage.removeItem(prefixo + 'f_prods');
-        localStorage.removeItem(prefixo + 'f_comps');
-        localStorage.removeItem(prefixo + 'f_cfg_loja');
-        localStorage.removeItem(prefixo + 'f_orders');
-        localStorage.removeItem(prefixo + 'f_horarios');
-        localStorage.removeItem(prefixo + 'f_taxas_config');
-        localStorage.removeItem(prefixo + 'f_fidelidade_cfg');
-        localStorage.removeItem(prefixo + 'f_fidelidade_cli');
-        localStorage.removeItem(prefixo + 'f_cupons');
-        localStorage.removeItem(prefixo + 'f_integracoes');
-    }
-    
-    // Também remover dados gerais (para compatibilidade)
     localStorage.removeItem('f_cats');
     localStorage.removeItem('f_prods');
     localStorage.removeItem('f_comps');
@@ -6450,7 +6399,6 @@ async function authLogout() {
     localStorage.removeItem('f_fidelidade_cli');
     localStorage.removeItem('f_cupons');
     localStorage.removeItem('f_integracoes');
-    
     REST_ID = null; SUPA_TOKEN = null;
     // Resetar nome da sidebar
     var sn = document.getElementById('sidebar-nome-loja');
