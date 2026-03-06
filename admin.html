@@ -5747,8 +5747,8 @@ function renderComps() {
                 <small style="color:#888;">${c.options.length} opção(ões) · ${c.type === 'radio' ? 'Escolha única' : 'Múltipla escolha'}</small>
             </div>
             <div style="display:flex; gap:8px;">
-                <button class="btn-edit" onclick="openCompModal(${c.id})">Editar</button>
-                <button onclick="deletarComp(${c.id})" style="background:#ffebee; border:none; color:#c62828; padding:8px 12px; border-radius:8px; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                <button class="btn-edit" onclick="openCompModal('${c.id}')">Editar</button>
+                <button onclick="deletarComp('${c.id}')" style="background:#ffebee; border:none; color:#c62828; padding:8px 12px; border-radius:8px; cursor:pointer;"><i class="fas fa-trash"></i></button>
             </div>
         </div>
     `).join('');
