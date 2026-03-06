@@ -5473,7 +5473,7 @@ function salvarProdutoGeral() {
     if (currentId) db.prods = db.prods.map(p => p.id == currentId ? produtoData : p);
     else           db.prods.push(produtoData);
     localStorage.setItem('f_prods', JSON.stringify(db.prods));
-    cardapioSync(); renderProds(); closeProdForm();
+    cardapioSync(); renderProds();
     const _sp = { nome: produtoData.name, preco: parseFloat(produtoData.price)||0,
         categoria_nome: produtoData.category, descricao: produtoData.desc||'',
         imagem: produtoData.img||'', complementos: produtoData.comps||[], ativo: produtoData.active!==false };
@@ -5481,6 +5481,7 @@ function salvarProdutoGeral() {
     if (currentId && _isSupaId) supaUpdate('produtos', currentId, _sp).catch(e => console.warn('Supa upd prod:', e.message));
     else supaInsert('produtos', _sp).then(r => { if(r&&r[0]){const p=db.prods.find(x=>x.id===produtoData.id);if(p){p.id=r[0].id;p._supa=true;}} }).catch(e => console.warn('Supa ins prod:', e.message));
     currentId = null; tempImg = "";
+    closeProdForm();
     alert("Produto salvo com sucesso!");
 }
 
