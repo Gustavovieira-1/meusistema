@@ -482,7 +482,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                 <i class="fas fa-fire" style="color:white; font-size:15px;"></i>
             </div>
             <div>
-                <div style="font-weight:800; font-size:15px; color:#111; letter-spacing:-0.3px; line-height:1.1;">Fogueiro</div>
+                <div id="sidebar-nome-loja" style="font-weight:800; font-size:15px; color:#111; letter-spacing:-0.3px; line-height:1.1;">Meu Restaurante</div>
                 <div style="font-size:11px; color:#aaa; font-weight:400;">Painel Admin</div>
             </div>
         </div>
@@ -6065,8 +6065,24 @@ async function authLogout() {
             headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_TOKEN }
         });
     } catch(e) {}
+    // Limpar sessão e dados locais
     localStorage.removeItem('supa_session');
+    localStorage.removeItem('f_cats');
+    localStorage.removeItem('f_prods');
+    localStorage.removeItem('f_comps');
+    localStorage.removeItem('f_cfg_loja');
+    localStorage.removeItem('f_orders');
+    localStorage.removeItem('f_horarios');
+    localStorage.removeItem('f_taxas_config');
+    localStorage.removeItem('f_fidelidade_cfg');
+    localStorage.removeItem('f_fidelidade_cli');
+    localStorage.removeItem('f_cupons');
+    localStorage.removeItem('f_integracoes');
     REST_ID = null; SUPA_TOKEN = null;
+    // Resetar nome da sidebar
+    var sn = document.getElementById('sidebar-nome-loja');
+    if (sn) sn.textContent = 'Meu Restaurante';
+    document.title = 'Admin';
     mostrarTelaLogin();
 }
 
@@ -6152,6 +6168,13 @@ async function supaCarregarConfigs() {
         if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
             const atual = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
             if (!atual.nomeMarca) localStorage.setItem('f_cfg_loja', JSON.stringify(cfgRows[0].dados_extras));
+            // Atualizar nome no sidebar
+            var _cfgCarregada = cfgRows[0].dados_extras || {};
+            if (_cfgCarregada.nomeMarca) {
+                var _sn = document.getElementById('sidebar-nome-loja');
+                if (_sn) _sn.textContent = _cfgCarregada.nomeMarca;
+                document.title = _cfgCarregada.nomeMarca + ' — Admin';
+            }
         }
         if (horRows && horRows[0] && horRows[0].dados)
             localStorage.setItem('f_horarios', JSON.stringify(horRows[0].dados));
@@ -7835,6 +7858,13 @@ function cfgSaveConfig(obj) {
 }
 
 function cfgInicializar() {
+    // Atualizar nome no sidebar ao abrir configurações
+    var _cfgAtual = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
+    if (_cfgAtual.nomeMarca) {
+        var _sn = document.getElementById('sidebar-nome-loja');
+        if (_sn) _sn.textContent = _cfgAtual.nomeMarca;
+        document.title = _cfgAtual.nomeMarca + ' — Admin';
+    }
     var c = cfgGetConfig();
 
     // Imagens
@@ -7962,8 +7992,9 @@ function cfgSalvar() {
 
     // Atualizar nome no sidebar
     if (obj.nomeMarca) {
-        var sideNome = document.querySelector('.sidebar-header [style*="font-weight:800"]');
+        var sideNome = document.getElementById('sidebar-nome-loja');
         if (sideNome) sideNome.textContent = obj.nomeMarca;
+        document.title = obj.nomeMarca + ' — Admin';
     }
 
     // Supabase
