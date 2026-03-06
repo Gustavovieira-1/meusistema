@@ -428,10 +428,10 @@ async function init(){
         // Buscar restaurante pelo slug
         let restRows;
         if (REST_SLUG) {
-            restRows = await supaFetch('restaurantes?slug=eq.' + REST_SLUG + '&select=id,nome,slug,ativo');
+            restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
         } else {
             // fallback: pega o primeiro restaurante (útil em desenvolvimento)
-            restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1');
+            restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1&order=id.asc');
         }
         if (!restRows || !restRows[0]) throw new Error('Restaurante não encontrado');
         const rest = restRows[0];
@@ -442,21 +442,35 @@ async function init(){
             supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=*'),
-            supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=*'),
-            supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*'),
-            supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*')
+            supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
         ]);
 
         db.categories = (cats||[]).map(c => ({id: c.id, name: c.nome, active: true}));
-        db.prods      = (prods||[]).map(p => ({
-            id: p.id, name: p.nome, price: p.preco, category: p.categoria_nome,
-            desc: p.descricao, img: p.imagem, comps: p.complementos||[], active: true
-        }));
-        db.comps      = (comps||[]).map(c => ({id: c.id, title: c.titulo, type: c.tipo, options: c.opcoes||[]}));
+        db.prods      = (prods||[]).map(p => {
+            const priceVal = typeof p.preco === 'string' ? parseFloat(p.preco.replace(',', '.')) : parseFloat(p.preco);
+            return {
+                id: p.id, name: p.nome, price: isNaN(priceVal) ? 0 : priceVal, category: p.categoria_nome,
+                desc: p.descricao || '', img: p.imagem || '', comps: p.complementos||[], active: true
+            };
+        });
+        db.comps      = (comps||[]).map(c => ({id: c.id, title: c.titulo || c.nome || '', type: c.tipo || 'check', options: (c.opcoes || [])}));
 
-        const cfg = (cfgRows&&cfgRows[0]) ? (cfgRows[0].dados_extras || {}) : {};
-        db.cfg    = cfg;
-        db.txCfg  = (txRows&&txRows[0]) ? (txRows[0].dados || {}) : {};
+        const cfg = (cfgRows&&cfgRows[0]) || {};
+        db.cfg    = {
+            nomeUnidade: cfg.nome_unidade || rest.nome,
+            cidade: cfg.cidade || '',
+            logoUrl: cfg.logo_url || '',
+            heroImg: cfg.imagem_hero || '',
+            minPedido: parseFloat(cfg.valor_minimo) || 0,
+            taxaEntrega: parseFloat(cfg.taxa_entrega) || 0
+        };
+        db.txCfg  = (txRows&&txRows[0]) ? {
+            tempoEntrega: txRows[0].tempo_entrega || 40,
+            tempoRetirada: txRows[0].tempo_retirada || 20,
+            taxaPadrao: parseFloat(txRows[0].taxa_padrao) || 0
+        } : {};
         db.horarios = (horRows&&horRows[0]) ? (horRows[0].dados || []) : [];
 
         // Verificar se loja está aberta
@@ -544,7 +558,7 @@ function prodCard(p){
 function goSec(id){var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
 
 function initObs(){
-    var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id.replace('sec-','');document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});var btn=document.getElementById('nav-'+id);if(btn){btn.classList.add('active');btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});}}});},{rootMargin:'-20% 0px -70% 0px'});
+    var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id.replace('sec-','');document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});var btn=document.getElementById('nav-'+id);if(btn){btn.classList.add('active');}}});},{rootMargin:'-20% 0px -70% 0px'});
     document.querySelectorAll('.cat-section').forEach(function(s){obs.observe(s);});
 }
 
