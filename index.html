@@ -420,22 +420,27 @@ async function supaFetch(path) {
 }
 
 async function init(){
+    console.log('[INIT] Iniciando carregamento de dados...');
     // Pegar slug da URL: /?r=fogueiro-burguer  OU  /fogueiro-burguer
     const params = new URLSearchParams(window.location.search);
     REST_SLUG = params.get('r') || window.location.pathname.replace('/','').split('/')[0] || null;
+    console.log('[INIT] REST_SLUG:', REST_SLUG);
 
     try{
         // Buscar restaurante pelo slug
         let restRows;
         if (REST_SLUG) {
+            console.log('[INIT] Buscando restaurante por slug...');
             restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
         } else {
             // fallback: pega o primeiro restaurante (útil em desenvolvimento)
+            console.log('[INIT] Buscando primeiro restaurante (fallback)...');
             restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1&order=id.asc');
         }
         if (!restRows || !restRows[0]) throw new Error('Restaurante não encontrado');
         const rest = restRows[0];
         REST_ID = rest.id;
+        console.log('[INIT] ✅ REST_ID carregado:', REST_ID);
 
         // Buscar cardápio, configs e taxas em paralelo
         const [cats, prods, comps, cfgRows, txRows, horRows] = await Promise.all([
@@ -641,16 +646,21 @@ function buscaEnd(){clearTimeout(_endT);var v=document.getElementById('ch-rua').
 function preencheEnd(enc){var full=decodeURIComponent(enc),parts=full.split(',');document.getElementById('ch-rua').value=parts[0]?parts[0].trim():full;if(parts[1])document.getElementById('ch-bairro').value=parts[1].trim();document.getElementById('ch-sugs').style.display='none';}
 
 async function finalizarPedido(){
+    console.log('[PEDIDO] Iniciando finalizarPedido...');
+    console.log('[PEDIDO] REST_ID atual:', REST_ID);
+    
     var nome=document.getElementById('ch-nome').value.trim(),tel=document.getElementById('ch-tel').value.trim();
     if(!nome){alert('Informe seu nome.');return;}if(!tel){alert('Informe seu celular.');return;}
     if(tipoAtual==='Entrega'&&!document.getElementById('ch-rua').value.trim()){alert('Informe o endereço.');return;}
     
     // ✅ VERIFICAR SE REST_ID ESTÁ CARREGADO
     if (!REST_ID) {
+        console.warn('[PEDIDO] ❌ REST_ID não está carregado!');
         alert('⚠️ Restaurante não carregado ainda. Aguarde um momento e tente novamente.');
         return;
     }
     
+    console.log('[PEDIDO] ✅ REST_ID validado, prosseguindo...');
     var cfg=db.cfg||{},tx=db.txCfg||{},sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0),taxa=tipoAtual==='Entrega'?parseFloat(tx.taxaPadrao||cfg.taxaEntrega||0):0,troco=pgtoAtual==='Dinheiro'?parseFloat(document.getElementById('ch-troco').value||0):0;
     var desc=fidelGetDesconto();
     var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value:'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:cfg.cidade||'',subtotal:sub,taxaEntrega:taxa,descontoPontos:desc,resgPontos:fidelResgSel,total:Math.max(0,sub+taxa-desc),items:carrinho.slice()};
