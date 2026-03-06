@@ -1813,6 +1813,51 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
         </div>
 
 
+        <!-- BLOCO: LIMPEZA DE PEDIDOS FINALIZADOS -->
+        <div style="background:white; border-radius:16px; border:1.5px solid #f1f5f9; box-shadow:0 1px 6px rgba(0,0,0,.04); padding:24px 28px; margin-bottom:18px;">
+            <div style="font-size:12px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:20px;">Limpeza de Pedidos</div>
+            <div style="max-width:420px;">
+                <div style="font-size:13px; color:#475569; margin-bottom:18px; line-height:1.6;">
+                    Configure quando os pedidos finalizados devem desaparecer do painel. Os dados ficarão salvos no histórico.
+                </div>
+                
+                <div style="margin-bottom:18px;">
+                    <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:8px; text-transform:uppercase; letter-spacing:.4px;">Modo de Limpeza</label>
+                    <div style="display:flex; gap:12px; margin-bottom:14px;">
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="radio" id="cfg-limpar-modo-horario" name="cfg-limpar-modo" value="horario" checked style="cursor:pointer;">
+                            <span style="font-size:13px; color:#475569;">Horário fixo do dia</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                            <input type="radio" id="cfg-limpar-modo-minutos" name="cfg-limpar-modo" value="minutos" style="cursor:pointer;">
+                            <span style="font-size:13px; color:#475569;">Após X minutos</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="cfg-limpar-horario-div" style="margin-bottom:18px;">
+                    <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;">Horário da Limpeza</label>
+                    <input id="cfg-limpar-horario" type="time" placeholder="HH:MM" 
+                        style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                    <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Todos os dias neste horário, os pedidos finalizados desaparecerão</div>
+                </div>
+
+                <div id="cfg-limpar-minutos-div" style="display:none; margin-bottom:18px;">
+                    <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;">Minutos após Finalização</label>
+                    <input id="cfg-limpar-minutos" type="number" min="1" step="1" placeholder="Ex: 30" 
+                        style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                    <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Os pedidos desaparecerão X minutos após serem finalizados</div>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input id="cfg-limpar-ativado" type="checkbox" style="cursor:pointer;">
+                        <span style="font-size:13px; color:#475569;">Ativar limpeza automática</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <!-- BLOCO: SEGURANÇA DA CONTA -->
         <div style="background:white; border-radius:16px; border:1.5px solid #f1f5f9; box-shadow:0 1px 6px rgba(0,0,0,.04); padding:24px 28px; margin-bottom:18px;">
             <div style="font-size:12px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:20px;">Segurança da Conta</div>
@@ -8232,6 +8277,10 @@ function cfgSalvar() {
         retiradaMin:     parseInt(el('cfg-retirada-min').value||0),
         retiradaMax:     parseInt(el('cfg-retirada-max').value||0),
         aceitaBalcao:    el('cfg-sw-balcao').dataset.on === '1',
+        limparAtivado:   el('cfg-limpar-ativado').checked || false,
+        limparModo:      document.querySelector('input[name="cfg-limpar-modo"]:checked').value || 'horario',
+        limparHorario:   el('cfg-limpar-horario').value || '00:00',
+        limparMinutos:   parseInt(el('cfg-limpar-minutos').value||30)
     };
     cfgSaveConfig(obj);
 
@@ -8251,6 +8300,73 @@ function cfgSalvar() {
     }, 'restaurante_id').catch(e => console.warn('Supa cfg:', e.message));
     cupToast('Configurações salvas!', '#16a34a');
 }
+
+// LIMPEZA DE PEDIDOS
+function cfgToggleLimparModo() {
+    var modo = document.querySelector('input[name="cfg-limpar-modo"]:checked').value;
+    document.getElementById('cfg-limpar-horario-div').style.display = (modo === 'horario') ? '' : 'none';
+    document.getElementById('cfg-limpar-minutos-div').style.display = (modo === 'minutos') ? '' : 'none';
+}
+
+function cfgCarregarLimpeza() {
+    var obj = cfgGetConfig() || {};
+    if (obj.limparAtivado !== undefined) document.getElementById('cfg-limpar-ativado').checked = obj.limparAtivado;
+    if (obj.limparModo) {
+        document.getElementById(obj.limparModo === 'minutos' ? 'cfg-limpar-modo-minutos' : 'cfg-limpar-modo-horario').checked = true;
+        cfgToggleLimparModo();
+    }
+    if (obj.limparHorario) document.getElementById('cfg-limpar-horario').value = obj.limparHorario;
+    if (obj.limparMinutos) document.getElementById('cfg-limpar-minutos').value = obj.limparMinutos;
+}
+
+// Inicializa listeners para o modo de limpeza
+document.addEventListener('DOMContentLoaded', function() {
+    var radios = document.querySelectorAll('input[name="cfg-limpar-modo"]');
+    radios.forEach(function(r) {
+        r.addEventListener('change', cfgToggleLimparModo);
+    });
+    setTimeout(function() { cfgCarregarLimpeza(); }, 500);
+});
+
+// Auto-limpeza de pedidos finalizados
+function cfgAplicarLimpeza() {
+    var cfg = cfgGetConfig() || {};
+    if (!cfg.limparAtivado) return;
+    
+    var modo = cfg.limparModo || 'horario';
+    var agora = new Date();
+    var deveParar = false;
+    
+    if (modo === 'horario') {
+        var horaConfiguracao = (cfg.limparHorario || '00:00').split(':');
+        var horaConfig = parseInt(horaConfiguracao[0])*60 + parseInt(horaConfiguracao[1]);
+        var horaAtual = agora.getHours()*60 + agora.getMinutes();
+        
+        // Se passou da hora configurada hoje, faz a limpeza
+        deveParar = (horaAtual >= horaConfig);
+    } else if (modo === 'minutos') {
+        var minutosParar = cfg.limparMinutos || 30;
+        var agora_ms = agora.getTime();
+        
+        // Remove pedidos finalizados que ultrapassaram o tempo
+        orders = orders.filter(function(o) {
+            if (o.status === 'finalizado' && o.finalizadoEm) {
+                var finalizado_ms = new Date(o.finalizadoEm).getTime();
+                var minutosPassados = (agora_ms - finalizado_ms) / 60000;
+                return minutosPassados < minutosParar;  // Mantém se ainda não atingiu o tempo
+            }
+            return true;  // Mantém pedidos não-finalizados
+        });
+        deveParar = true;  // Sempre renderiza se em modo de minutos
+    }
+    
+    if (deveParar) {
+        renderOrders();  // Renderiza se removeu pedidos ou se é horário
+    }
+}
+
+// Verifica limpeza a cada minuto
+setInterval(cfgAplicarLimpeza, 60000);
 
 // HORARIOS
 var HOR_KEY="f_horarios",horDiaEditando=-1,_horP=[];
