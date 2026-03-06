@@ -5691,14 +5691,45 @@ function saveComp() {
         type:    document.getElementById('c-type').value,
         options: opts
     };
-    if (currentCompId) { db.comps = db.comps.map(x => x.id === currentCompId ? obj : x); }
-    else { db.comps.push(obj); }
+    
+    if (currentCompId) { 
+        // Ao editar, preservar o flag _supa do complemento original
+        db.comps = db.comps.map(x => {
+            if (x.id === currentCompId) {
+                return { ...obj, _supa: x._supa };  // Preserva _supa
+            }
+            return x;
+        });
+    }
+    else { 
+        db.comps.push(obj); 
+    }
+    
     localStorage.setItem('f_comps', JSON.stringify(db.comps));
     closeModal(); renderComps();
+    
     const _sc = { titulo: obj.title, tipo: obj.type, opcoes: obj.options };
     const _isSupaComp = typeof currentCompId === 'string' && currentCompId.includes('-');
-    if (currentCompId && _isSupaComp) supaUpdate('complementos', currentCompId, _sc).catch(e => console.warn('Supa upd comp:', e.message));
-    else supaInsert('complementos', _sc).then(r => { if(r&&r[0]){const c=db.comps.find(x=>x.id===obj.id);if(c){c.id=r[0].id;c._supa=true;}} }).catch(e => console.warn('Supa ins comp:', e.message));
+    
+    if (currentCompId && _isSupaComp) {
+        supaUpdate('complementos', currentCompId, _sc).catch(e => console.warn('Supa upd comp:', e.message));
+    } else if (currentCompId) {
+        // Se é um complemento local que está sendo editado, só salva local
+    } else {
+        // Novo complemento - tentar salvar no Supabase
+        supaInsert('complementos', _sc).then(r => { 
+            if(r && r[0]) {
+                const c = db.comps.find(x => x.id === obj.id);
+                if (c) {
+                    c.id = r[0].id;
+                    c._supa = true;
+                    localStorage.setItem('f_comps', JSON.stringify(db.comps));
+                    renderComps();
+                }
+            } 
+        }).catch(e => console.warn('Supa ins comp:', e.message));
+    }
+    
     currentCompId = null;
 }
 
@@ -5728,8 +5759,13 @@ function deletarComp(id) {
     const _comp = db.comps.find(c => c.id === id);
     db.comps = db.comps.filter(c => c.id !== id);
     localStorage.setItem('f_comps', JSON.stringify(db.comps));
-    cardapioSync(); renderComps();
-    if (_comp && _comp._supa) supaDelete('complementos', id).catch(e => console.warn('Supa del comp:', e.message));
+    cardapioSync(); 
+    renderComps();
+    
+    // Deletar do Supabase se vier de lá (tem _supa flag OU o ID é UUID)
+    if (_comp && (_comp._supa || (typeof id === 'string' && id.includes('-')))) {
+        supaDelete('complementos', id).catch(e => console.warn('Supa del comp:', e.message));
+    }
 }
 
 function closeModal() { document.getElementById('modal-comp').style.display = 'none'; }
