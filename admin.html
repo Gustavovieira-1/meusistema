@@ -8345,7 +8345,7 @@ function cfgAplicarLimpeza() {
         var horaConfig = parseInt(horaConfiguracao[0])*60 + parseInt(horaConfiguracao[1]);
         var horaAtual = agora.getHours()*60 + agora.getMinutes();
         
-        // Se passou da hora configurada, marca para remover pedidos finalizados
+        // Se passou da hora configurada, marca para remover todos os pedidos
         deveRemover = (horaAtual >= horaConfig);
     } else if (modo === 'minutos') {
         // Modo minutos: sempre verifica e remove
@@ -8354,31 +8354,37 @@ function cfgAplicarLimpeza() {
     
     if (!deveRemover) return;
     
-    // Salvar pedidos finalizados no histórico ANTES de remover
-    var pedidosFinalizados = orders.filter(function(o) { return o.status === 'finalizado'; });
-    pedidosFinalizados.forEach(function(o) { histRegistrar(o); });
+    // Salvar todos os pedidos no histórico ANTES de remover
+    orders.forEach(function(o) { 
+        if (o.status === 'finalizado') histRegistrar(o);  // Só salva finalizados no histórico
+    });
     
-    // Aplicar a remoção conforme o modo
+    // Aplicar a remoção conforme o modo - APAGA TODOS OS PEDIDOS
     if (modo === 'horario') {
-        // Remove TODOS os pedidos finalizados se passou da hora
-        orders = orders.filter(function(o) { return o.status !== 'finalizado'; });
-        console.log('[Limpeza] Removidos ' + pedidosFinalizados.length + ' pedidos finalizados (modo horário)');
+        // Remove TODOS os pedidos (de todas as colunas) se passou da hora
+        var removidos = orders.length;
+        orders = [];  // Limpa tudo
+        if (removidos > 0) console.log('[Limpeza] Removidos ' + removidos + ' pedidos de todas as colunas (modo horário)');
     } else if (modo === 'minutos') {
         var minutosParar = cfg.limparMinutos || 30;
         var agora_ms = agora.getTime();
         
-        // Remove pedidos finalizados que ultrapassaram o tempo
+        // Remove pedidos de TODAS as colunas que ultrapassaram o tempo
         var antes = orders.length;
         orders = orders.filter(function(o) {
-            if (o.status === 'finalizado' && o.finalizadoEm) {
-                var finalizado_ms = new Date(o.finalizadoEm).getTime();
-                var minutosPassados = (agora_ms - finalizado_ms) / 60000;
-                return minutosPassados < minutosParar;  // Mantém se ainda não atingiu o tempo
+            // Usa finalizadoEm se disponível (para pedidos já finalizados), senão usa timestamp
+            var tempoReferencia = o.finalizadoEm || o.timestamp;
+            if (tempoReferencia) {
+                var tempo_ms = new Date(tempoReferencia).getTime();
+                var minutosPassados = (agora_ms - tempo_ms) / 60000;
+                // Remove se passou do tempo, mantém se ainda não passou
+                return minutosPassados < minutosParar;
             }
-            return true;  // Mantém pedidos não-finalizados
+            // Se não tem tempo de referência, mantém (segurança)
+            return true;
         });
         var removidos = antes - orders.length;
-        if (removidos > 0) console.log('[Limpeza] Removidos ' + removidos + ' pedidos finalizados (modo minutos)');
+        if (removidos > 0) console.log('[Limpeza] Removidos ' + removidos + ' pedidos de todas as colunas (modo minutos)');
     }
     
     // Atualizar localStorage e renderizar
