@@ -5945,7 +5945,20 @@ async function supaDelete(table, id) {
     return supaReq('DELETE', table + '?id=eq.' + id, null);
 }
 async function supaUpsert(table, obj, onConflict) {
-    return supaReq('POST', table + '?on_conflict=' + onConflict, { ...obj, restaurante_id: REST_ID });
+    const body = { ...obj, restaurante_id: REST_ID };
+    const r = await fetch(SUPA_URL + '/rest/v1/' + table + '?on_conflict=' + onConflict, {
+        method: 'POST',
+        headers: {
+            'apikey':        SUPA_KEY,
+            'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
+            'Content-Type':  'application/json',
+            'Prefer':        'return=representation,resolution=merge-duplicates'
+        },
+        body: JSON.stringify(body)
+    });
+    if (!r.ok) { const e = await r.text(); throw new Error(e); }
+    const txt = await r.text();
+    return txt ? JSON.parse(txt) : null;
 }
 
 async function supaCarregarCardapio() {
