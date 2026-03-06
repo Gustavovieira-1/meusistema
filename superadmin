@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Master</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #13131a;
+  --surface2: #1a1a24;
+  --border: #2a2a3a;
+  --accent: #e30613;
+  --accent2: #ff6b35;
+  --text: #f0f0f8;
+  --muted: #6b6b8a;
+  --green: #22c55e;
+  --yellow: #f59e0b;
+  --red: #ef4444;
+  --blue: #3b82f6;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── TELA DE LOGIN ── */
+#tela-login {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg);
+}
+.login-bg {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(227,6,19,.15) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,107,53,.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+.login-card {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 400px; padding: 48px 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: 0 40px 80px rgba(0,0,0,.6);
+}
+.login-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(227,6,19,.1); border: 1px solid rgba(227,6,19,.3);
+  color: var(--accent); padding: 6px 14px; border-radius: 20px;
+  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; margin-bottom: 28px;
+}
+.login-titulo {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px; font-weight: 800;
+  line-height: 1.1; margin-bottom: 8px;
+}
+.login-sub { font-size: 14px; color: var(--muted); margin-bottom: 36px; }
+.login-campo { margin-bottom: 16px; }
+.login-campo label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: .8px; margin-bottom: 8px;
+}
+.login-campo input {
+  width: 100%; padding: 13px 16px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 12px; color: var(--text);
+  font-size: 15px; font-family: inherit; outline: none;
+  transition: border-color .2s;
+}
+.login-campo input:focus { border-color: var(--accent); }
+.login-campo input::placeholder { color: var(--muted); }
+.login-btn {
+  width: 100%; padding: 14px;
+  background: var(--accent); color: white; border: none;
+  border-radius: 12px; font-size: 15px; font-weight: 700;
+  font-family: inherit; cursor: pointer; margin-top: 8px;
+  transition: background .15s, transform .1s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.login-btn:hover { background: #c0000f; }
+.login-btn:active { transform: scale(.98); }
+.login-btn:disabled { background: var(--border); cursor: default; }
+.login-erro {
+  display: none; background: rgba(239,68,68,.1);
+  border: 1px solid rgba(239,68,68,.3); border-radius: 10px;
+  padding: 10px 14px; font-size: 13px; color: #ef4444;
+  margin-top: 12px;
+}
+
+/* ── APP ── */
+#app { display: none; min-height: 100vh; }
+
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 100;
+  height: 64px; padding: 0 32px;
+  background: rgba(10,10,15,.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.topbar-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 800;
+  display: flex; align-items: center; gap: 10px;
+}
+.topbar-logo-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .6; transform: scale(1.4); }
+}
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.topbar-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 14px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 20px;
+  font-size: 13px; color: var(--muted);
+}
+.topbar-user strong { color: var(--text); font-size: 13px; }
+.btn-logout {
+  padding: 8px 16px; background: transparent;
+  border: 1px solid var(--border); border-radius: 10px;
+  color: var(--muted); font-size: 12px; font-family: inherit;
+  cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 6px;
+}
+.btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+/* ── MAIN ── */
+.main { max-width: 1400px; margin: 0 auto; padding: 40px 32px; }
+
+/* ── CARDS DE MÉTRICAS ── */
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px; margin-bottom: 40px;
+}
+.metrica-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px;
+  position: relative; overflow: hidden;
+  transition: border-color .2s;
+}
+.metrica-card:hover { border-color: var(--accent); }
+.metrica-card::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 2px;
+}
+.metrica-card.verde::before { background: var(--green); }
+.metrica-card.azul::before { background: var(--blue); }
+.metrica-card.amarelo::before { background: var(--yellow); }
+.metrica-card.vermelho::before { background: var(--accent); }
+.metrica-label {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .8px; margin-bottom: 12px;
+}
+.metrica-valor {
+  font-family: 'Syne', sans-serif;
+  font-size: 36px; font-weight: 800; line-height: 1;
+  margin-bottom: 6px;
+}
+.metrica-sub { font-size: 12px; color: var(--muted); }
+.metrica-icon {
+  position: absolute; bottom: 20px; right: 20px;
+  font-size: 32px; opacity: .06;
+}
+
+/* ── HEADER DE SEÇÃO ── */
+.sec-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px;
+}
+.sec-titulo {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px; font-weight: 700;
+}
+.sec-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+/* ── BTN PRIMÁRIO ── */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; background: var(--accent); color: white;
+  border: none; border-radius: 10px; font-size: 13px; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: background .15s;
+}
+.btn-primary:hover { background: #c0000f; }
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; background: var(--surface2);
+  border: 1px solid var(--border); color: var(--text);
+  border-radius: 10px; font-size: 13px; font-weight: 600;
+  font-family: inherit; cursor: pointer; transition: all .15s;
+}
+.btn-secondary:hover { border-color: var(--muted); }
+
+/* ── TABELA DE RESTAURANTES ── */
+.tabela-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden; margin-bottom: 32px;
+}
+.tabela-filtros {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+  display: flex; gap: 10px; align-items: center;
+}
+.filtro-input {
+  flex: 1; padding: 9px 14px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-size: 13px;
+  font-family: inherit; outline: none;
+}
+.filtro-input:focus { border-color: var(--accent); }
+.filtro-input::placeholder { color: var(--muted); }
+.filtro-select {
+  padding: 9px 14px; background: var(--surface2);
+  border: 1px solid var(--border); border-radius: 10px;
+  color: var(--text); font-size: 13px; font-family: inherit;
+  outline: none; cursor: pointer;
+}
+table { width: 100%; border-collapse: collapse; }
+thead { background: var(--surface2); }
+th {
+  padding: 12px 20px; text-align: left;
+  font-size: 11px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .6px;
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 16px 20px; font-size: 14px;
+  border-bottom: 1px solid rgba(42,42,58,.5);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,.02); }
+.rest-nome { font-weight: 600; font-size: 14px; }
+.rest-slug { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px;
+  font-size: 11px; font-weight: 700;
+}
+.badge.ativo { background: rgba(34,197,94,.1); color: var(--green); border: 1px solid rgba(34,197,94,.2); }
+.badge.inativo { background: rgba(107,107,138,.1); color: var(--muted); border: 1px solid var(--border); }
+.badge.pago { background: rgba(59,130,246,.1); color: var(--blue); border: 1px solid rgba(59,130,246,.2); }
+.badge.pendente { background: rgba(245,158,11,.1); color: var(--yellow); border: 1px solid rgba(245,158,11,.2); }
+.badge.trial { background: rgba(255,107,53,.1); color: var(--accent2); border: 1px solid rgba(255,107,53,.2); }
+.acoes { display: flex; gap: 6px; }
+.btn-acao {
+  width: 32px; height: 32px; border-radius: 8px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.btn-acao:hover { border-color: var(--text); color: var(--text); }
+.btn-acao.danger:hover { border-color: var(--red); color: var(--red); }
+.btn-acao.success:hover { border-color: var(--green); color: var(--green); }
+
+/* ── TOGGLE ATIVO ── */
+.toggle {
+  width: 40px; height: 22px; border-radius: 11px;
+  background: var(--border); cursor: pointer;
+  position: relative; transition: background .2s; border: none;
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--green); }
+.toggle::after {
+  content: ''; position: absolute;
+  top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: white; transition: transform .2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.toggle.on::after { transform: translateX(18px); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 36px; width: 100%; max-width: 520px;
+  box-shadow: 0 40px 80px rgba(0,0,0,.5);
+  animation: slideUp .2s ease;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.modal-titulo {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px; font-weight: 800; margin-bottom: 6px;
+}
+.modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+.campo { margin-bottom: 16px; }
+.campo label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: .6px; margin-bottom: 7px;
+}
+.campo input, .campo select {
+  width: 100%; padding: 11px 14px;
+  background: var(--surface2); border: 1.5px solid var(--border);
+  border-radius: 10px; color: var(--text);
+  font-size: 14px; font-family: inherit; outline: none;
+  transition: border-color .15s;
+}
+.campo input:focus, .campo select:focus { border-color: var(--accent); }
+.campo input::placeholder { color: var(--muted); }
+.campo select option { background: var(--surface2); }
+.modal-footer {
+  display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;
+}
+.modal-erro {
+  display: none; background: rgba(239,68,68,.1);
+  border: 1px solid rgba(239,68,68,.2); border-radius: 8px;
+  padding: 10px 14px; font-size: 13px; color: #ef4444; margin-top: 12px;
+}
+.modal-ok {
+  display: none; background: rgba(34,197,94,.1);
+  border: 1px solid rgba(34,197,94,.2); border-radius: 8px;
+  padding: 10px 14px; font-size: 13px; color: var(--green); margin-top: 12px;
+}
+
+/* ── LOADING ── */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px; color: var(--muted); gap: 12px;
+  flex-direction: column;
+}
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── VAZIO ── */
+.vazio {
+  text-align: center; padding: 60px;
+  color: var(--muted); font-size: 14px;
+}
+.vazio-icon { font-size: 40px; margin-bottom: 12px; opacity: .4; }
+
+/* ── ABAS ── */
+.abas {
+  display: flex; gap: 4px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 4px; margin-bottom: 24px;
+  width: fit-content;
+}
+.aba {
+  padding: 8px 20px; border-radius: 9px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  color: var(--muted); background: none; border: none;
+  font-family: inherit; transition: all .15s;
+}
+.aba.active { background: var(--surface); color: var(--text); }
+
+/* ── SEÇÕES ── */
+.secao { display: none; }
+.secao.active { display: block; }
+
+/* ── LINHA DIVISÓRIA ── */
+.divider { height: 1px; background: var(--border); margin: 32px 0; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 28px; right: 28px; z-index: 9999;
+  padding: 14px 20px; border-radius: 12px;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  transform: translateY(80px); opacity: 0;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events: none;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .metricas { grid-template-columns: repeat(2, 1fr); }
+  .main { padding: 24px 16px; }
+  .topbar { padding: 0 16px; }
+}
+@media (max-width: 600px) {
+  .metricas { grid-template-columns: 1fr 1fr; }
+  .topbar-user { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── TELA DE LOGIN ── -->
+<div id="tela-login">
+  <div class="login-bg"></div>
+  <div class="login-card">
+    <div class="login-badge"><i class="fas fa-shield-halved"></i> Acesso Restrito</div>
+    <div class="login-titulo">Painel<br>Master</div>
+    <div class="login-sub">Somente administradores autorizados</div>
+    <div class="login-campo">
+      <label>E-mail</label>
+      <input id="login-email" type="email" placeholder="seu@email.com.br"
+             onkeydown="if(event.key==='Enter')document.getElementById('login-senha').focus()">
+    </div>
+    <div class="login-campo">
+      <label>Senha</label>
+      <input id="login-senha" type="password" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')saLogin()">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="saLogin()">
+      <i class="fas fa-arrow-right-to-bracket"></i> Entrar
+    </button>
+    <div class="login-erro" id="login-erro"></div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-dot"></div>
+      Painel Master
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user">
+        <i class="fas fa-user-shield" style="color:var(--accent);font-size:12px;"></i>
+        <strong id="sa-nome-usuario">—</strong>
+      </div>
+      <button class="btn-logout" onclick="saLogout()">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </button>
+    </div>
+  </div>
+
+  <!-- Conteúdo -->
+  <div class="main">
+
+    <!-- Métricas -->
+    <div class="metricas" id="sa-metricas">
+      <div class="metrica-card verde">
+        <div class="metrica-label">Ativos</div>
+        <div class="metrica-valor" id="m-ativos">—</div>
+        <div class="metrica-sub">restaurantes online</div>
+        <div class="metrica-icon"><i class="fas fa-store"></i></div>
+      </div>
+      <div class="metrica-card azul">
+        <div class="metrica-label">Total Cadastrados</div>
+        <div class="metrica-valor" id="m-total">—</div>
+        <div class="metrica-sub">todos os clientes</div>
+        <div class="metrica-icon"><i class="fas fa-users"></i></div>
+      </div>
+      <div class="metrica-card amarelo">
+        <div class="metrica-label">Pagamentos Pendentes</div>
+        <div class="metrica-valor" id="m-pendentes">—</div>
+        <div class="metrica-sub">aguardando pagamento</div>
+        <div class="metrica-icon"><i class="fas fa-clock"></i></div>
+      </div>
+      <div class="metrica-card vermelho">
+        <div class="metrica-label">Pedidos Hoje</div>
+        <div class="metrica-valor" id="m-pedidos">—</div>
+        <div class="metrica-sub">em todos os restaurantes</div>
+        <div class="metrica-icon"><i class="fas fa-receipt"></i></div>
+      </div>
+    </div>
+
+    <!-- Abas -->
+    <div class="abas">
+      <button class="aba active" onclick="saAba('restaurantes',this)">
+        <i class="fas fa-store" style="margin-right:6px;font-size:11px;"></i>Restaurantes
+      </button>
+      <button class="aba" onclick="saAba('pedidos',this)">
+        <i class="fas fa-receipt" style="margin-right:6px;font-size:11px;"></i>Pedidos
+      </button>
+      <button class="aba" onclick="saAba('pagamentos',this)">
+        <i class="fas fa-credit-card" style="margin-right:6px;font-size:11px;"></i>Pagamentos
+      </button>
+    </div>
+
+    <!-- ── ABA: RESTAURANTES ── -->
+    <div class="secao active" id="sec-restaurantes">
+      <div class="sec-header">
+        <div>
+          <div class="sec-titulo">Restaurantes</div>
+          <div class="sec-sub">Gerencie todos os seus clientes</div>
+        </div>
+        <button class="btn-primary" onclick="saAbrirModalRest()">
+          <i class="fas fa-plus"></i> Novo Restaurante
+        </button>
+      </div>
+
+      <div class="tabela-wrap">
+        <div class="tabela-filtros">
+          <input class="filtro-input" placeholder="Buscar por nome ou slug..."
+                 oninput="saFiltrarRest(this.value)" id="filtro-rest">
+          <select class="filtro-select" onchange="saFiltrarRest()" id="filtro-status">
+            <option value="">Todos os status</option>
+            <option value="ativo">Ativos</option>
+            <option value="inativo">Inativos</option>
+          </select>
+          <select class="filtro-select" onchange="saFiltrarRest()" id="filtro-pgto">
+            <option value="">Todos os planos</option>
+            <option value="pago">Pagos</option>
+            <option value="trial">Trial</option>
+            <option value="pendente">Pendentes</option>
+          </select>
+        </div>
+        <div id="tabela-rest-body">
+          <div class="loading"><i class="fas fa-circle-notch fa-spin" style="font-size:24px;color:var(--accent);"></i><span>Carregando restaurantes...</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ABA: PEDIDOS ── -->
+    <div class="secao" id="sec-pedidos">
+      <div class="sec-header">
+        <div>
+          <div class="sec-titulo">Pedidos Recentes</div>
+          <div class="sec-sub">Todos os pedidos de todos os restaurantes</div>
+        </div>
+        <select class="filtro-select" onchange="saCarregarPedidos(this.value)" id="filtro-rest-pedidos">
+          <option value="">Todos os restaurantes</option>
+        </select>
+      </div>
+      <div class="tabela-wrap">
+        <div id="tabela-pedidos-body">
+          <div class="loading"><i class="fas fa-circle-notch fa-spin" style="font-size:24px;color:var(--accent);"></i><span>Carregando...</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ABA: PAGAMENTOS ── -->
+    <div class="secao" id="sec-pagamentos">
+      <div class="sec-header">
+        <div>
+          <div class="sec-titulo">Controle de Pagamentos</div>
+          <div class="sec-sub">Gerencie planos e cobranças</div>
+        </div>
+      </div>
+      <div class="tabela-wrap">
+        <div id="tabela-pgto-body">
+          <div class="loading"><i class="fas fa-circle-notch fa-spin" style="font-size:24px;color:var(--accent);"></i><span>Carregando...</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ── MODAL: NOVO/EDITAR RESTAURANTE ── -->
+<div class="modal-overlay" id="modal-rest">
+  <div class="modal">
+    <div class="modal-titulo" id="modal-rest-titulo">Novo Restaurante</div>
+    <div class="modal-sub">Preencha os dados e crie o acesso para o cliente</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="campo" style="grid-column:1/-1;">
+        <label>Nome do Restaurante</label>
+        <input id="m-nome" type="text" placeholder="Ex: Fogueiro Burguer">
+      </div>
+      <div class="campo">
+        <label>Slug (URL do cardápio)</label>
+        <input id="m-slug" type="text" placeholder="fogueiro-burguer"
+               oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'-')">
+      </div>
+      <div class="campo">
+        <label>Plano</label>
+        <select id="m-plano">
+          <option value="trial">Trial (7 dias)</option>
+          <option value="mensal">Mensal</option>
+          <option value="anual">Anual</option>
+        </select>
+      </div>
+      <div class="campo" style="grid-column:1/-1;">
+        <label>E-mail do Proprietário</label>
+        <input id="m-email" type="email" placeholder="dono@restaurante.com.br">
+      </div>
+      <div class="campo">
+        <label>Senha de Acesso</label>
+        <input id="m-senha" type="password" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="campo">
+        <label>Confirmar Senha</label>
+        <input id="m-senha2" type="password" placeholder="Repita a senha">
+      </div>
+      <div class="campo" style="grid-column:1/-1;">
+        <label>Observação (interno)</label>
+        <input id="m-obs" type="text" placeholder="Ex: cliente indicado por fulano">
+      </div>
+    </div>
+
+    <div class="modal-erro" id="modal-rest-erro"></div>
+    <div class="modal-ok"   id="modal-rest-ok"></div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="saFecharModalRest()">Cancelar</button>
+      <button class="btn-primary"   id="modal-rest-btn" onclick="saSalvarRest()">
+        <i class="fas fa-check"></i> Criar Restaurante
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: EDITAR PAGAMENTO ── -->
+<div class="modal-overlay" id="modal-pgto">
+  <div class="modal">
+    <div class="modal-titulo">Editar Pagamento</div>
+    <div class="modal-sub" id="modal-pgto-nome">—</div>
+    <input type="hidden" id="mpgto-rest-id">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="campo">
+        <label>Status de Pagamento</label>
+        <select id="mpgto-status">
+          <option value="pago">Pago</option>
+          <option value="pendente">Pendente</option>
+          <option value="trial">Trial</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Plano</label>
+        <select id="mpgto-plano">
+          <option value="trial">Trial</option>
+          <option value="mensal">Mensal</option>
+          <option value="anual">Anual</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Próximo Vencimento</label>
+        <input id="mpgto-venc" type="date">
+      </div>
+      <div class="campo">
+        <label>Valor (R$)</label>
+        <input id="mpgto-valor" type="number" placeholder="0.00" step="0.01">
+      </div>
+      <div class="campo" style="grid-column:1/-1;">
+        <label>Observação</label>
+        <input id="mpgto-obs" type="text" placeholder="Ex: pagou via Pix em 05/03">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="saFecharModalPgto()">Cancelar</button>
+      <button class="btn-primary" onclick="saSalvarPgto()">
+        <i class="fas fa-check"></i> Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────
+const SA_URL = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
+const SA_KEY = 'sb_publishable_XtEWScp1E8Nfs2Oujdp93Q_Q59CSihV';
+// Papel que identifica o superadmin na tabela usuarios
+const SA_ROLE = 'superadmin';
+
+let SA_TOKEN   = null;
+let _restaurantes = [];
+let _editRestId   = null;
+
+// ── HELPERS ─────────────────────────────────────────────────
+async function saFetch(method, path, body, token) {
+    const r = await fetch(SA_URL + '/rest/v1/' + path, {
+        method,
+        headers: {
+            'apikey': SA_KEY,
+            'Authorization': 'Bearer ' + (token || SA_TOKEN || SA_KEY),
+            'Content-Type': 'application/json',
+            'Prefer': method === 'POST' ? 'return=representation' : ''
+        },
+        body: body ? JSON.stringify(body) : undefined
+    });
+    const txt = await r.text();
+    if (!r.ok) throw new Error(txt || r.status);
+    return txt ? JSON.parse(txt) : null;
+}
+
+async function saAuthFetch(method, path, body) {
+    const r = await fetch(SA_URL + '/auth/v1/' + path, {
+        method,
+        headers: {
+            'apikey': SA_KEY,
+            'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY),
+            'Content-Type': 'application/json'
+        },
+        body: body ? JSON.stringify(body) : undefined
+    });
+    const txt = await r.text();
+    if (!r.ok) throw new Error(txt);
+    return txt ? JSON.parse(txt) : null;
+}
+
+function toast(msg, ok = true) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.background = ok ? '#22c55e' : '#ef4444';
+    el.style.color = 'white';
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function money(v) {
+    return 'R$ ' + parseFloat(v || 0).toFixed(2).replace('.', ',');
+}
+
+// ── LOGIN ────────────────────────────────────────────────────
+async function saLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const senha = document.getElementById('login-senha').value;
+    const btn   = document.getElementById('login-btn');
+    const erro  = document.getElementById('login-erro');
+    erro.style.display = 'none';
+    if (!email || !senha) { erro.textContent = 'Preencha e-mail e senha.'; erro.style.display = 'block'; return; }
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Entrando...';
+    try {
+        const sess = await saAuthFetch('POST', 'token?grant_type=password', { email, password: senha });
+        SA_TOKEN = sess.access_token;
+        // Verificar se é superadmin
+        const usuario = await saFetch('GET', 'usuarios?select=role,nome', null, SA_TOKEN);
+        if (!usuario || !usuario[0] || usuario[0].role !== SA_ROLE) {
+            SA_TOKEN = null;
+            throw new Error('Acesso negado. Você não tem permissão de superadmin.');
+        }
+        document.getElementById('sa-nome-usuario').textContent = usuario[0].nome || email;
+        localStorage.setItem('sa_session', JSON.stringify({ token: SA_TOKEN, nome: usuario[0].nome || email, salvoEm: Date.now() }));
+        mostrarApp();
+    } catch(e) {
+        let msg = e.message;
+        try { msg = JSON.parse(msg).error_description || msg; } catch {}
+        erro.textContent = msg;
+        erro.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Entrar';
+    }
+}
+
+async function saVerificarSessao() {
+    try {
+        const raw = localStorage.getItem('sa_session');
+        if (!raw) return false;
+        const sess = JSON.parse(raw);
+        if (Date.now() - sess.salvoEm > 7 * 86400000) { localStorage.removeItem('sa_session'); return false; }
+        SA_TOKEN = sess.token;
+        document.getElementById('sa-nome-usuario').textContent = sess.nome || 'Admin';
+        return true;
+    } catch { return false; }
+}
+
+function saLogout() {
+    localStorage.removeItem('sa_session');
+    SA_TOKEN = null;
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('tela-login').style.display = 'flex';
+}
+
+function mostrarApp() {
+    document.getElementById('tela-login').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    saCarregarTudo();
+}
+
+// ── CARREGAMENTO GERAL ───────────────────────────────────────
+async function saCarregarTudo() {
+    await saCarregarRestaurantes();
+    saCalcularMetricas();
+    saCarregarPedidos('');
+    saCarregarPagamentos();
+}
+
+async function saCarregarRestaurantes() {
+    try {
+        // Buscar restaurantes + dados de pagamento
+        const [rests, pgtos, pedidos] = await Promise.all([
+            saFetch('GET', 'restaurantes?select=*&order=criado_em.desc'),
+            saFetch('GET', 'pagamentos?select=*'),
+            saFetch('GET', 'pedidos?select=restaurante_id&status=neq.cancelado')
+        ]);
+
+        const pgtoMap = {};
+        (pgtos || []).forEach(p => { pgtoMap[p.restaurante_id] = p; });
+
+        const pedidosMap = {};
+        (pedidos || []).forEach(p => {
+            pedidosMap[p.restaurante_id] = (pedidosMap[p.restaurante_id] || 0) + 1;
+        });
+
+        _restaurantes = (rests || []).map(r => ({
+            ...r,
+            pgto: pgtoMap[r.id] || { status_pgto: 'pendente', plano: 'trial' },
+            totalPedidos: pedidosMap[r.id] || 0
+        }));
+
+        // Popular select de restaurantes no filtro de pedidos
+        const sel = document.getElementById('filtro-rest-pedidos');
+        sel.innerHTML = '<option value="">Todos os restaurantes</option>' +
+            _restaurantes.map(r => `<option value="${r.id}">${r.nome}</option>`).join('');
+
+        saRenderRestaurantes(_restaurantes);
+    } catch(e) {
+        document.getElementById('tabela-rest-body').innerHTML =
+            `<div class="vazio"><div class="vazio-icon">⚠️</div>Erro ao carregar: ${e.message}<br><small>Verifique se as tabelas existem no Supabase.</small></div>`;
+    }
+}
+
+function saCalcularMetricas() {
+    const ativos    = _restaurantes.filter(r => r.ativo).length;
+    const total     = _restaurantes.length;
+    const pendentes = _restaurantes.filter(r => r.pgto.status_pgto === 'pendente').length;
+    const hoje      = new Date(); hoje.setHours(0,0,0,0);
+
+    document.getElementById('m-ativos').textContent    = ativos;
+    document.getElementById('m-total').textContent     = total;
+    document.getElementById('m-pendentes').textContent = pendentes;
+
+    // Pedidos de hoje — buscar separado
+    saFetch('GET', `pedidos?select=id&created_at=gte.${hoje.toISOString()}`)
+        .then(r => { document.getElementById('m-pedidos').textContent = (r || []).length; })
+        .catch(() => { document.getElementById('m-pedidos').textContent = '—'; });
+}
+
+function saFiltrarRest(val) {
+    const termo  = (document.getElementById('filtro-rest')?.value || '').toLowerCase();
+    const status = document.getElementById('filtro-status')?.value || '';
+    const pgto   = document.getElementById('filtro-pgto')?.value || '';
+
+    const filtrados = _restaurantes.filter(r => {
+        const matchTermo  = !termo  || r.nome.toLowerCase().includes(termo) || (r.slug||'').includes(termo);
+        const matchStatus = !status || (status === 'ativo' ? r.ativo : !r.ativo);
+        const matchPgto   = !pgto   || r.pgto.status_pgto === pgto;
+        return matchTermo && matchStatus && matchPgto;
+    });
+    saRenderRestaurantes(filtrados);
+}
+
+function saRenderRestaurantes(lista) {
+    const el = document.getElementById('tabela-rest-body');
+    if (!lista.length) {
+        el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-store"></i></div>Nenhum restaurante encontrado.</div>';
+        return;
+    }
+
+    const badgePgto = s => {
+        const map = { pago: 'pago', pendente: 'pendente', trial: 'trial', cancelado: 'inativo' };
+        const labels = { pago: 'Pago', pendente: 'Pendente', trial: 'Trial', cancelado: 'Cancelado' };
+        return `<span class="badge ${map[s]||'inativo'}">${labels[s]||s}</span>`;
+    };
+
+    el.innerHTML = `<table>
+        <thead><tr>
+            <th>Restaurante</th>
+            <th>Plano</th>
+            <th>Pagamento</th>
+            <th>Pedidos</th>
+            <th>Ativo</th>
+            <th>Ações</th>
+        </tr></thead>
+        <tbody>
+        ${lista.map(r => `<tr>
+            <td>
+                <div class="rest-nome">${r.nome}</div>
+                <div class="rest-slug"><i class="fas fa-link" style="font-size:9px;margin-right:4px;color:var(--muted);"></i>${r.slug||'—'}</div>
+            </td>
+            <td><span style="font-size:13px;color:var(--muted);text-transform:capitalize;">${r.pgto.plano||'trial'}</span></td>
+            <td>${badgePgto(r.pgto.status_pgto||'pendente')}</td>
+            <td>
+                <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;">${r.totalPedidos}</span>
+                <span style="font-size:11px;color:var(--muted);margin-left:4px;">pedidos</span>
+            </td>
+            <td>
+                <button class="toggle ${r.ativo?'on':''}" onclick="saToggleAtivo('${r.id}',this)" title="${r.ativo?'Desativar':'Ativar'}"></button>
+            </td>
+            <td>
+                <div class="acoes">
+                    <button class="btn-acao" onclick="saAbrirCardapio('${r.slug}')" title="Ver cardápio"><i class="fas fa-eye"></i></button>
+                    <button class="btn-acao" onclick="saEditarRest('${r.id}')" title="Editar"><i class="fas fa-pen"></i></button>
+                    <button class="btn-acao success" onclick="saEditarPgto('${r.id}')" title="Pagamento"><i class="fas fa-credit-card"></i></button>
+                    <button class="btn-acao danger" onclick="saDeletarRest('${r.id}','${r.nome}')" title="Excluir"><i class="fas fa-trash"></i></button>
+                </div>
+            </td>
+        </tr>`).join('')}
+        </tbody>
+    </table>`;
+}
+
+// ── TOGGLE ATIVO ─────────────────────────────────────────────
+async function saToggleAtivo(id, btn) {
+    const rest = _restaurantes.find(r => r.id === id);
+    if (!rest) return;
+    const novoAtivo = !rest.ativo;
+    try {
+        await saFetch('PATCH', `restaurantes?id=eq.${id}`, { ativo: novoAtivo });
+        rest.ativo = novoAtivo;
+        btn.classList.toggle('on', novoAtivo);
+        saCalcularMetricas();
+        toast(novoAtivo ? '✓ Restaurante ativado' : 'Restaurante desativado', novoAtivo);
+    } catch(e) {
+        toast('Erro: ' + e.message, false);
+    }
+}
+
+// ── MODAL RESTAURANTE ─────────────────────────────────────────
+function saAbrirModalRest(id) {
+    _editRestId = id || null;
+    const modal = document.getElementById('modal-rest');
+    const titulo = document.getElementById('modal-rest-titulo');
+    const btnTxt = document.getElementById('modal-rest-btn');
+
+    if (id) {
+        const r = _restaurantes.find(x => x.id === id);
+        titulo.textContent = 'Editar Restaurante';
+        btnTxt.innerHTML = '<i class="fas fa-check"></i> Salvar Alterações';
+        document.getElementById('m-nome').value  = r.nome || '';
+        document.getElementById('m-slug').value  = r.slug || '';
+        document.getElementById('m-plano').value = r.pgto?.plano || 'trial';
+        document.getElementById('m-email').value = '';
+        document.getElementById('m-senha').value = '';
+        document.getElementById('m-senha2').value = '';
+        document.getElementById('m-obs').value   = r.obs || '';
+        // Esconder campos de senha em edição
+        document.getElementById('m-email').closest('.campo').style.display = 'none';
+        document.getElementById('m-senha').closest('.campo').style.display = 'none';
+        document.getElementById('m-senha2').closest('.campo').style.display = 'none';
+    } else {
+        titulo.textContent = 'Novo Restaurante';
+        btnTxt.innerHTML = '<i class="fas fa-check"></i> Criar Restaurante';
+        ['m-nome','m-slug','m-email','m-senha','m-senha2','m-obs'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.value = ''; el.closest('.campo').style.display = ''; }
+        });
+    }
+
+    document.getElementById('modal-rest-erro').style.display = 'none';
+    document.getElementById('modal-rest-ok').style.display   = 'none';
+    modal.classList.add('open');
+}
+
+function saFecharModalRest() {
+    document.getElementById('modal-rest').classList.remove('open');
+    _editRestId = null;
+}
+
+function saEditarRest(id) { saAbrirModalRest(id); }
+
+async function saSalvarRest() {
+    const btn  = document.getElementById('modal-rest-btn');
+    const erro = document.getElementById('modal-rest-erro');
+    const ok   = document.getElementById('modal-rest-ok');
+    erro.style.display = 'none';
+    ok.style.display   = 'none';
+
+    const nome  = document.getElementById('m-nome').value.trim();
+    const slug  = document.getElementById('m-slug').value.trim();
+    const plano = document.getElementById('m-plano').value;
+    const obs   = document.getElementById('m-obs').value.trim();
+
+    if (!nome) { erro.textContent = 'Informe o nome do restaurante.'; erro.style.display = 'block'; return; }
+    if (!slug) { erro.textContent = 'Informe o slug.'; erro.style.display = 'block'; return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Salvando...';
+
+    try {
+        if (_editRestId) {
+            // Editar existente
+            await saFetch('PATCH', `restaurantes?id=eq.${_editRestId}`, { nome, slug, obs });
+            await saFetch('PATCH', `pagamentos?restaurante_id=eq.${_editRestId}`, { plano });
+            const r = _restaurantes.find(x => x.id === _editRestId);
+            if (r) { r.nome = nome; r.slug = slug; r.obs = obs; r.pgto.plano = plano; }
+            ok.textContent = '✓ Restaurante atualizado com sucesso!';
+            ok.style.display = 'block';
+            saRenderRestaurantes(_restaurantes);
+            toast('✓ Restaurante atualizado!');
+            setTimeout(saFecharModalRest, 1500);
+        } else {
+            // Criar novo
+            const email = document.getElementById('m-email').value.trim();
+            const senha = document.getElementById('m-senha').value;
+            const senha2 = document.getElementById('m-senha2').value;
+            if (!email) { erro.textContent = 'Informe o e-mail.'; erro.style.display = 'block'; btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Criar Restaurante'; return; }
+            if (!senha || senha.length < 6) { erro.textContent = 'A senha precisa ter pelo menos 6 caracteres.'; erro.style.display = 'block'; btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Criar Restaurante'; return; }
+            if (senha !== senha2) { erro.textContent = 'As senhas não coincidem.'; erro.style.display = 'block'; btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Criar Restaurante'; return; }
+
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Criando restaurante...';
+
+            // 1. Criar restaurante
+            const restRows = await saFetch('POST', 'restaurantes', { nome, slug, ativo: true, obs });
+            const restId = restRows[0].id;
+
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Criando usuário...';
+
+            // 2. Criar usuário no Auth (via Admin API — precisa de service_role key)
+            // Como usamos anon key, criamos o usuário via signup e depois vinculamos
+            const signupR = await fetch(SA_URL + '/auth/v1/signup', {
+                method: 'POST',
+                headers: { 'apikey': SA_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password: senha })
+            });
+            const signupD = await signupR.json();
+            if (!signupR.ok) throw new Error(signupD.message || signupD.msg || 'Erro ao criar usuário');
+            const userId = signupD.user?.id || signupD.id;
+            if (!userId) throw new Error('Não foi possível obter o ID do usuário criado.');
+
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Finalizando...';
+
+            // 3. Vincular usuário ao restaurante
+            await saFetch('POST', 'usuarios', { id: userId, restaurante_id: restId, nome, role: 'admin' });
+
+            // 4. Criar registro de pagamento
+            const venc = new Date(); venc.setDate(venc.getDate() + 7);
+            await saFetch('POST', 'pagamentos', {
+                restaurante_id: restId, plano, status_pgto: 'trial',
+                vencimento: venc.toISOString().split('T')[0], valor: 0
+            });
+
+            ok.textContent = `✓ Restaurante criado! Login: ${email}`;
+            ok.style.display = 'block';
+            toast('✓ Restaurante criado com sucesso!');
+            await saCarregarRestaurantes();
+            saCalcularMetricas();
+            setTimeout(saFecharModalRest, 2000);
+        }
+    } catch(e) {
+        let msg = e.message;
+        try { const p = JSON.parse(msg); msg = p.message || p.error_description || msg; } catch {}
+        erro.textContent = msg;
+        erro.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = _editRestId
+            ? '<i class="fas fa-check"></i> Salvar Alterações'
+            : '<i class="fas fa-check"></i> Criar Restaurante';
+    }
+}
+
+async function saDeletarRest(id, nome) {
+    if (!confirm(`Tem certeza que deseja excluir "${nome}"?\n\nIsso vai remover o restaurante e todos os dados permanentemente.`)) return;
+    try {
+        await saFetch('DELETE', `restaurantes?id=eq.${id}`);
+        _restaurantes = _restaurantes.filter(r => r.id !== id);
+        saRenderRestaurantes(_restaurantes);
+        saCalcularMetricas();
+        toast('Restaurante excluído.');
+    } catch(e) { toast('Erro: ' + e.message, false); }
+}
+
+function saAbrirCardapio(slug) {
+    if (!slug) { toast('Slug não configurado.', false); return; }
+    window.open(window.location.origin + '?r=' + slug, '_blank');
+}
+
+// ── PEDIDOS ──────────────────────────────────────────────────
+async function saCarregarPedidos(restId) {
+    const el = document.getElementById('tabela-pedidos-body');
+    el.innerHTML = '<div class="loading"><i class="fas fa-circle-notch fa-spin" style="font-size:24px;color:var(--accent);"></i><span>Carregando pedidos...</span></div>';
+    try {
+        let path = 'pedidos?select=*&order=criado_em.desc&limit=100';
+        if (restId) path += `&restaurante_id=eq.${restId}`;
+        const pedidos = await saFetch('GET', path);
+
+        // Criar mapa de nomes de restaurantes
+        const nomeMap = {};
+        _restaurantes.forEach(r => { nomeMap[r.id] = r.nome; });
+
+        if (!pedidos || !pedidos.length) {
+            el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-receipt"></i></div>Nenhum pedido encontrado.</div>';
+            return;
+        }
+
+        const statusColor = { analise:'#f59e0b', preparo:'#3b82f6', pronto:'#8b5cf6', entrega:'#e30613', finalizado:'#22c55e', cancelado:'#6b7280' };
+
+        el.innerHTML = `<table>
+            <thead><tr>
+                <th>Pedido</th>
+                <th>Restaurante</th>
+                <th>Cliente</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Data</th>
+            </tr></thead>
+            <tbody>
+            ${pedidos.map(p => `<tr>
+                <td><strong style="font-family:'Syne',sans-serif;">${p.numero||p.id.slice(0,8)}</strong></td>
+                <td><span style="font-size:13px;">${nomeMap[p.restaurante_id]||'—'}</span></td>
+                <td>
+                    <div style="font-size:13px;font-weight:600;">${p.cliente||'—'}</div>
+                    <div style="font-size:11px;color:var(--muted);">${p.tipo||''}</div>
+                </td>
+                <td><strong style="font-family:'Syne',sans-serif;">${money(p.total)}</strong></td>
+                <td><span style="background:${statusColor[p.status]||'#6b7280'}22;color:${statusColor[p.status]||'#6b7280'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">${p.status||'—'}</span></td>
+                <td style="font-size:12px;color:var(--muted);">${p.criado_em ? new Date(p.criado_em).toLocaleString('pt-BR') : '—'}</td>
+            </tr>`).join('')}
+            </tbody>
+        </table>`;
+    } catch(e) {
+        el.innerHTML = `<div class="vazio"><div class="vazio-icon">⚠️</div>Erro: ${e.message}</div>`;
+    }
+}
+
+// ── PAGAMENTOS ───────────────────────────────────────────────
+async function saCarregarPagamentos() {
+    const el = document.getElementById('tabela-pgto-body');
+    try {
+        const pgtos = await saFetch('GET', 'pagamentos?select=*&order=vencimento.asc');
+        const nomeMap = {};
+        _restaurantes.forEach(r => { nomeMap[r.id] = r.nome; });
+
+        if (!pgtos || !pgtos.length) {
+            el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-credit-card"></i></div>Nenhum registro de pagamento.</div>';
+            return;
+        }
+
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+
+        el.innerHTML = `<table>
+            <thead><tr>
+                <th>Restaurante</th>
+                <th>Plano</th>
+                <th>Status</th>
+                <th>Vencimento</th>
+                <th>Valor</th>
+                <th>Observação</th>
+                <th>Ações</th>
+            </tr></thead>
+            <tbody>
+            ${pgtos.map(p => {
+                const venc = p.vencimento ? new Date(p.vencimento) : null;
+                const vencido = venc && venc < hoje;
+                return `<tr>
+                    <td><strong style="font-size:13px;">${nomeMap[p.restaurante_id]||'—'}</strong></td>
+                    <td><span style="font-size:13px;text-transform:capitalize;color:var(--muted);">${p.plano||'—'}</span></td>
+                    <td><span class="badge ${p.status_pgto==='pago'?'pago':p.status_pgto==='trial'?'trial':'pendente'}">${p.status_pgto||'pendente'}</span></td>
+                    <td style="font-size:13px;${vencido?'color:var(--red);font-weight:700;':'color:var(--muted);'}">
+                        ${venc ? venc.toLocaleDateString('pt-BR') : '—'}
+                        ${vencido ? ' <span style="font-size:10px;">(vencido)</span>' : ''}
+                    </td>
+                    <td><strong style="font-family:'Syne',sans-serif;">${money(p.valor)}</strong></td>
+                    <td style="font-size:12px;color:var(--muted);">${p.obs||'—'}</td>
+                    <td>
+                        <button class="btn-acao success" onclick="saEditarPgto('${p.restaurante_id}')" title="Editar"><i class="fas fa-pen"></i></button>
+                    </td>
+                </tr>`;
+            }).join('')}
+            </tbody>
+        </table>`;
+    } catch(e) {
+        el.innerHTML = `<div class="vazio"><div class="vazio-icon">⚠️</div>Erro: ${e.message}</div>`;
+    }
+}
+
+function saEditarPgto(restId) {
+    const rest = _restaurantes.find(r => r.id === restId);
+    if (!rest) return;
+    document.getElementById('modal-pgto-nome').textContent = rest.nome;
+    document.getElementById('mpgto-rest-id').value = restId;
+    document.getElementById('mpgto-status').value = rest.pgto?.status_pgto || 'pendente';
+    document.getElementById('mpgto-plano').value  = rest.pgto?.plano || 'trial';
+    document.getElementById('mpgto-venc').value   = rest.pgto?.vencimento || '';
+    document.getElementById('mpgto-valor').value  = rest.pgto?.valor || '';
+    document.getElementById('mpgto-obs').value    = rest.pgto?.obs || '';
+    document.getElementById('modal-pgto').classList.add('open');
+}
+
+function saFecharModalPgto() {
+    document.getElementById('modal-pgto').classList.remove('open');
+}
+
+async function saSalvarPgto() {
+    const restId = document.getElementById('mpgto-rest-id').value;
+    const dados = {
+        status_pgto: document.getElementById('mpgto-status').value,
+        plano:       document.getElementById('mpgto-plano').value,
+        vencimento:  document.getElementById('mpgto-venc').value || null,
+        valor:       parseFloat(document.getElementById('mpgto-valor').value) || 0,
+        obs:         document.getElementById('mpgto-obs').value.trim()
+    };
+    try {
+        // Upsert pagamento
+        await saFetch('POST', 'pagamentos?on_conflict=restaurante_id',
+            { ...dados, restaurante_id: restId });
+        const r = _restaurantes.find(x => x.id === restId);
+        if (r) r.pgto = { ...r.pgto, ...dados };
+        saFecharModalPgto();
+        saCarregarPagamentos();
+        saRenderRestaurantes(_restaurantes);
+        saCalcularMetricas();
+        toast('✓ Pagamento atualizado!');
+    } catch(e) { toast('Erro: ' + e.message, false); }
+}
+
+// ── ABAS ─────────────────────────────────────────────────────
+function saAba(id, btn) {
+    document.querySelectorAll('.aba').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.secao').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sec-' + id).classList.add('active');
+    if (id === 'pedidos') saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value);
+    if (id === 'pagamentos') saCarregarPagamentos();
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+(async function init() {
+    const temSessao = await saVerificarSessao();
+    if (temSessao) mostrarApp();
+    // else login fica visível por padrão
+})();
+</script>
+</body>
+</html>
