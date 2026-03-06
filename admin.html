@@ -3137,7 +3137,9 @@ function inicializarSistema() {
     }, 60000);  // Atualizar a cada 60 segundos (1 minuto) ao invés de 30
 
     // 🔄 POLLING em tempo real: atualizar pedidos a cada 5 segundos
+    console.log('[ADMIN] Iniciando polling de pedidos a cada 5 segundos...');
     setInterval(function() {
+        console.log('[ADMIN] Polling... chamando supaCarregarPedidos()');
         supaCarregarPedidos();
     }, 5000);
     
@@ -3147,14 +3149,18 @@ function inicializarSistema() {
 
 // Inicialização: verificar sessão salva primeiro
 async function iniciarApp() {
+    console.log('[ADMIN] iniciarApp() iniciada');
     const temSessao = await authVerificarSessao();
     if (temSessao) {
+        console.log('[ADMIN] ✅ Sessão encontrada, inicializando...');
         esconderTelaLogin();
         inicializarSistema();
         supaCarregarCardapio();
         supaCarregarConfigs();
+        console.log('[ADMIN] Carregando pedidos iniciais...');
         supaCarregarPedidos();
     } else {
+        console.log('[ADMIN] ❌ Sem sessão, mostrando login');
         mostrarTelaLogin();
     }
 }
@@ -6235,7 +6241,10 @@ async function supaCarregarCardapio() {
 
 async function supaCarregarPedidos() {
     try {
+        console.log('[SUPA] Carregando pedidos do Supabase...');
         const rows = await supaGet('pedidos', 'status=neq.finalizado&status=neq.cancelado&order=criado_em.desc');
+        console.log('[SUPA] ✅ Pedidos recebidos:', rows ? rows.length : 0);
+        
         if (rows && rows.length) {
             const mapped = rows.map(r => {
                 // Parse itens se for string JSON
