@@ -3126,6 +3126,8 @@ function inicializarSistema() {
     renderProds();
     renderOrders();
     aplicarStatusLoja();
+    cfgAplicarLimpeza();  // 🧹 Aplicar limpeza ao iniciar
+    
     // Atualiza só os textos de tempo nos cards a cada 30s (sem re-renderizar tudo)
     setInterval(function() {
         document.querySelectorAll('.order-time[data-ts]').forEach(function(el) {
@@ -8335,20 +8337,38 @@ function cfgAplicarLimpeza() {
     
     var modo = cfg.limparModo || 'horario';
     var agora = new Date();
-    var deveParar = false;
+    var deveRemover = false;
     
     if (modo === 'horario') {
+        // Modo horário: remove se passou da hora configurada
         var horaConfiguracao = (cfg.limparHorario || '00:00').split(':');
         var horaConfig = parseInt(horaConfiguracao[0])*60 + parseInt(horaConfiguracao[1]);
         var horaAtual = agora.getHours()*60 + agora.getMinutes();
         
-        // Se passou da hora configurada hoje, faz a limpeza
-        deveParar = (horaAtual >= horaConfig);
+        // Se passou da hora configurada, marca para remover pedidos finalizados
+        deveRemover = (horaAtual >= horaConfig);
+    } else if (modo === 'minutos') {
+        // Modo minutos: sempre verifica e remove
+        deveRemover = true;
+    }
+    
+    if (!deveRemover) return;
+    
+    // Salvar pedidos finalizados no histórico ANTES de remover
+    var pedidosFinalizados = orders.filter(function(o) { return o.status === 'finalizado'; });
+    pedidosFinalizados.forEach(function(o) { histRegistrar(o); });
+    
+    // Aplicar a remoção conforme o modo
+    if (modo === 'horario') {
+        // Remove TODOS os pedidos finalizados se passou da hora
+        orders = orders.filter(function(o) { return o.status !== 'finalizado'; });
+        console.log('[Limpeza] Removidos ' + pedidosFinalizados.length + ' pedidos finalizados (modo horário)');
     } else if (modo === 'minutos') {
         var minutosParar = cfg.limparMinutos || 30;
         var agora_ms = agora.getTime();
         
         // Remove pedidos finalizados que ultrapassaram o tempo
+        var antes = orders.length;
         orders = orders.filter(function(o) {
             if (o.status === 'finalizado' && o.finalizadoEm) {
                 var finalizado_ms = new Date(o.finalizadoEm).getTime();
@@ -8357,12 +8377,13 @@ function cfgAplicarLimpeza() {
             }
             return true;  // Mantém pedidos não-finalizados
         });
-        deveParar = true;  // Sempre renderiza se em modo de minutos
+        var removidos = antes - orders.length;
+        if (removidos > 0) console.log('[Limpeza] Removidos ' + removidos + ' pedidos finalizados (modo minutos)');
     }
     
-    if (deveParar) {
-        renderOrders();  // Renderiza se removeu pedidos ou se é horário
-    }
+    // Atualizar localStorage e renderizar
+    localStorage.setItem('f_orders', JSON.stringify(orders));
+    renderOrders();
 }
 
 // Verifica limpeza a cada minuto
