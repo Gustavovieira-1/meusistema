@@ -444,21 +444,6 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 #login-usuario-nome:hover { color:#e30613; }
 
     </style>
-<script>
-// Carregar nome da loja imediatamente para evitar piscar "Meu Restaurante"
-(function() {
-    try {
-        var cfg = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
-        if (cfg.nomeMarca) {
-            document.addEventListener('DOMContentLoaded', function() {
-                var el = document.getElementById('sidebar-nome-loja');
-                if (el) el.textContent = cfg.nomeMarca;
-                document.title = cfg.nomeMarca + ' — Admin';
-            });
-        }
-    } catch(e) {}
-})();
-</script>
 </head>
 <body>
 <!-- ── TELA DE LOGIN ── -->
@@ -498,6 +483,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             </div>
             <div>
                 <div id="sidebar-nome-loja" style="font-weight:800; font-size:15px; color:#111; letter-spacing:-0.3px; line-height:1.1;">Meu Restaurante</div>
+                <script>try{var _cn=JSON.parse(localStorage.getItem('f_cfg_loja')||'{}');if(_cn.nomeMarca){document.getElementById('sidebar-nome-loja').textContent=_cn.nomeMarca;document.title=_cn.nomeMarca+' — Admin';}}catch(e){}</script>
                 <div style="font-size:11px; color:#aaa; font-weight:400;">Painel Admin</div>
             </div>
         </div>
