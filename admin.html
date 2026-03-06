@@ -6297,8 +6297,7 @@ function tocarSomNotificacao() {
     countRepeticoes = 0;
     
     // Carregar o arquivo de som
-    audio.src = './som-notificacao.mp3';
-    
+audio.src = 'https://oijcggqfcgjkgcaymjqx.supabase.co/storage/v1/object/sign/Audios/som-notificacao%20(1).mp3?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85MTdlOTE2Yi04ODdiLTQ0NmUtOWRiOC1kMDBkN2FjMDE5NDQiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJBdWRpb3Mvc29tLW5vdGlmaWNhY2FvICgxKS5tcDMiLCJpYXQiOjE3NzI4MzMxNzUsImV4cCI6MTgwNDM2OTE3NX0.oJmUOy-JBiQbkSK3r3NsdBW0Cx6ReUs9fgwEDhTuWZA';    
     // Quando terminar de tocar, tocar novamente (segunda vez) se for a primeira
     audio.onended = function() {
         countRepeticoes++;
