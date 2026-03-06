@@ -444,6 +444,21 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 #login-usuario-nome:hover { color:#e30613; }
 
     </style>
+<script>
+// Carregar nome da loja imediatamente para evitar piscar "Meu Restaurante"
+(function() {
+    try {
+        var cfg = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
+        if (cfg.nomeMarca) {
+            document.addEventListener('DOMContentLoaded', function() {
+                var el = document.getElementById('sidebar-nome-loja');
+                if (el) el.textContent = cfg.nomeMarca;
+                document.title = cfg.nomeMarca + ' — Admin';
+            });
+        }
+    } catch(e) {}
+})();
+</script>
 </head>
 <body>
 <!-- ── TELA DE LOGIN ── -->
@@ -611,7 +626,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                 <div style="font-size:13px; font-weight:700; color:#1a1a1a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Administrador</div>
                 <div style="font-size:11px; color:#aaa;">Acesso: Dono</div>
             </div>
-            <i class="fas fa-right-from-bracket" style="color:#ccc; font-size:14px; cursor:pointer;" title="Sair" onmouseover="this.style.color='#e30613'" onmouseout="this.style.color='#ccc'"></i>
+            <i class="fas fa-right-from-bracket" style="color:#ccc; font-size:14px; cursor:pointer;" title="Sair" onclick="authLogout()" onmouseover="this.style.color='#e30613'" onmouseout="this.style.color='#ccc'"></i>
         </div>
 
         <div style="margin-top:12px; text-align:center; font-size:10px; color:#ccc;">
@@ -620,16 +635,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             <a href="#" style="color:#ccc; text-decoration:none;">Privacidade</a>
             <div style="margin-top:3px;">v1.0.0</div>
         </div>
-        <!-- Usuário logado + Logout -->
-        <div style="margin-top:10px; padding:10px 14px; background:rgba(255,255,255,.06); border-radius:10px; display:flex; align-items:center; justify-content:space-between;">
-            <div>
-                <div style="font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px;">Logado como</div>
-                <div id="login-usuario-nome" style="font-size:12px; color:#e2e8f0; font-weight:600; margin-top:2px;">—</div>
-            </div>
-            <button onclick="authLogout()" title="Sair" style="background:rgba(255,255,255,.1); border:none; color:#94a3b8; padding:7px 10px; border-radius:8px; cursor:pointer; font-size:12px; font-family:inherit;">
-                <i class="fas fa-sign-out-alt"></i>
-            </button>
-        </div>
+
     </div>
 
 </div>
