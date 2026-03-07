@@ -6232,9 +6232,10 @@ async function supaCarregarCardapio() {
             status: p.ativo ? 'ativo' : 'inativo', active: p.ativo, _supa: true
         }));
         db.comps = (comps || []).map(c => ({ id: c.id, title: c.titulo, type: c.tipo, options: c.opcoes || [], _supa: true }));
-        localStorage.setItem('f_cats',  JSON.stringify(db.categories));
-        localStorage.setItem('f_prods', JSON.stringify(db.prods));
-        localStorage.setItem('f_comps', JSON.stringify(db.comps));
+        // Salvar sem imagens para evitar quota exceeded
+        try { localStorage.setItem('f_cats', JSON.stringify(db.categories)); } catch(e) {}
+        try { localStorage.setItem('f_prods', JSON.stringify(db.prods.map(p => ({...p, img: ''})))); } catch(e) {}
+        try { localStorage.setItem('f_comps', JSON.stringify(db.comps)); } catch(e) {}
         renderCategories(); renderProds(); renderComps(); cardapioSync();
         console.log('[Supabase] Cardápio:', db.categories.length, 'cats,', db.prods.length, 'prods');
     } catch(e) {
