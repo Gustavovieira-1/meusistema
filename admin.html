@@ -2105,38 +2105,65 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
     <!-- IMPRESSORA -->
     <div id="sec-impressao" class="section">
 
-        <!-- Barra superior: botões de modo + salvar -->
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:12px;">
-            <div style="display:flex; gap:8px;">
-                <button class="imp-modo-btn active" id="imp-modo-pc" onclick="impSetModo('pc',this)">
-                    <i class="fas fa-print"></i> Imprimir pelo Computador
-                </button>
-                <button class="imp-modo-btn" id="imp-modo-cel" onclick="impSetModo('cel',this)">
-                    <i class="fas fa-mobile-screen"></i> Imprimir pelo Celular/Tablet
-                </button>
-            </div>
-            <button onclick="impSalvar()" id="imp-btn-salvar" style="background:#16a34a; border:none; color:white; padding:11px 24px; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:8px;">
-                <i class="fas fa-floppy-disk"></i> Salvar configurações
-            </button>
-        </div>
+        <!-- STATUS DO ASSISTENTE -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px; align-items:start;">
 
-        <!-- Seção: Assistente / Impressão automática -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-bottom:28px; align-items:start;">
-            <!-- Esquerda: assistente -->
-            <div>
+            <!-- Esquerda: status + download -->
+            <div style="background:white; border:1.5px solid #f1f5f9; border-radius:14px; padding:20px;">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
                     <div style="font-size:14px; font-weight:800; color:#1e293b;">Assistente de Impressão</div>
-                    <span id="imp-assistente-badge" style="background:#dcfce7; color:#16a34a; font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px; border:1.5px solid #bbf7d0;">● Aberta</span>
+                    <span id="imp-assistente-badge" style="background:#fecdd3; color:#e30613; font-size:10px; font-weight:800; padding:3px 10px; border-radius:20px; border:1.5px solid #fca5a5;">● Offline</span>
                 </div>
-                <div style="font-size:12px; color:#94a3b8; margin-bottom:14px; line-height:1.6;">Instale o assistente para nosso sistema se comunicar com a sua impressora.</div>
-                <button onclick="impBaixarAssistente()" style="background:#e30613; border:none; color:white; padding:9px 18px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:7px;">
-                    <i class="fas fa-download"></i> Baixar
+                <div id="imp-status-txt" style="font-size:12px; color:#94a3b8; margin-bottom:16px; line-height:1.6;">Verificando conexão com o assistente...</div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button onclick="impVerificarStatus()" style="background:#f1f5f9; border:1.5px solid #e2e8f0; color:#334155; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fas fa-rotate"></i> Verificar
+                    </button>
+                    <button onclick="impTestar()" style="background:#16a34a; border:none; color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fas fa-print"></i> Imprimir Teste
+                    </button>
+                    <a id="imp-btn-baixar" href="#" download style="background:#e30613; border:none; color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
+                        <i class="fas fa-download"></i> Baixar .exe
+                    </a>
+                </div>
+            </div>
+
+            <!-- Direita: configurar impressora -->
+            <div style="background:white; border:1.5px solid #f1f5f9; border-radius:14px; padding:20px;">
+                <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:4px;">Impressora</div>
+                <div style="font-size:12px; color:#94a3b8; margin-bottom:14px;">Selecione qual impressora receberá os pedidos.</div>
+
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <select id="imp-sel-sistema" style="flex:1; padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:12px; color:#1e293b; font-family:inherit; outline:none; background:white;" onchange="document.getElementById('imp-modal-nome').value=this.value">
+                        <option value="">Clique em Buscar...</option>
+                    </select>
+                    <button onclick="impBuscarImpressoras()" id="imp-btn-buscar" style="background:#f1f5f9; border:1.5px solid #e2e8f0; border-radius:8px; padding:9px 14px; font-size:12px; font-weight:700; color:#334155; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:6px;">
+                        <i class="fas fa-magnifying-glass"></i> Buscar
+                    </button>
+                </div>
+
+                <input id="imp-modal-nome" type="text" placeholder="Ou digitar o nome manualmente..." style="width:100%; padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:12px; color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box; margin-bottom:10px;" onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
+
+                <div style="display:flex; gap:8px; margin-bottom:14px;">
+                    <button class="imp-largura-btn" onclick="impSetLargura('58',this)" id="imp-larg-58">58mm</button>
+                    <button class="imp-largura-btn active" onclick="impSetLargura('80',this)" id="imp-larg-80">80mm</button>
+                </div>
+                <input type="hidden" id="imp-largura" value="80">
+
+                <button onclick="impSalvarImpressora()" style="background:#e30613; border:none; color:white; padding:9px 18px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:7px;">
+                    <i class="fas fa-floppy-disk"></i> Salvar
                 </button>
             </div>
-            <!-- Direita: toggles -->
-            <div style="display:flex; flex-direction:column; gap:14px; padding-top:4px;">
+        </div>
+
+        <!-- TOGGLES + LOG -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px; align-items:start;">
+
+            <!-- Toggles -->
+            <div style="background:white; border:1.5px solid #f1f5f9; border-radius:14px; padding:20px; display:flex; flex-direction:column; gap:14px;">
+                <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:2px;">Automações</div>
                 <label style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
-                    <span style="font-size:13px; color:#334155; font-weight:500;">Ativar uso do Assistente para impressão</span>
+                    <span style="font-size:13px; color:#334155; font-weight:500;">Ativar uso do Assistente</span>
                     <div class="imp-toggle" onclick="impToggle(this,'imp-ativar')"><div class="imp-toggle-thumb"></div></div>
                     <input type="checkbox" id="imp-ativar" style="display:none;" checked>
                 </label>
@@ -2151,109 +2178,53 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <input type="checkbox" id="imp-aceitar" style="display:none;" checked>
                 </label>
             </div>
-        </div>
 
-        <div style="border-top:1px solid #f1f5f9; margin-bottom:24px;"></div>
-
-        <!-- Lista de impressoras -->
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-bottom:28px; align-items:start;">
-            <div>
-                <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:4px;">Lista de impressoras</div>
-                <div style="font-size:12px; color:#94a3b8; margin-bottom:14px;">Gerencie suas impressoras configuradas para receber os pedidos.</div>
-                <button onclick="impNovaImpressora()" style="background:white; border:1.5px solid #e2e8f0; color:#334155; padding:9px 18px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:7px;">
-                    <i class="fas fa-plus" style="color:#e30613;"></i> Nova Impressora
+            <!-- Log -->
+            <div style="background:white; border:1.5px solid #f1f5f9; border-radius:14px; padding:20px;">
+                <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:10px;">Log de Impressões</div>
+                <div id="imp-log-box" style="background:#0f172a; color:#94a3b8; border-radius:8px; padding:12px; font-family:'Courier New',monospace; font-size:10px; line-height:1.7; max-height:130px; overflow-y:auto;">
+                    <span style="color:#60a5fa;">Aguardando conexão...</span>
+                </div>
+                <button onclick="document.getElementById('imp-log-box').innerHTML=''" style="margin-top:8px; background:#f1f5f9; border:1.5px solid #e2e8f0; color:#64748b; padding:6px 14px; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; font-family:inherit;">
+                    🗑️ Limpar
                 </button>
             </div>
-            <div id="imp-lista" style="display:flex; flex-direction:column; gap:10px;"></div>
         </div>
 
         <div style="border-top:1px solid #f1f5f9; margin-bottom:24px;"></div>
 
-        <!-- Configuração da notinha -->
+        <!-- CONFIGURAÇÃO DA NOTINHA -->
         <div style="display:grid; grid-template-columns:minmax(240px,320px) 1fr; gap:32px; align-items:start;">
-            <!-- Preview da comanda -->
             <div style="min-width:0; overflow:hidden;">
                 <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:4px;">Configuração da notinha</div>
                 <div style="font-size:12px; color:#94a3b8; margin-bottom:14px;">Defina suas preferências para as notas impressas dos pedidos.</div>
-                <!-- Preview visual -->
                 <div id="imp-preview-comanda" style="background:#f0f4ff; border:1px solid #c7d2fe; border-radius:10px; padding:12px 14px; font-family:'Courier New',monospace; font-size:10px; color:#1e293b; line-height:1.6; white-space:pre; overflow-x:auto;"></div>
             </div>
-            <!-- Opções -->
             <div style="display:flex; flex-direction:column; gap:14px; padding-top:42px;">
-
-                <!-- Nome da loja -->
                 <div style="padding:14px; background:white; border:1.5px solid #f1f5f9; border-radius:10px;">
                     <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:8px;">Nome da loja na comanda</div>
                     <input id="imp-loja-nome" type="text" placeholder="Ex: Fogueiro Burger" oninput="impAtualizarPreview()" style="width:100%; padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
                 </div>
-
-                <!-- Largura do papel -->
                 <div style="padding:14px; background:white; border:1.5px solid #f1f5f9; border-radius:10px;">
-                    <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:8px;">Largura do papel</div>
-                    <div style="display:flex; gap:8px;">
-                        <button class="imp-largura-btn" onclick="impSetLargura('58',this)">58mm</button>
-                        <button class="imp-largura-btn active" onclick="impSetLargura('80',this)">80mm</button>
-                    </div>
-                    <input type="hidden" id="imp-largura" value="80">
-                </div>
-
-                <!-- Campos da notinha -->
-                <div style="padding:14px; background:white; border:1.5px solid #f1f5f9; border-radius:10px;">
-                    <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:12px;">Campos exibidos na notinha</div>
+                    <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:8px;">Campos exibidos na notinha</div>
                     <div style="display:flex; flex-direction:column; gap:10px;">
-                        <div style="display:flex; align-items:center; justify-content:space-between;">
-                            <span style="font-size:13px; color:#334155;">Código do pedido</span>
-                            <div class="imp-toggle" id="imp-tog-codigo" onclick="impToggle(this,'imp-show-codigo')"><div class="imp-toggle-thumb"></div></div>
-                            <input type="checkbox" id="imp-show-codigo" checked style="display:none;">
-                        </div>
-                        <div style="display:flex; align-items:center; justify-content:space-between;">
-                            <span style="font-size:13px; color:#334155;">Data e horário</span>
-                            <div class="imp-toggle" id="imp-tog-data" onclick="impToggle(this,'imp-show-data')"><div class="imp-toggle-thumb"></div></div>
-                            <input type="checkbox" id="imp-show-data" checked style="display:none;">
-                        </div>
-                        <div style="display:flex; align-items:center; justify-content:space-between;">
-                            <span style="font-size:13px; color:#334155;">Previsão de entrega</span>
-                            <div class="imp-toggle" id="imp-tog-previsao" onclick="impToggle(this,'imp-show-previsao')"><div class="imp-toggle-thumb"></div></div>
-                            <input type="checkbox" id="imp-show-previsao" checked style="display:none;">
-                        </div>
-                        <div style="display:flex; align-items:center; justify-content:space-between;">
-                            <span style="font-size:13px; color:#334155;">Nº de pedidos na loja</span>
-                            <div class="imp-toggle" id="imp-tog-totloja" onclick="impToggle(this,'imp-show-totloja')"><div class="imp-toggle-thumb"></div></div>
-                            <input type="checkbox" id="imp-show-totloja" checked style="display:none;">
-                        </div>
-                        <div style="display:flex; align-items:center; justify-content:space-between;">
-                            <span style="font-size:13px; color:#334155;">Celular do cliente</span>
-                            <div class="imp-toggle" id="imp-tog-celular" onclick="impToggle(this,'imp-show-celular')"><div class="imp-toggle-thumb"></div></div>
-                            <input type="checkbox" id="imp-show-celular" checked style="display:none;">
-                        </div>
-                        <div style="display:flex; align-items:center; justify-content:space-between;">
-                            <span style="font-size:13px; color:#334155;">Endereço completo</span>
-                            <div class="imp-toggle" id="imp-tog-endereco" onclick="impToggle(this,'imp-show-endereco')"><div class="imp-toggle-thumb"></div></div>
-                            <input type="checkbox" id="imp-show-endereco" checked style="display:none;">
-                        </div>
-                        <div style="display:flex; align-items:center; justify-content:space-between;">
-                            <span style="font-size:13px; color:#334155;">Subtotal e taxas</span>
-                            <div class="imp-toggle" id="imp-tog-subtotal" onclick="impToggle(this,'imp-show-subtotal')"><div class="imp-toggle-thumb"></div></div>
-                            <input type="checkbox" id="imp-show-subtotal" checked style="display:none;">
-                        </div>
-                        <div style="display:flex; align-items:center; justify-content:space-between;">
-                            <span style="font-size:13px; color:#334155;">Forma de pagamento</span>
-                            <div class="imp-toggle" id="imp-tog-pgto" onclick="impToggle(this,'imp-show-pgto')"><div class="imp-toggle-thumb"></div></div>
-                            <input type="checkbox" id="imp-show-pgto" checked style="display:none;">
-                        </div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13px; color:#334155;">Código do pedido</span><div class="imp-toggle" id="imp-tog-codigo" onclick="impToggle(this,'imp-show-codigo')"><div class="imp-toggle-thumb"></div></div><input type="checkbox" id="imp-show-codigo" checked style="display:none;"></div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13px; color:#334155;">Data e horário</span><div class="imp-toggle" id="imp-tog-data" onclick="impToggle(this,'imp-show-data')"><div class="imp-toggle-thumb"></div></div><input type="checkbox" id="imp-show-data" checked style="display:none;"></div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13px; color:#334155;">Previsão de entrega</span><div class="imp-toggle" id="imp-tog-previsao" onclick="impToggle(this,'imp-show-previsao')"><div class="imp-toggle-thumb"></div></div><input type="checkbox" id="imp-show-previsao" checked style="display:none;"></div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13px; color:#334155;">Nº de pedidos na loja</span><div class="imp-toggle" id="imp-tog-totloja" onclick="impToggle(this,'imp-show-totloja')"><div class="imp-toggle-thumb"></div></div><input type="checkbox" id="imp-show-totloja" checked style="display:none;"></div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13px; color:#334155;">Celular do cliente</span><div class="imp-toggle" id="imp-tog-celular" onclick="impToggle(this,'imp-show-celular')"><div class="imp-toggle-thumb"></div></div><input type="checkbox" id="imp-show-celular" checked style="display:none;"></div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13px; color:#334155;">Endereço completo</span><div class="imp-toggle" id="imp-tog-endereco" onclick="impToggle(this,'imp-show-endereco')"><div class="imp-toggle-thumb"></div></div><input type="checkbox" id="imp-show-endereco" checked style="display:none;"></div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13px; color:#334155;">Subtotal e taxas</span><div class="imp-toggle" id="imp-tog-subtotal" onclick="impToggle(this,'imp-show-subtotal')"><div class="imp-toggle-thumb"></div></div><input type="checkbox" id="imp-show-subtotal" checked style="display:none;"></div>
+                        <div style="display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13px; color:#334155;">Forma de pagamento</span><div class="imp-toggle" id="imp-tog-pgto" onclick="impToggle(this,'imp-show-pgto')"><div class="imp-toggle-thumb"></div></div><input type="checkbox" id="imp-show-pgto" checked style="display:none;"></div>
                     </div>
                 </div>
-
-                <!-- Rodapé -->
                 <div style="padding:14px; background:white; border:1.5px solid #f1f5f9; border-radius:10px;">
                     <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:8px;">Mensagem de rodapé</div>
                     <input id="imp-rodape" type="text" placeholder="Ex: Obrigado pela preferência! 😊" oninput="impAtualizarPreview()" style="width:100%; padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
                 </div>
-
-                <!-- Botões -->
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button onclick="impTestar()" style="background:#f1f5f9; border:1.5px solid #e2e8f0; border-radius:8px; padding:9px 18px; font-size:12px; font-weight:700; color:#334155; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:7px;">
-                        <i class="fas fa-print" style="color:#64748b;"></i> Testar impressão
+                <div style="display:flex; gap:8px;">
+                    <button onclick="impSalvar()" style="background:#16a34a; border:none; color:white; padding:9px 18px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:7px;">
+                        <i class="fas fa-floppy-disk"></i> Salvar configurações
                     </button>
                 </div>
             </div>
@@ -4324,6 +4295,11 @@ function impInicializar() {
     });
     impRenderLista();
     impAtualizarPreview();
+    // Verifica status do assistente ao abrir a aba
+    setTimeout(impVerificarStatus, 300);
+    // Reverifica a cada 30s
+    clearInterval(_impStatusTimer);
+    _impStatusTimer = setInterval(impVerificarStatus, 30000);
 }
 
 function impSalvar() {
@@ -4380,7 +4356,88 @@ function impSetLargura(v, btn) {
 }
 
 function impBaixarAssistente() {
-    alert('O assistente de impressão permite comunicação direta com sua impressora térmica.\n\nPara instalar:\n1. Baixe e instale o driver da sua impressora\n2. Configure-a como impressora padrão no Windows/Mac\n3. Use o botão "Nova Impressora" para vincular aqui');
+    showSec('impressao');
+}
+
+// ── PAINEL DO ASSISTENTE INTEGRADO ─────────────────────────────────────────
+var _impStatusTimer = null;
+
+function impAddLog(msg, tipo) {
+    var box = document.getElementById('imp-log-box');
+    if (!box) return;
+    var span = document.createElement('span');
+    var cores = { ok: '#4ade80', err: '#f87171', info: '#60a5fa' };
+    span.style.color = cores[tipo] || '#94a3b8';
+    var h = new Date().toLocaleTimeString('pt-BR');
+    span.textContent = '[' + h + '] ' + msg;
+    box.appendChild(span);
+    box.appendChild(document.createElement('br'));
+    box.scrollTop = box.scrollHeight;
+}
+
+function impVerificarStatus() {
+    var badge = document.getElementById('imp-assistente-badge');
+    var txt   = document.getElementById('imp-status-txt');
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', IMP_SERVIDOR + '/status', true);
+    xhr.timeout = 3000;
+    xhr.onload = function() {
+        try {
+            var d = JSON.parse(xhr.responseText);
+            if (d.ok) {
+                if (badge) { badge.style.background='#dcfce7'; badge.style.color='#16a34a'; badge.style.border='1.5px solid #bbf7d0'; badge.textContent='● Online'; }
+                if (txt) txt.textContent = 'Assistente rodando na porta ' + d.porta + ' · versão ' + d.versao;
+                impAddLog('Assistente online — porta ' + d.porta, 'ok');
+                // Carrega config salva
+                var xhr2 = new XMLHttpRequest();
+                xhr2.open('GET', IMP_SERVIDOR + '/', true);
+                xhr2.timeout = 3000;
+                xhr2.onload = function() {
+                    try {
+                        var d2 = JSON.parse(xhr2.responseText);
+                        if (d2.config && d2.config.impressora) {
+                            var el = document.getElementById('imp-modal-nome');
+                            if (el && !el.value) el.value = d2.config.impressora;
+                            var larg = parseInt(d2.config.largura) || 80;
+                            var b58 = document.getElementById('imp-larg-58');
+                            var b80 = document.getElementById('imp-larg-80');
+                            if (b58 && b80) {
+                                b58.className = larg===58 ? 'imp-largura-btn active' : 'imp-largura-btn';
+                                b80.className = larg===80 ? 'imp-largura-btn active' : 'imp-largura-btn';
+                            }
+                            var hid = document.getElementById('imp-largura');
+                            if (hid) hid.value = larg;
+                        }
+                    } catch(e) {}
+                };
+                xhr2.send();
+            }
+        } catch(e) {}
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+        if (badge) { badge.style.background='#fecdd3'; badge.style.color='#e30613'; badge.style.border='1.5px solid #fca5a5'; badge.textContent='● Offline'; }
+        if (txt) txt.textContent = 'Assistente não encontrado. Baixe e abra o programa abaixo.';
+        impAddLog('Assistente offline', 'err');
+    };
+    xhr.send();
+}
+
+function impSalvarImpressora() {
+    var nome  = (document.getElementById('imp-modal-nome')||{}).value||'';
+    var larg  = (document.getElementById('imp-largura')||{}).value||'80';
+    if (!nome.trim()) { impAddLog('Digite o nome da impressora!', 'err'); return; }
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', IMP_SERVIDOR + '/configurar', true);
+    xhr.setRequestHeader('Content-Type','application/json');
+    xhr.timeout = 4000;
+    xhr.onload = function() {
+        try {
+            var d = JSON.parse(xhr.responseText);
+            if (d.ok) { impAddLog('✓ Impressora salva: ' + nome, 'ok'); impFeedback('✓ Impressora salva!', '#16a34a'); }
+        } catch(e) {}
+    };
+    xhr.onerror = function() { impAddLog('Erro: assistente offline', 'err'); };
+    xhr.send(JSON.stringify({ impressora: nome, largura: parseInt(larg) }));
 }
 
 // ── LISTA DE IMPRESSORAS ───────────────────────────
@@ -4433,21 +4490,33 @@ function impPopularSelect() {
 }
 
 function impBuscarImpressoras() {
-    var btn = document.getElementById('imp-spin');
-    var status = document.getElementById('imp-busca-status');
-    if(btn) btn.classList.add('fa-spin');
-    if(status) status.textContent = 'Buscando impressoras no sistema...';
-    setTimeout(function(){
-        if(btn) btn.classList.remove('fa-spin');
-        if(status) status.innerHTML = '<span style="color:#16a34a;font-weight:700;">✓</span> Impressoras encontradas. Selecione no menu acima ou use a impressora padrão do sistema.';
-        // Tenta usar window.print para detectar — na prática adiciona as mais comuns
-        var sel = document.getElementById('imp-modal-sistema');
-        if(sel && sel.options.length <= 4) {
-            ['Impressora Térmica USB','Impressora Térmica Rede','Epson TM-T20','Bematech MP-4200 TH'].forEach(function(n){
-                var o = document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o);
-            });
-        }
-    }, 1200);
+    var btn = document.getElementById('imp-btn-buscar');
+    var sel = document.getElementById('imp-sel-sistema');
+    if (btn) btn.innerHTML = '<i class="fas fa-rotate fa-spin"></i> Buscando...';
+    impAddLog('Buscando impressoras...', 'info');
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', IMP_SERVIDOR + '/impressoras', true);
+    xhr.timeout = 6000;
+    xhr.onload = function() {
+        if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar';
+        try {
+            var d = JSON.parse(xhr.responseText);
+            if (sel) {
+                sel.innerHTML = '<option value="">Selecione a impressora...</option>';
+                (d.impressoras||[]).forEach(function(n) {
+                    var o = document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o);
+                });
+                sel.onchange = function() { if(sel.value) { var el=document.getElementById('imp-modal-nome'); if(el) el.value=sel.value; } };
+            }
+            impAddLog('Encontradas ' + (d.impressoras||[]).length + ' impressoras', 'ok');
+            if (!(d.impressoras||[]).length) impAddLog('Nenhuma encontrada. Verifique se o assistente está rodando.', 'err');
+        } catch(e) { impAddLog('Erro ao buscar: ' + e.message, 'err'); }
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+        if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar';
+        impAddLog('Assistente offline. Baixe e abra o programa.', 'err');
+    };
+    xhr.send();
 }
 
 function impFecharModal() {
