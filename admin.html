@@ -6370,8 +6370,14 @@ async function authLogin(email, senha) {
 }
 
 async function authGetRestaurante(token) {
-    // Busca o restaurante_id vinculado ao usuário logado
-    const r = await fetch(SUPA_URL + '/rest/v1/usuarios?select=restaurante_id,nome,role&id=eq.' + (await fetch(SUPA_URL + '/auth/v1/user', {headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token}}).then(r=>r.json()).then(d=>d.id)), {
+    // Busca o id do usuário logado primeiro
+    const uRes = await fetch(SUPA_URL + '/auth/v1/user', {
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token }
+    });
+    const uData = await uRes.json();
+    if (!uData || !uData.id) throw new Error('Não foi possível obter dados do usuário');
+    // Busca o restaurante_id filtrando pelo id do usuário
+    const r = await fetch(SUPA_URL + '/rest/v1/usuarios?select=restaurante_id,nome,role&id=eq.' + uData.id, {
         headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token }
     });
     const d = await r.json();
