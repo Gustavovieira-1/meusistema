@@ -6371,7 +6371,7 @@ async function authLogin(email, senha) {
 
 async function authGetRestaurante(token) {
     // Busca o restaurante_id vinculado ao usuário logado
-    const r = await fetch(SUPA_URL + '/rest/v1/usuarios?select=restaurante_id,nome,role', {
+    const r = await fetch(SUPA_URL + '/rest/v1/usuarios?select=restaurante_id,nome,role&id=eq.' + (await fetch(SUPA_URL + '/auth/v1/user', {headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+token}}).then(r=>r.json()).then(d=>d.id)), {
         headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + token }
     });
     const d = await r.json();
