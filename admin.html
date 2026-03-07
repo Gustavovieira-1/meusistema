@@ -5398,7 +5398,7 @@ function saveCategory() {
     if (!name) return alert("Por favor, digite um nome para a categoria!");
     const _tmpCatId = Date.now();
     db.categories.push({ id: _tmpCatId, name, active: true });
-    localStorage.setItem('f_cats', JSON.stringify(db.categories));
+    try { localStorage.setItem('f_cats', JSON.stringify(db.categories)); } catch(e) { localStorage.removeItem('f_cats'); }
     cardapioSync(); renderCategories(); input.value = ''; closeCategoryModal();
     supaInsert('categorias', { nome: name, ativo: true, ordem: db.categories.length })
         .then(r => { if (r&&r[0]) { const c=db.categories.find(x=>x.id===_tmpCatId); if(c){c.id=r[0].id;c._supa=true;} } })
@@ -5436,7 +5436,7 @@ function deleteCategory(id) {
     if (confirm("Deseja mesmo excluir esta categoria?")) {
         const _cat = db.categories.find(c => c.id == id);
         db.categories = db.categories.filter(c => c.id != id);
-        localStorage.setItem('f_cats', JSON.stringify(db.categories));
+        try { localStorage.setItem('f_cats', JSON.stringify(db.categories)); } catch(e) { localStorage.removeItem('f_cats'); }
         renderCategories();
         if (_cat && _cat._supa) supaDelete('categorias', id).catch(e => console.warn('Supa del cat:', e.message));
     }
@@ -5446,7 +5446,7 @@ function toggleCategory(id) {
     const cat = db.categories.find(c => c.id == id);
     if (cat) {
         cat.active = !cat.active;
-        localStorage.setItem('f_cats', JSON.stringify(db.categories));
+        try { localStorage.setItem('f_cats', JSON.stringify(db.categories)); } catch(e) { localStorage.removeItem('f_cats'); }
         cardapioSync(); renderCategories();
         if (cat._supa) supaUpdate('categorias', id, { ativo: cat.active }).catch(e => console.warn('Supa tog cat:', e.message));
     }
@@ -5579,7 +5579,7 @@ function salvarProdutoGeral() {
 
     if (currentId) db.prods = db.prods.map(p => p.id == currentId ? produtoData : p);
     else           db.prods.push(produtoData);
-    localStorage.setItem('f_prods', JSON.stringify(db.prods));
+    try { localStorage.setItem('f_prods', JSON.stringify(db.prods)); } catch(e) { localStorage.removeItem('f_prods'); }
     cardapioSync(); renderProds();
     const _sp = { nome: produtoData.name, preco: parseFloat(produtoData.price)||0,
         categoria_nome: produtoData.category, descricao: produtoData.desc||'',
@@ -5590,7 +5590,7 @@ function salvarProdutoGeral() {
         if(r&&r[0]){
             const p=db.prods.find(x=>x.id==produtoData.id);
             if(p){ p.id=r[0].id; p._supa=true; }
-            localStorage.setItem('f_prods', JSON.stringify(db.prods));
+            try { localStorage.setItem('f_prods', JSON.stringify(db.prods)); } catch(e) { localStorage.removeItem('f_prods'); }
             renderProds(); // re-renderiza com UUID correto
         }
     }).catch(e => console.warn('Supa ins prod:', e.message));
@@ -5649,7 +5649,7 @@ function deleteProd(id) {
     if (confirm("Tem certeza que deseja apagar este produto?")) {
         const _prod = db.prods.find(p => p.id == id);
         db.prods = db.prods.filter(p => p.id != id);
-        localStorage.setItem('f_prods', JSON.stringify(db.prods));
+        try { localStorage.setItem('f_prods', JSON.stringify(db.prods)); } catch(e) { localStorage.removeItem('f_prods'); }
         cardapioSync(); renderProds();
         if (_prod && _prod._supa) supaDelete('produtos', id).catch(e => console.warn('Supa del prod:', e.message));
     }
@@ -5661,7 +5661,7 @@ function duplicarProd(id) {
     const tmpId = Date.now();
     const copia = { ...original, id: tmpId, name: original.name + ' (Cópia)', _supa: false };
     db.prods.push(copia);
-    localStorage.setItem('f_prods', JSON.stringify(db.prods));
+    try { localStorage.setItem('f_prods', JSON.stringify(db.prods)); } catch(e) { localStorage.removeItem('f_prods'); }
     cardapioSync(); renderProds();
     // Salvar no Supabase e atualizar ID
     const _sp = { nome: copia.name, preco: parseFloat(copia.price)||0,
@@ -5671,7 +5671,7 @@ function duplicarProd(id) {
         if(r&&r[0]){
             const p = db.prods.find(x => x.id == tmpId);
             if(p){ p.id=r[0].id; p._supa=true; }
-            localStorage.setItem('f_prods', JSON.stringify(db.prods));
+            try { localStorage.setItem('f_prods', JSON.stringify(db.prods)); } catch(e) { localStorage.removeItem('f_prods'); }
             renderProds();
         }
     }).catch(e => console.warn('Supa dup prod:', e.message));
@@ -6145,7 +6145,7 @@ function sortDrop(event, type, targetIdx) {
         // Atualizar campo ordem
         arr.forEach((p, i) => { p.ordem = i; });
         db.prods = arr;
-        try { localStorage.setItem('f_prods', JSON.stringify(db.prods)); } catch(e) {}
+        try { try { localStorage.setItem('f_prods', JSON.stringify(db.prods)); } catch(e) { localStorage.removeItem('f_prods'); } } catch(e) {}
         cardapioSync(); renderProds();
         // Salvar ordem no Supabase
         db.prods.forEach((p, i) => {
@@ -6160,7 +6160,7 @@ function sortDrop(event, type, targetIdx) {
         arr.splice(targetIdx, 0, item);
         arr.forEach((c, i) => { c.ordem = i; });
         db.categories = arr;
-        localStorage.setItem('f_cats', JSON.stringify(db.categories));
+        try { localStorage.setItem('f_cats', JSON.stringify(db.categories)); } catch(e) { localStorage.removeItem('f_cats'); }
         cardapioSync(); renderCategories();
         // Salvar ordem no Supabase
         db.categories.forEach((c, i) => {
@@ -6232,10 +6232,7 @@ async function supaCarregarCardapio() {
             status: p.ativo ? 'ativo' : 'inativo', active: p.ativo, _supa: true
         }));
         db.comps = (comps || []).map(c => ({ id: c.id, title: c.titulo, type: c.tipo, options: c.opcoes || [], _supa: true }));
-        // Salvar sem imagens para evitar quota exceeded
-        try { localStorage.setItem('f_cats', JSON.stringify(db.categories)); } catch(e) {}
-        try { localStorage.setItem('f_prods', JSON.stringify(db.prods.map(p => ({...p, img: ''})))); } catch(e) {}
-        try { localStorage.setItem('f_comps', JSON.stringify(db.comps)); } catch(e) {}
+        try { localStorage.removeItem('f_cats'); localStorage.removeItem('f_prods'); localStorage.removeItem('f_comps'); } catch(e) {}
         renderCategories(); renderProds(); renderComps(); cardapioSync();
         console.log('[Supabase] Cardápio:', db.categories.length, 'cats,', db.prods.length, 'prods');
     } catch(e) {
