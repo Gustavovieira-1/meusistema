@@ -5206,7 +5206,7 @@ function imprimirPedido(id, pedidoOverride) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', IMP_SERVIDOR + '/imprimir', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.timeout = 4000;
+    xhr.timeout = 15000; // 15 segundos — tempo suficiente para PowerShell imprimir
 
     xhr.onload = function() {
         try {
@@ -5219,17 +5219,19 @@ function imprimirPedido(id, pedidoOverride) {
     };
 
     xhr.onerror = function() {
-        imprimirNavegador(pedidoResolv, cfg, cfgTx, totalPedidos);
+        // Assistente offline: mostra aviso, NÃO abre diálogo do navegador
+        impFeedback('⚠ Assistente offline — pedido não impresso', '#f59e0b');
     };
 
     xhr.ontimeout = function() {
-        imprimirNavegador(pedidoResolv, cfg, cfgTx, totalPedidos);
+        // Timeout: mostra aviso, NÃO abre diálogo do navegador
+        impFeedback('⚠ Impressora demorou — verifique o assistente', '#f59e0b');
     };
 
     try {
         xhr.send(JSON.stringify(dados));
     } catch(e) {
-        imprimirNavegador(pedidoResolv, cfg, cfgTx, totalPedidos);
+        impFeedback('⚠ Assistente offline — pedido não impresso', '#f59e0b');
     }
 }
 
@@ -5296,11 +5298,10 @@ function impTestar() {
         } catch(e) { impFeedback('✓ Enviado!', '#16a34a'); }
     };
     xhr.onerror = xhr.ontimeout = function() {
-        impFeedback('⚠ Servidor não encontrado — abrindo no navegador', '#f59e0b');
-        imprimirNavegador(pedidoTeste, cfg, cfgTx, 25);
+        impFeedback('⚠ Assistente offline — verifique se está rodando', '#f59e0b');
     };
     try { xhr.send(JSON.stringify(dados)); }
-    catch(e) { imprimirNavegador(pedidoTeste, cfg, cfgTx, 25); }
+    catch(e) { impFeedback('⚠ Assistente offline', '#f59e0b'); }
 }
 
 function imprimirNavegador(o, cfg, cfgTx, totalPedidosLoja) {
