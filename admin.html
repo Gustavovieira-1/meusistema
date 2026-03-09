@@ -6535,6 +6535,15 @@ async function authVerificarSessao() {
         }
         SUPA_TOKEN = sess.token;
         REST_ID    = sess.restId;
+        // Se REST_ID vazio, buscar do Supabase com o token salvo
+        if (!REST_ID && SUPA_TOKEN) {
+            try {
+                const usuario = await authGetRestaurante(SUPA_TOKEN);
+                REST_ID = usuario.restaurante_id;
+                authSalvarSessao(SUPA_TOKEN, REST_ID, usuario.nome, usuario.role);
+            } catch(e) { return false; }
+        }
+        if (!REST_ID) return false;
         impAtualizarChaves();
         var _elNome = document.getElementById('login-usuario-nome');
         if (_elNome) _elNome.textContent = sess.nomeUsuario || 'Admin';
