@@ -2934,83 +2934,14 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 // ══════════════════════════════════════════════════════
 var _syncTimer = null;
 function cardapioSyncManual() {
-    var btn = document.getElementById('btn-sync-cardapio');
-    if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...'; btn.disabled = true; }
-    
-    var cats  = JSON.parse(localStorage.getItem('f_cats')  || '[]');
-    var prods = JSON.parse(localStorage.getItem('f_prods') || '[]');
-    var comps = JSON.parse(localStorage.getItem('f_comps') || '[]');
-    var cfg   = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
-    var pausada = JSON.parse(localStorage.getItem('f_loja_pausada') || 'false');
-
-    var txCfg2 = JSON.parse(localStorage.getItem('f_taxas_config') || '{}');
-    fetch(IMP_SERVIDOR + '/cardapio/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categories: cats, prods: prods, comps: comps, cfg: cfg, txCfg: txCfg2, pausada: pausada })
-    }).then(function(r){ return r.json(); })
-      .then(function(d){
-          if (btn) {
-              if (d.ok) {
-                  btn.innerHTML = '<i class="fas fa-check"></i> Sincronizado!';
-                  btn.style.color = '#16a34a';
-              } else {
-                  btn.innerHTML = '<i class="fas fa-times"></i> Erro no sync';
-                  btn.style.color = '#e30613';
-              }
-              setTimeout(function(){
-                  btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sincronizar cardápio';
-                  btn.style.color = '#334155';
-                  btn.disabled = false;
-              }, 2500);
-          }
-      })
-      .catch(function(){
-          if (btn) {
-              btn.innerHTML = '<i class="fas fa-times"></i> Servidor offline';
-              btn.style.color = '#e30613';
-              setTimeout(function(){
-                  btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sincronizar cardápio';
-                  btn.style.color = '#334155';
-                  btn.disabled = false;
-              }, 2500);
-          }
-      });
+    // Desativado — assistente faz polling direto no Supabase
+    alert('Sincronização automática via assistente. Nenhuma ação necessária.');
 }
 
 function cardapioSync() {
-    clearTimeout(_syncTimer);
-    _syncTimer = setTimeout(function() {
-        // Lê sempre do localStorage para garantir dados mais recentes
-        var cats  = JSON.parse(localStorage.getItem('f_cats')  || '[]');
-        var prods = JSON.parse(localStorage.getItem('f_prods') || '[]');
-        var comps = JSON.parse(localStorage.getItem('f_comps') || '[]');
-        var cfg   = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
-        var txCfg = JSON.parse(localStorage.getItem('f_taxas_config') || '{}');
-        var pausada = JSON.parse(localStorage.getItem('f_loja_pausada') || 'false');
-
-        var dados = {
-            categories: cats,
-            prods:      prods,
-            comps:      comps,
-            cfg:        cfg,
-            txCfg:      txCfg,
-            pausada:    pausada
-        };
-        fetch(IMP_SERVIDOR + '/cardapio/sync', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dados)
-        }).then(function(r){ return r.json(); })
-          .then(function(d){
-              if(d.ok) console.log('✓ Cardápio sincronizado — ' + prods.length + ' produtos, ' + cats.length + ' categorias');
-          })
-          .catch(function(e){ console.warn('⚠️ Sync offline:', e.message); });
-    }, 500);
+    // Desativado — assistente faz polling direto no Supabase
 }
 
-// SSE — recebe pedidos online em tempo real
-var _sseConn = null;
 function sseConectar() {
     if (_sseConn) _sseConn.close();
     try {
