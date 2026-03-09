@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <meta http-equiv="origin-trial-disabled-features" content="BlockInsecurePrivateNetworkRequests">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Fogueiro - Oficial</title>
@@ -6297,7 +6298,17 @@ async function supaReq(method, path, body) {
     return txt ? JSON.parse(txt) : null;
 }
 async function supaGet(table, query) {
-    return supaReq('GET', table + '?restaurante_id=eq.' + REST_ID + (query ? '&' + query : '') + '&select=*', null);
+
+    if (!REST_ID) {
+        console.warn('[Supabase] REST_ID vazio, ignorando requisição');
+        return [];
+    }
+
+    return supaReq(
+        'GET',
+        table + '?restaurante_id=eq.' + REST_ID + (query ? '&' + query : '') + '&select=*',
+        null
+    );
 }
 async function supaInsert(table, obj) {
     return supaReq('POST', table, { ...obj, restaurante_id: REST_ID });
