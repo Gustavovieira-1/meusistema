@@ -4388,26 +4388,26 @@ function impAddLog(msg, tipo) {
 }
 
 function impVerificarStatus() {
-    // Lê status do assistente via Supabase — sem chamar localhost (evita bloqueio Chrome PNA)
     if (!REST_ID) return;
     var badge = document.getElementById('imp-assistente-badge');
     var txt   = document.getElementById('imp-status-txt');
-    supaReq('GET', 'assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', null)
+    fetch(SUPA_URL + '/rest/v1/assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', {
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+    })
+    .then(function(r) { return r.json(); })
     .then(function(rows) {
-        var row = rows && rows[0];
+        var row = Array.isArray(rows) ? rows[0] : null;
         if (!row) {
             if (badge) { badge.style.background='#fecdd3'; badge.style.color='#e30613'; badge.style.border='1.5px solid #fca5a5'; badge.textContent='● Offline'; }
             if (txt) txt.textContent = 'Assistente não encontrado. Baixe e abra o programa abaixo.';
             impAddLog('Assistente offline', 'err');
             return;
         }
-        // Considera online se o heartbeat foi nos últimos 30 segundos
         var ago = (Date.now() - new Date(row.atualizado_em).getTime()) / 1000;
         if (ago < 60) {
             if (badge) { badge.style.background='#dcfce7'; badge.style.color='#16a34a'; badge.style.border='1.5px solid #bbf7d0'; badge.textContent='● Online'; }
-            if (txt) txt.textContent = 'Assistente rodando · versão ' + (row.versao || '2.0');
-            impAddLog('Assistente online — porta 9876', 'ok');
-            // Preenche impressora salva no campo
+            if (txt) txt.textContent = 'Assistente rodando · versão ' + (row.versao || '3.0');
+            impAddLog('Assistente online', 'ok');
             if (row.impressora) {
                 var el = document.getElementById('imp-modal-nome');
                 if (el && !el.value) el.value = row.impressora;
