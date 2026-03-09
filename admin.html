@@ -6558,11 +6558,13 @@ async function authLogout() {
     mostrarTelaLogin();
 }
 
-function authSalvarSessao(token, restId, nomeUsuario, role) {
-    localStorage.setItem('supa_session', JSON.stringify({
-        token, restId, nomeUsuario, role,
-        salvoEm: Date.now()
-    }));
+function authSalvarSessao(token, restId, nomeUsuario, role, refreshToken) {
+    // Chave única por restaurante para suportar múltiplos logins
+    var chave = 'supa_session_' + (restId || 'default');
+    var obj = { token, restId, nomeUsuario, role, salvoEm: Date.now() };
+    if (refreshToken) obj.refreshToken = refreshToken;
+    localStorage.setItem('supa_session', JSON.stringify(obj)); // compatibilidade
+    localStorage.setItem(chave, JSON.stringify(obj));
 }
 
 // 🔄 Renovar token automaticamente a cada 50 minutos
@@ -6585,7 +6587,7 @@ async function authRenovarToken() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                refresh_token: sess.token
+                refresh_token: sess.refreshToken || sess.token
             })
         });
         
@@ -6620,6 +6622,13 @@ async function authVerificarSessao() {
         }
         SUPA_TOKEN = sess.token;
         REST_ID    = sess.restId;
+        // Recarregar da chave específica do restaurante (mais atualizada)
+        if (REST_ID) {
+            try {
+                var raw2 = localStorage.getItem('supa_session_' + REST_ID);
+                if (raw2) { var sess2 = JSON.parse(raw2); SUPA_TOKEN = sess2.token; }
+            } catch(e) {}
+        }
         impAtualizarChaves();
         var _elNome = document.getElementById('login-usuario-nome');
         if (_elNome) _elNome.textContent = sess.nomeUsuario || 'Admin';
@@ -6656,7 +6665,7 @@ async function authFazerLogin() {
         REST_ID = usuario.restaurante_id;
         impAtualizarChaves();
 
-        authSalvarSessao(SUPA_TOKEN, REST_ID, usuario.nome, usuario.role);
+        authSalvarSessao(SUPA_TOKEN, REST_ID, usuario.nome, usuario.role, sessao.refresh_token);
         document.getElementById('login-usuario-nome').textContent = usuario.nome || email;
         esconderTelaLogin();
         inicializarSistema();
