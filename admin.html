@@ -2125,6 +2125,9 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <a id="imp-btn-baixar" href="https://oijcggqfcgjkgcaymjqx.supabase.co/storage/v1/object/sign/downloads/AssistenteImpressao.exe?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85MTdlOTE2Yi04ODdiLTQ0NmUtOWRiOC1kMDBkN2FjMDE5NDQiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJkb3dubG9hZHMvQXNzaXN0ZW50ZUltcHJlc3Nhby5leGUiLCJpYXQiOjE3NzI5MjQxNzUsImV4cCI6NDI5NTgwNDE3NX0.9P1QETMwNZi6pGuey3LefRzrKWzkY6lPXfz5GSnU27A" download style="background:#e30613; border:none; color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
                         <i class="fas fa-download"></i> Baixar .exe
                     </a>
+                    <button onclick="impBaixarConfig()" style="background:#0f172a; border:none; color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px;">
+                        <i class="fas fa-gear"></i> Baixar Config
+                    </button>
                 </div>
             </div>
 
@@ -4427,10 +4430,31 @@ function impVerificarStatus() {
     xhr.send();
 }
 
+function impBaixarConfig() {
+    var nome = (document.getElementById('imp-modal-nome')||{}).value||'';
+    var larg = (document.getElementById('imp-largura')||{}).value||'80';
+    var cfg = impGetConfig();
+    var obj = {
+        impressora: nome || cfg.impressora || '',
+        largura: parseInt(larg) || 80,
+        restaurante_id: REST_ID || '',
+        token: SUPA_TOKEN || '',
+        lojaNome: cfg.lojaNome || '',
+        rodape: cfg.rodape || ''
+    };
+    var blob = new Blob([JSON.stringify(obj, null, 2)], {type: 'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'assistente-config.json';
+    a.click();
+    impAddLog('✓ Config baixada! Coloque o arquivo na pasta do AssistenteImpressao.exe', 'ok');
+}
+
 function impSalvarImpressora() {
     var nome  = (document.getElementById('imp-modal-nome')||{}).value||'';
     var larg  = (document.getElementById('imp-largura')||{}).value||'80';
     if (!nome.trim()) { impAddLog('Digite o nome da impressora!', 'err'); return; }
+    // Tenta salvar via HTTP no assistente
     var xhr = new XMLHttpRequest();
     xhr.open('POST', IMP_SERVIDOR + '/configurar', true);
     xhr.setRequestHeader('Content-Type','application/json');
@@ -4441,7 +4465,12 @@ function impSalvarImpressora() {
             if (d.ok) { impAddLog('✓ Impressora salva: ' + nome, 'ok'); impFeedback('✓ Impressora salva!', '#16a34a'); }
         } catch(e) {}
     };
-    xhr.onerror = function() { impAddLog('Erro: assistente offline', 'err'); };
+    xhr.onerror = function() {
+        // Fallback: oferece download do config
+        impAddLog('Assistente offline — baixe o arquivo de config abaixo', 'err');
+        impBaixarConfig();
+    };
+    xhr.ontimeout = function() { impBaixarConfig(); };
     xhr.send(JSON.stringify({ impressora: nome, largura: parseInt(larg), restaurante_id: REST_ID || '', token: SUPA_TOKEN || '' }));
 }
 
