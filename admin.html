@@ -3013,7 +3013,9 @@ var _sseConn = null;
 function sseConectar() {
     if (_sseConn) _sseConn.close();
     try {
-        _sseConn = new EventSource(IMP_SERVIDOR + '/eventos');
+        // DESATIVADO — Chrome bloqueia localhost vindo de HTTPS
+// _sseConn = new EventSource(IMP_SERVIDOR + '/eventos');
+return;
         _sseConn.addEventListener('pedido', function(e) {
             var pedido = JSON.parse(e.data);
             // Adiciona no array de orders se não existir
@@ -3094,7 +3096,8 @@ let editandoPedidoId      = null;
 
 // ── INICIALIZAÇÃO ──────────────────────────────────────────
 // Conecta SSE para receber pedidos online em tempo real
-setTimeout(sseConectar, 1500);
+// SSE desativado
+// setTimeout(sseConectar, 1500);
 // Sync inicial do cardápio ao abrir o admin (após tudo carregar)
 setTimeout(cardapioSync, 3000);
 function inicializarSistema() {
