@@ -4392,7 +4392,10 @@ function impVerificarStatus() {
     if (!REST_ID) return;
     var badge = document.getElementById('imp-assistente-badge');
     var txt   = document.getElementById('imp-status-txt');
-    supaReq('GET', 'assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', null)
+    fetch(SUPA_URL + '/rest/v1/assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', {
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+    })
+    .then(function(r) { return r.json(); })
     .then(function(rows) {
         var row = rows && rows[0];
         if (!row) {
@@ -4528,7 +4531,6 @@ function impPopularSelect() {
 }
 
 function impBuscarImpressoras() {
-    // Busca via Supabase — sem chamar localhost (evita bloqueio Chrome PNA)
     var btn = document.getElementById('imp-btn-buscar');
     var sel = document.getElementById('imp-sel-sistema');
     if (btn) btn.innerHTML = '<i class="fas fa-rotate fa-spin"></i> Buscando...';
@@ -4538,13 +4540,25 @@ function impBuscarImpressoras() {
         impAddLog('Faça login primeiro.', 'err');
         return;
     }
-    supaReq('GET', 'assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', null)
+    // Usa fetch direto com anon key — evita problema de token expirado
+    fetch(SUPA_URL + '/rest/v1/assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', {
+        headers: {
+            'apikey': SUPA_KEY,
+            'Authorization': 'Bearer ' + SUPA_KEY
+        }
+    })
+    .then(function(r) { return r.json(); })
     .then(function(rows) {
         if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar';
         var row = rows && rows[0];
-        var ago = row ? (Date.now() - new Date(row.atualizado_em).getTime()) / 1000 : 999;
-        if (!row || ago > 30) {
-            impAddLog('Assistente offline. Baixe e abra o programa.', 'err');
+        console.log('[IMP] assistente_status para REST_ID=' + REST_ID + ':', row);
+        if (!row) {
+            impAddLog('Assistente offline. Nenhum registro no Supabase para este restaurante.', 'err');
+            return;
+        }
+        var ago = (Date.now() - new Date(row.atualizado_em).getTime()) / 1000;
+        if (ago > 60) {
+            impAddLog('Assistente offline (último sinal há ' + Math.round(ago) + 's). Abra o programa.', 'err');
             return;
         }
         var lista = row.impressoras || [];
@@ -4555,8 +4569,8 @@ function impBuscarImpressoras() {
             });
             sel.onchange = function() { if(sel.value) { var el=document.getElementById('imp-modal-nome'); if(el) el.value=sel.value; } };
         }
-        impAddLog('Encontradas ' + lista.length + ' impressoras', lista.length ? 'ok' : 'err');
-        if (!lista.length) impAddLog('Nenhuma encontrada. Verifique se o assistente está rodando.', 'err');
+        impAddLog('Encontradas ' + lista.length + ' impressoras (há ' + Math.round(ago) + 's)', lista.length ? 'ok' : 'err');
+        if (!lista.length) impAddLog('Lista vazia — o assistente está online mas não encontrou impressoras.', 'err');
     })
     .catch(function(e) {
         if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar';
@@ -6558,13 +6572,11 @@ async function authLogout() {
     mostrarTelaLogin();
 }
 
-function authSalvarSessao(token, restId, nomeUsuario, role, refreshToken) {
-    // Chave única por restaurante para suportar múltiplos logins
-    var chave = 'supa_session_' + (restId || 'default');
-    var obj = { token, restId, nomeUsuario, role, salvoEm: Date.now() };
-    if (refreshToken) obj.refreshToken = refreshToken;
-    localStorage.setItem('supa_session', JSON.stringify(obj)); // compatibilidade
-    localStorage.setItem(chave, JSON.stringify(obj));
+function authSalvarSessao(token, restId, nomeUsuario, role) {
+    localStorage.setItem('supa_session', JSON.stringify({
+        token, restId, nomeUsuario, role,
+        salvoEm: Date.now()
+    }));
 }
 
 // 🔄 Renovar token automaticamente a cada 50 minutos
@@ -6587,7 +6599,7 @@ async function authRenovarToken() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                refresh_token: sess.refreshToken || sess.token
+                refresh_token: sess.token
             })
         });
         
@@ -6622,13 +6634,6 @@ async function authVerificarSessao() {
         }
         SUPA_TOKEN = sess.token;
         REST_ID    = sess.restId;
-        // Recarregar da chave específica do restaurante (mais atualizada)
-        if (REST_ID) {
-            try {
-                var raw2 = localStorage.getItem('supa_session_' + REST_ID);
-                if (raw2) { var sess2 = JSON.parse(raw2); SUPA_TOKEN = sess2.token; }
-            } catch(e) {}
-        }
         impAtualizarChaves();
         var _elNome = document.getElementById('login-usuario-nome');
         if (_elNome) _elNome.textContent = sess.nomeUsuario || 'Admin';
@@ -6665,7 +6670,7 @@ async function authFazerLogin() {
         REST_ID = usuario.restaurante_id;
         impAtualizarChaves();
 
-        authSalvarSessao(SUPA_TOKEN, REST_ID, usuario.nome, usuario.role, sessao.refresh_token);
+        authSalvarSessao(SUPA_TOKEN, REST_ID, usuario.nome, usuario.role);
         document.getElementById('login-usuario-nome').textContent = usuario.nome || email;
         esconderTelaLogin();
         inicializarSistema();
