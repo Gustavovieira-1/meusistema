@@ -2935,7 +2935,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 var _syncTimer = null;
 function cardapioSyncManual() { /* desativado */ }
 
-function cardapioSync() { /* desativado — assistente faz polling */ }
+function cardapioSync() { /* desativado */ }
 
 function sseConectar() {
     if (_sseConn) _sseConn.close();
@@ -4315,45 +4315,16 @@ function impAddLog(msg, tipo) {
 
 function impVerificarStatus() {
     if (!REST_ID) return;
-    var badge = document.getElementById('imp-assistente-badge');
-    var txt   = document.getElementById('imp-status-txt');
-    fetch(SUPA_URL + '/rest/v1/assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', {
-        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(rows){
-        var row = Array.isArray(rows) ? rows[0] : null;
-        if (!row) {
-            if (badge) { badge.style.background='#fecdd3'; badge.style.color='#e30613'; badge.style.border='1.5px solid #fca5a5'; badge.textContent='● Offline'; }
-            if (txt) txt.textContent = 'Assistente não encontrado. Baixe e abra o programa abaixo.';
-            impAddLog('Assistente offline', 'err'); return;
-        }
-        var ago = (Date.now() - new Date(row.atualizado_em).getTime()) / 1000;
-        if (ago < 60) {
-            if (badge) { badge.style.background='#dcfce7'; badge.style.color='#16a34a'; badge.style.border='1.5px solid #bbf7d0'; badge.textContent='● Online'; }
-            if (txt) txt.textContent = 'Assistente rodando · versão ' + (row.versao || '3.0');
-            impAddLog('Assistente online', 'ok');
-            if (row.impressora) {
-                var el = document.getElementById('imp-modal-nome');
-                if (el && !el.value) el.value = row.impressora;
-                var larg = parseInt(row.largura)||80;
-                var b58 = document.getElementById('imp-larg-58');
-                var b80 = document.getElementById('imp-larg-80');
-                if (b58&&b80){ b58.className=larg===58?'imp-largura-btn active':'imp-largura-btn'; b80.className=larg===80?'imp-largura-btn active':'imp-largura-btn'; }
-                var hid = document.getElementById('imp-largura');
-                if (hid) hid.value = larg;
-            }
-        } else {
-            if (badge) { badge.style.background='#fecdd3'; badge.style.color='#e30613'; badge.style.border='1.5px solid #fca5a5'; badge.textContent='● Offline'; }
-            if (txt) txt.textContent = 'Assistente não encontrado. Baixe e abra o programa abaixo.';
-            impAddLog('Assistente offline (último sinal há ' + Math.round(ago) + 's)', 'err');
-        }
-    })
-    .catch(function(){
-        if (badge) { badge.style.background='#fecdd3'; badge.style.color='#e30613'; badge.style.border='1.5px solid #fca5a5'; badge.textContent='● Offline'; }
-        if (txt) txt.textContent = 'Assistente não encontrado. Baixe e abra o programa abaixo.';
-        impAddLog('Assistente offline', 'err');
-    });
+    var badge=document.getElementById('imp-assistente-badge'), txt=document.getElementById('imp-status-txt');
+    fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID+'&select=*&limit=1',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}})
+    .then(function(r){return r.json();}).then(function(rows){
+        var row=Array.isArray(rows)?rows[0]:null;
+        if(!row){if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}if(txt)txt.textContent='Assistente não encontrado. Baixe e abra o programa abaixo.';impAddLog('Assistente offline','err');return;}
+        var ago=(Date.now()-new Date(row.atualizado_em).getTime())/1000;
+        if(ago<60){if(badge){badge.style.background='#dcfce7';badge.style.color='#16a34a';badge.textContent='● Online';}if(txt)txt.textContent='Assistente rodando · v'+(row.versao||'3');impAddLog('Assistente online','ok');
+            if(row.impressora){var el=document.getElementById('imp-modal-nome');if(el&&!el.value)el.value=row.impressora;var hid=document.getElementById('imp-largura');if(hid)hid.value=parseInt(row.largura)||80;}
+        }else{if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}if(txt)txt.textContent='Assistente não encontrado. Baixe e abra o programa abaixo.';impAddLog('Assistente offline ('+Math.round(ago)+'s)','err');}
+    }).catch(function(){if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}impAddLog('Assistente offline','err');});
 }
 
 function impBaixarConfig() {
@@ -4450,33 +4421,21 @@ function impPopularSelect() {
 }
 
 function impBuscarImpressoras() {
-    var btn = document.getElementById('imp-btn-buscar');
-    var sel = document.getElementById('imp-sel-sistema');
-    if (btn) btn.innerHTML = '<i class="fas fa-rotate fa-spin"></i> Buscando...';
-    impAddLog('Buscando impressoras...', 'info');
-    if (!REST_ID) { if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar'; impAddLog('Faça login primeiro.', 'err'); return; }
-    fetch(SUPA_URL + '/rest/v1/assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', {
-        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(rows){
-        if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar';
-        var row = Array.isArray(rows) ? rows[0] : null;
-        if (!row) { impAddLog('Assistente offline. Abra o programa.', 'err'); return; }
-        var ago = (Date.now() - new Date(row.atualizado_em).getTime()) / 1000;
-        if (ago > 60) { impAddLog('Assistente offline (último sinal há ' + Math.round(ago) + 's).', 'err'); return; }
-        var lista = row.impressoras || [];
-        if (sel) {
-            sel.innerHTML = '<option value="">Selecione a impressora...</option>';
-            lista.forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o); });
-            sel.onchange = function(){ if(sel.value){ var el=document.getElementById('imp-modal-nome'); if(el) el.value=sel.value; } };
-        }
-        impAddLog('Encontradas ' + lista.length + ' impressoras', lista.length ? 'ok' : 'err');
-    })
-    .catch(function(e){
-        if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar';
-        impAddLog('Erro: ' + (e.message||e), 'err');
-    });
+    var btn=document.getElementById('imp-btn-buscar'),sel=document.getElementById('imp-sel-sistema');
+    if(btn)btn.innerHTML='<i class="fas fa-rotate fa-spin"></i> Buscando...';
+    impAddLog('Buscando impressoras...','info');
+    if(!REST_ID){if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';impAddLog('Faça login primeiro.','err');return;}
+    fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID+'&select=*&limit=1',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}})
+    .then(function(r){return r.json();}).then(function(rows){
+        if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';
+        var row=Array.isArray(rows)?rows[0]:null;
+        if(!row){impAddLog('Assistente offline. Abra o programa.','err');return;}
+        var ago=(Date.now()-new Date(row.atualizado_em).getTime())/1000;
+        if(ago>60){impAddLog('Assistente offline ('+Math.round(ago)+'s).','err');return;}
+        var lista=row.impressoras||[];
+        if(sel){sel.innerHTML='<option value="">Selecione a impressora...</option>';lista.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});sel.onchange=function(){if(sel.value){var el=document.getElementById('imp-modal-nome');if(el)el.value=sel.value;}};}
+        impAddLog('Encontradas '+lista.length+' impressoras',lista.length?'ok':'err');
+    }).catch(function(e){if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';impAddLog('Erro: '+(e.message||e),'err');});
 }
 
 function impFecharModal() {
@@ -6241,11 +6200,14 @@ async function supaReq(method, path, body) {
     return txt ? JSON.parse(txt) : null;
 }
 async function supaGet(table, query) {
-
-    if (!REST_ID) {
-        console.warn('[Supabase] REST_ID vazio, ignorando requisição');
-        return [];
+    if (!REST_ID && SUPA_TOKEN) {
+        try {
+            const u = await authGetRestaurante(SUPA_TOKEN);
+            REST_ID = u.restaurante_id;
+            impAtualizarChaves();
+        } catch(e) {}
     }
+    if (!REST_ID) { return []; }
 
     return supaReq(
         'GET',
@@ -6535,13 +6497,8 @@ async function authVerificarSessao() {
         }
         SUPA_TOKEN = sess.token;
         REST_ID    = sess.restId;
-        // Se REST_ID vazio, buscar do Supabase com o token salvo
         if (!REST_ID && SUPA_TOKEN) {
-            try {
-                const usuario = await authGetRestaurante(SUPA_TOKEN);
-                REST_ID = usuario.restaurante_id;
-                authSalvarSessao(SUPA_TOKEN, REST_ID, usuario.nome, usuario.role);
-            } catch(e) { return false; }
+            try { const u = await authGetRestaurante(SUPA_TOKEN); REST_ID = u.restaurante_id; authSalvarSessao(SUPA_TOKEN, REST_ID, sess.nomeUsuario, sess.role); } catch(e) { return false; }
         }
         if (!REST_ID) return false;
         impAtualizarChaves();
