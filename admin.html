@@ -4392,10 +4392,7 @@ function impVerificarStatus() {
     if (!REST_ID) return;
     var badge = document.getElementById('imp-assistente-badge');
     var txt   = document.getElementById('imp-status-txt');
-    fetch(SUPA_URL + '/rest/v1/assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', {
-        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
-    })
-    .then(function(r) { return r.json(); })
+    supaReq('GET', 'assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', null)
     .then(function(rows) {
         var row = rows && rows[0];
         if (!row) {
@@ -4406,7 +4403,7 @@ function impVerificarStatus() {
         }
         // Considera online se o heartbeat foi nos últimos 30 segundos
         var ago = (Date.now() - new Date(row.atualizado_em).getTime()) / 1000;
-        if (ago < 30) {
+        if (ago < 60) {
             if (badge) { badge.style.background='#dcfce7'; badge.style.color='#16a34a'; badge.style.border='1.5px solid #bbf7d0'; badge.textContent='● Online'; }
             if (txt) txt.textContent = 'Assistente rodando · versão ' + (row.versao || '2.0');
             impAddLog('Assistente online — porta 9876', 'ok');
@@ -4540,27 +4537,16 @@ function impBuscarImpressoras() {
         impAddLog('Faça login primeiro.', 'err');
         return;
     }
-    // Usa fetch direto com anon key — evita problema de token expirado
     fetch(SUPA_URL + '/rest/v1/assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1', {
-        headers: {
-            'apikey': SUPA_KEY,
-            'Authorization': 'Bearer ' + SUPA_KEY
-        }
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
     })
     .then(function(r) { return r.json(); })
     .then(function(rows) {
         if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar';
         var row = rows && rows[0];
-        console.log('[IMP] assistente_status para REST_ID=' + REST_ID + ':', row);
-        if (!row) {
-            impAddLog('Assistente offline. Nenhum registro no Supabase para este restaurante.', 'err');
-            return;
-        }
+        if (!row) { impAddLog('Assistente offline. Abra o programa.', 'err'); return; }
         var ago = (Date.now() - new Date(row.atualizado_em).getTime()) / 1000;
-        if (ago > 60) {
-            impAddLog('Assistente offline (último sinal há ' + Math.round(ago) + 's). Abra o programa.', 'err');
-            return;
-        }
+        if (ago > 60) { impAddLog('Assistente offline (último sinal há ' + Math.round(ago) + 's).', 'err'); return; }
         var lista = row.impressoras || [];
         if (sel) {
             sel.innerHTML = '<option value="">Selecione a impressora...</option>';
@@ -4569,15 +4555,13 @@ function impBuscarImpressoras() {
             });
             sel.onchange = function() { if(sel.value) { var el=document.getElementById('imp-modal-nome'); if(el) el.value=sel.value; } };
         }
-        impAddLog('Encontradas ' + lista.length + ' impressoras (há ' + Math.round(ago) + 's)', lista.length ? 'ok' : 'err');
-        if (!lista.length) impAddLog('Lista vazia — o assistente está online mas não encontrou impressoras.', 'err');
+        impAddLog('Encontradas ' + lista.length + ' impressoras', lista.length ? 'ok' : 'err');
     })
     .catch(function(e) {
         if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar';
-        impAddLog('Erro ao buscar: ' + (e.message||e), 'err');
+        impAddLog('Erro: ' + (e.message||e), 'err');
     });
 }
-
 function impFecharModal() {
     document.getElementById('imp-modal-nova').style.display = 'none';
 }
