@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta http-equiv="origin-trial-disabled-features" content="BlockInsecurePrivateNetworkRequests">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Fogueiro - Oficial</title>
@@ -2933,16 +2932,88 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 //  SYNC CARDÁPIO → SERVIDOR
 // ══════════════════════════════════════════════════════
 var _syncTimer = null;
-function cardapioSyncManual() { /* desativado */ }
+function cardapioSyncManual() {
+    var btn = document.getElementById('btn-sync-cardapio');
+    if (btn) { btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...'; btn.disabled = true; }
+    
+    var cats  = JSON.parse(localStorage.getItem('f_cats')  || '[]');
+    var prods = JSON.parse(localStorage.getItem('f_prods') || '[]');
+    var comps = JSON.parse(localStorage.getItem('f_comps') || '[]');
+    var cfg   = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
+    var pausada = JSON.parse(localStorage.getItem('f_loja_pausada') || 'false');
 
-function cardapioSync() { /* desativado */ }
+    var txCfg2 = JSON.parse(localStorage.getItem('f_taxas_config') || '{}');
+    fetch(IMP_SERVIDOR + '/cardapio/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categories: cats, prods: prods, comps: comps, cfg: cfg, txCfg: txCfg2, pausada: pausada })
+    }).then(function(r){ return r.json(); })
+      .then(function(d){
+          if (btn) {
+              if (d.ok) {
+                  btn.innerHTML = '<i class="fas fa-check"></i> Sincronizado!';
+                  btn.style.color = '#16a34a';
+              } else {
+                  btn.innerHTML = '<i class="fas fa-times"></i> Erro no sync';
+                  btn.style.color = '#e30613';
+              }
+              setTimeout(function(){
+                  btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sincronizar cardápio';
+                  btn.style.color = '#334155';
+                  btn.disabled = false;
+              }, 2500);
+          }
+      })
+      .catch(function(){
+          if (btn) {
+              btn.innerHTML = '<i class="fas fa-times"></i> Servidor offline';
+              btn.style.color = '#e30613';
+              setTimeout(function(){
+                  btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sincronizar cardápio';
+                  btn.style.color = '#334155';
+                  btn.disabled = false;
+              }, 2500);
+          }
+      });
+}
 
+function cardapioSync() {
+    clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(function() {
+        // Lê sempre do localStorage para garantir dados mais recentes
+        var cats  = JSON.parse(localStorage.getItem('f_cats')  || '[]');
+        var prods = JSON.parse(localStorage.getItem('f_prods') || '[]');
+        var comps = JSON.parse(localStorage.getItem('f_comps') || '[]');
+        var cfg   = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
+        var txCfg = JSON.parse(localStorage.getItem('f_taxas_config') || '{}');
+        var pausada = JSON.parse(localStorage.getItem('f_loja_pausada') || 'false');
+
+        var dados = {
+            categories: cats,
+            prods:      prods,
+            comps:      comps,
+            cfg:        cfg,
+            txCfg:      txCfg,
+            pausada:    pausada
+        };
+        fetch(IMP_SERVIDOR + '/cardapio/sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dados)
+        }).then(function(r){ return r.json(); })
+          .then(function(d){
+              if(d.ok) console.log('✓ Cardápio sincronizado — ' + prods.length + ' produtos, ' + cats.length + ' categorias');
+          })
+          .catch(function(e){ console.warn('⚠️ Sync offline:', e.message); });
+    }, 500);
+}
+
+// SSE — recebe pedidos online em tempo real
+var _sseConn = null;
 function sseConectar() {
     if (_sseConn) _sseConn.close();
     try {
-        // DESATIVADO — Chrome bloqueia localhost vindo de HTTPS
-// _sseConn = new EventSource(IMP_SERVIDOR + '/eventos');
-return;
+        _sseConn = new EventSource(IMP_SERVIDOR + '/eventos');
         _sseConn.addEventListener('pedido', function(e) {
             var pedido = JSON.parse(e.data);
             // Adiciona no array de orders se não existir
@@ -3023,8 +3094,7 @@ let editandoPedidoId      = null;
 
 // ── INICIALIZAÇÃO ──────────────────────────────────────────
 // Conecta SSE para receber pedidos online em tempo real
-// SSE desativado
-// setTimeout(sseConectar, 1500);
+setTimeout(sseConectar, 1500);
 // Sync inicial do cardápio ao abrir o admin (após tudo carregar)
 setTimeout(cardapioSync, 3000);
 function inicializarSistema() {
@@ -4314,17 +4384,50 @@ function impAddLog(msg, tipo) {
 }
 
 function impVerificarStatus() {
-    if (!REST_ID) return;
-    var badge=document.getElementById('imp-assistente-badge'), txt=document.getElementById('imp-status-txt');
-    fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID+'&select=*&limit=1',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}})
-    .then(function(r){return r.json();}).then(function(rows){
-        var row=Array.isArray(rows)?rows[0]:null;
-        if(!row){if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}if(txt)txt.textContent='Assistente não encontrado. Baixe e abra o programa abaixo.';impAddLog('Assistente offline','err');return;}
-        var ago=(Date.now()-new Date(row.atualizado_em).getTime())/1000;
-        if(ago<60){if(badge){badge.style.background='#dcfce7';badge.style.color='#16a34a';badge.textContent='● Online';}if(txt)txt.textContent='Assistente rodando · v'+(row.versao||'3');impAddLog('Assistente online','ok');
-            if(row.impressora){var el=document.getElementById('imp-modal-nome');if(el&&!el.value)el.value=row.impressora;var hid=document.getElementById('imp-largura');if(hid)hid.value=parseInt(row.largura)||80;}
-        }else{if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}if(txt)txt.textContent='Assistente não encontrado. Baixe e abra o programa abaixo.';impAddLog('Assistente offline ('+Math.round(ago)+'s)','err');}
-    }).catch(function(){if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}impAddLog('Assistente offline','err');});
+    var badge = document.getElementById('imp-assistente-badge');
+    var txt   = document.getElementById('imp-status-txt');
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', IMP_SERVIDOR + '/status', true);
+    xhr.timeout = 3000;
+    xhr.onload = function() {
+        try {
+            var d = JSON.parse(xhr.responseText);
+            if (d.ok) {
+                if (badge) { badge.style.background='#dcfce7'; badge.style.color='#16a34a'; badge.style.border='1.5px solid #bbf7d0'; badge.textContent='● Online'; }
+                if (txt) txt.textContent = 'Assistente rodando na porta ' + d.porta + ' · versão ' + d.versao;
+                impAddLog('Assistente online — porta ' + d.porta, 'ok');
+                // Carrega config salva
+                var xhr2 = new XMLHttpRequest();
+                xhr2.open('GET', IMP_SERVIDOR + '/', true);
+                xhr2.timeout = 3000;
+                xhr2.onload = function() {
+                    try {
+                        var d2 = JSON.parse(xhr2.responseText);
+                        if (d2.config && d2.config.impressora) {
+                            var el = document.getElementById('imp-modal-nome');
+                            if (el && !el.value) el.value = d2.config.impressora;
+                            var larg = parseInt(d2.config.largura) || 80;
+                            var b58 = document.getElementById('imp-larg-58');
+                            var b80 = document.getElementById('imp-larg-80');
+                            if (b58 && b80) {
+                                b58.className = larg===58 ? 'imp-largura-btn active' : 'imp-largura-btn';
+                                b80.className = larg===80 ? 'imp-largura-btn active' : 'imp-largura-btn';
+                            }
+                            var hid = document.getElementById('imp-largura');
+                            if (hid) hid.value = larg;
+                        }
+                    } catch(e) {}
+                };
+                xhr2.send();
+            }
+        } catch(e) {}
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+        if (badge) { badge.style.background='#fecdd3'; badge.style.color='#e30613'; badge.style.border='1.5px solid #fca5a5'; badge.textContent='● Offline'; }
+        if (txt) txt.textContent = 'Assistente não encontrado. Baixe e abra o programa abaixo.';
+        impAddLog('Assistente offline', 'err');
+    };
+    xhr.send();
 }
 
 function impBaixarConfig() {
@@ -4421,21 +4524,33 @@ function impPopularSelect() {
 }
 
 function impBuscarImpressoras() {
-    var btn=document.getElementById('imp-btn-buscar'),sel=document.getElementById('imp-sel-sistema');
-    if(btn)btn.innerHTML='<i class="fas fa-rotate fa-spin"></i> Buscando...';
-    impAddLog('Buscando impressoras...','info');
-    if(!REST_ID){if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';impAddLog('Faça login primeiro.','err');return;}
-    fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID+'&select=*&limit=1',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}})
-    .then(function(r){return r.json();}).then(function(rows){
-        if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';
-        var row=Array.isArray(rows)?rows[0]:null;
-        if(!row){impAddLog('Assistente offline. Abra o programa.','err');return;}
-        var ago=(Date.now()-new Date(row.atualizado_em).getTime())/1000;
-        if(ago>60){impAddLog('Assistente offline ('+Math.round(ago)+'s).','err');return;}
-        var lista=row.impressoras||[];
-        if(sel){sel.innerHTML='<option value="">Selecione a impressora...</option>';lista.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});sel.onchange=function(){if(sel.value){var el=document.getElementById('imp-modal-nome');if(el)el.value=sel.value;}};}
-        impAddLog('Encontradas '+lista.length+' impressoras',lista.length?'ok':'err');
-    }).catch(function(e){if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';impAddLog('Erro: '+(e.message||e),'err');});
+    var btn = document.getElementById('imp-btn-buscar');
+    var sel = document.getElementById('imp-sel-sistema');
+    if (btn) btn.innerHTML = '<i class="fas fa-rotate fa-spin"></i> Buscando...';
+    impAddLog('Buscando impressoras...', 'info');
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', IMP_SERVIDOR + '/impressoras', true);
+    xhr.timeout = 6000;
+    xhr.onload = function() {
+        if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar';
+        try {
+            var d = JSON.parse(xhr.responseText);
+            if (sel) {
+                sel.innerHTML = '<option value="">Selecione a impressora...</option>';
+                (d.impressoras||[]).forEach(function(n) {
+                    var o = document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o);
+                });
+                sel.onchange = function() { if(sel.value) { var el=document.getElementById('imp-modal-nome'); if(el) el.value=sel.value; } };
+            }
+            impAddLog('Encontradas ' + (d.impressoras||[]).length + ' impressoras', 'ok');
+            if (!(d.impressoras||[]).length) impAddLog('Nenhuma encontrada. Verifique se o assistente está rodando.', 'err');
+        } catch(e) { impAddLog('Erro ao buscar: ' + e.message, 'err'); }
+    };
+    xhr.onerror = xhr.ontimeout = function() {
+        if (btn) btn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Buscar';
+        impAddLog('Assistente offline. Baixe e abra o programa.', 'err');
+    };
+    xhr.send();
 }
 
 function impFecharModal() {
@@ -4565,12 +4680,12 @@ function impAtualizarPreview() {
     localStorage.setItem(IMP_KEY, JSON.stringify(cfgSave));
 }
 
-var IMP_SERVIDOR = 'http://localhost:9876';
+var IMP_SERVIDOR = 'http://127.0.0.1:9876';
 
 // Retorna o nome da impressora principal salva na lista
 function impGetNomeImpressora() {
     try {
-        var lista = JSON.parse(localStorage.getItem(IMP_LIST)) || [];
+        var lista = JSON.parse(localStorage.getItem('f_impressora_lista')) || [];
         // Prioridade: impressora de 'Caixa', senão a primeira da lista
         var caixa = lista.find(function(i){ return i.func === 'Caixa'; });
         var imp   = caixa || lista[0];
@@ -4863,7 +4978,7 @@ function txMapaIniciar() {
     txMapaDesenharCirculos();
 
     // Tenta centralizar pela cidade da loja
-    var impCfg = (function(){ try{ return JSON.parse(localStorage.getItem(IMP_KEY))||{}; }catch(e){ return {}; } })();
+    var impCfg = (function(){ try{ return JSON.parse(localStorage.getItem('f_impressora_cfg'))||{}; }catch(e){ return {}; } })();
     var cidade = impCfg.lojaCidade || '';
     if (cidade && !cfg.centroLat) txMapaBuscarCidade(cidade);
 }
@@ -5097,42 +5212,8 @@ function imprimirPedido(id, pedidoOverride) {
         });
     }
 
-    // ── NOVA LÓGICA: envia pedido para impressão via Supabase ──
-    // O assistente local faz polling no Supabase e imprime automaticamente.
-    // Isso elimina o bloqueio Chrome PNA (localhost de HTTPS).
-    if (o._supa_id && REST_ID) {
-        var dadosImp = {
-            config: {
-                lojaNome:      cfg.lojaNome  || 'Nome da Loja',
-                largura:       cfg.largura   || '80',
-                rodape:        cfg.rodape    || '',
-                showCodigo:    cfg.showCodigo   !== false,
-                showData:      cfg.showData     !== false,
-                showPrevisao:  cfg.showPrevisao !== false,
-                showTotLoja:   cfg.showTotLoja  !== false,
-                showCelular:   cfg.showCelular  !== false,
-                showEndereco:  cfg.showEndereco !== false,
-                showSubtotal:  cfg.showSubtotal !== false,
-                showPgto:      cfg.showPgto     !== false,
-                tempoEntrega:  cfgTx.tempoEntrega  || 40,
-                tempoRetirada: cfgTx.tempoRetirada || 20,
-                taxaPadrao:    cfgTx.taxaPadrao    || 5,
-                dbComps:       db.comps || []
-            }
-        };
-        // Marca impresso=false para o assistente pegar + salva config da nota
-        supaReq('PATCH', 'pedidos?id=eq.' + o._supa_id + '&restaurante_id=eq.' + REST_ID,
-            { impresso: false, dados_impressao: dadosImp })
-        .then(function() {
-            impFeedback('✓ Enviado para impressora!', '#16a34a');
-        })
-        .catch(function() {
-            impFeedback('⚠ Erro ao enviar para impressão', '#e30613');
-        });
-        return;
-    }
-
-    // Fallback: tenta via localhost (ex: pedido PDV sem _supa_id ainda)
+    // Lê toggles diretamente dos checkboxes (mais confiável que localStorage)
+    // Lê diretamente do localStorage — funciona mesmo fora da aba de impressão
     var dados = {
         pedido: pedidoResolv,
         config: {
@@ -5154,10 +5235,13 @@ function imprimirPedido(id, pedidoOverride) {
         },
         impressora: impGetNomeImpressora() || IMP_NOME_IMPRESSORA
     };
+
+    // Tenta via XMLHttpRequest (funciona melhor com file://)
     var xhr = new XMLHttpRequest();
     xhr.open('POST', IMP_SERVIDOR + '/imprimir', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.timeout = 15000;
+    xhr.timeout = 15000; // 15 segundos — tempo suficiente para PowerShell imprimir
+
     xhr.onload = function() {
         try {
             var resp = JSON.parse(xhr.responseText);
@@ -5167,10 +5251,20 @@ function imprimirPedido(id, pedidoOverride) {
             impFeedback('✓ Enviado para impressora!', '#16a34a');
         }
     };
-    xhr.onerror = xhr.ontimeout = function() {
+
+    xhr.onerror = function() {
+        // Assistente offline: mostra aviso, NÃO abre diálogo do navegador
         impFeedback('⚠ Assistente offline — pedido não impresso', '#f59e0b');
     };
-    try { xhr.send(JSON.stringify(dados)); } catch(e) {
+
+    xhr.ontimeout = function() {
+        // Timeout: mostra aviso, NÃO abre diálogo do navegador
+        impFeedback('⚠ Impressora demorou — verifique o assistente', '#f59e0b');
+    };
+
+    try {
+        xhr.send(JSON.stringify(dados));
+    } catch(e) {
         impFeedback('⚠ Assistente offline — pedido não impresso', '#f59e0b');
     }
 }
@@ -6200,20 +6294,7 @@ async function supaReq(method, path, body) {
     return txt ? JSON.parse(txt) : null;
 }
 async function supaGet(table, query) {
-    if (!REST_ID && SUPA_TOKEN) {
-        try {
-            const u = await authGetRestaurante(SUPA_TOKEN);
-            REST_ID = u.restaurante_id;
-            impAtualizarChaves();
-        } catch(e) {}
-    }
-    if (!REST_ID) { return []; }
-
-    return supaReq(
-        'GET',
-        table + '?restaurante_id=eq.' + REST_ID + (query ? '&' + query : '') + '&select=*',
-        null
-    );
+    return supaReq('GET', table + '?restaurante_id=eq.' + REST_ID + (query ? '&' + query : '') + '&select=*', null);
 }
 async function supaInsert(table, obj) {
     return supaReq('POST', table, { ...obj, restaurante_id: REST_ID });
@@ -6497,10 +6578,6 @@ async function authVerificarSessao() {
         }
         SUPA_TOKEN = sess.token;
         REST_ID    = sess.restId;
-        if (!REST_ID && SUPA_TOKEN) {
-            try { const u = await authGetRestaurante(SUPA_TOKEN); REST_ID = u.restaurante_id; authSalvarSessao(SUPA_TOKEN, REST_ID, sess.nomeUsuario, sess.role); } catch(e) { return false; }
-        }
-        if (!REST_ID) return false;
         impAtualizarChaves();
         var _elNome = document.getElementById('login-usuario-nome');
         if (_elNome) _elNome.textContent = sess.nomeUsuario || 'Admin';
