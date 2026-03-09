@@ -4228,6 +4228,11 @@ function openOrderDetails(id) {
 // ── IMPRESSORA ─────────────────────────────────────────────────────
 var IMP_KEY  = 'f_impressora_cfg';
 var IMP_LIST = 'f_impressora_lista';
+function impAtualizarChaves() {
+    var rid = (typeof REST_ID !== 'undefined' && REST_ID) ? REST_ID : 'default';
+    IMP_KEY  = 'f_impressora_cfg_'  + rid;
+    IMP_LIST = 'f_impressora_lista_' + rid;
+}
 
 function impGetConfig() {
     try {
@@ -6543,6 +6548,7 @@ async function authVerificarSessao() {
         }
         SUPA_TOKEN = sess.token;
         REST_ID    = sess.restId;
+        impAtualizarChaves();
         var _elNome = document.getElementById('login-usuario-nome');
         if (_elNome) _elNome.textContent = sess.nomeUsuario || 'Admin';
         // Carregar nome da loja salvo
@@ -6576,6 +6582,7 @@ async function authFazerLogin() {
 
         const usuario = await authGetRestaurante(SUPA_TOKEN);
         REST_ID = usuario.restaurante_id;
+        impAtualizarChaves();
 
         authSalvarSessao(SUPA_TOKEN, REST_ID, usuario.nome, usuario.role);
         document.getElementById('login-usuario-nome').textContent = usuario.nome || email;
