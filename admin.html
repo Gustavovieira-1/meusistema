@@ -4442,7 +4442,7 @@ function impSalvarImpressora() {
         } catch(e) {}
     };
     xhr.onerror = function() { impAddLog('Erro: assistente offline', 'err'); };
-    xhr.send(JSON.stringify({ impressora: nome, largura: parseInt(larg) }));
+    xhr.send(JSON.stringify({ impressora: nome, largura: parseInt(larg), restaurante_id: REST_ID || '', token: SUPA_TOKEN || '' }));
 }
 
 // ── LISTA DE IMPRESSORAS ───────────────────────────
@@ -6407,7 +6407,8 @@ async function supaSalvarPedido(pedido) {
             pagamento: pedido.pagamento, troco: pedido.troco || 0,
             itens: pedido.items || [], subtotal: pedido.subtotal || pedido.total,
             taxa_entrega: pedido.taxaEntrega || 0, desconto_pontos: pedido.descontoPontos || 0,
-            total: pedido.total, status: pedido.status || 'analise'
+            total: pedido.total, status: pedido.status || 'analise',
+            impresso: false
         });
         if (r && r[0]) pedido._supa_id = r[0].id;
     } catch(e) { console.warn('[Supabase] Salvar pedido:', e.message); }
