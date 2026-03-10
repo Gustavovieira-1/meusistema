@@ -4365,11 +4365,15 @@ function impBaixarConfig() {
     var nome = (document.getElementById('imp-modal-nome')||{}).value||'';
     var larg = (document.getElementById('imp-largura')||{}).value||'80';
     var cfg = impGetConfig();
+    // Pega refresh_token da sessão salva para renovação automática
+    var sessao = {};
+    try { sessao = JSON.parse(localStorage.getItem('supa_session') || '{}'); } catch(e) {}
     var obj = {
         impressora: nome || cfg.impressora || '',
         largura: parseInt(larg) || 80,
         restaurante_id: REST_ID || '',
         token: SUPA_TOKEN || '',
+        refresh_token: sessao.refresh_token || '',
         lojaNome: cfg.lojaNome || '',
         rodape: cfg.rodape || ''
     };
@@ -6501,9 +6505,10 @@ async function authLogout() {
     mostrarTelaLogin();
 }
 
-function authSalvarSessao(token, restId, nomeUsuario, role) {
+function authSalvarSessao(token, restId, nomeUsuario, role, refreshToken) {
     localStorage.setItem('supa_session', JSON.stringify({
         token, restId, nomeUsuario, role,
+        refresh_token: refreshToken || '',
         salvoEm: Date.now()
     }));
 }
@@ -6603,7 +6608,7 @@ async function authFazerLogin() {
         REST_ID = usuario.restaurante_id;
         impAtualizarChaves();
 
-        authSalvarSessao(SUPA_TOKEN, REST_ID, usuario.nome, usuario.role);
+        authSalvarSessao(SUPA_TOKEN, REST_ID, usuario.nome, usuario.role, sessao.refresh_token || '');
         document.getElementById('login-usuario-nome').textContent = usuario.nome || email;
 
         // Limpar dados do restaurante anterior antes de carregar o novo
