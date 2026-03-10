@@ -4376,7 +4376,12 @@ function impBaixarConfig() {
     var blob = new Blob([JSON.stringify(obj, null, 2)], {type: 'application/json'});
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'assistente-config.json';
+    var nomeLoja = (cfg.lojaNome || REST_ID || 'config')
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    a.download = 'assistente-config-' + nomeLoja + '.json';
     a.click();
     impAddLog('✓ Config baixada! Coloque o arquivo na pasta do AssistenteImpressao.exe', 'ok');
 }
