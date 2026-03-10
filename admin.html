@@ -6360,7 +6360,9 @@ async function supaCarregarPedidos() {
             });
             const idsNuvem = new Set(mapped.map(o => o.id));
             const pedidosNovos = mapped.filter(o => !orders.find(ord => ord.id === o.id) && o.status === 'analise');
-            orders = [...mapped, ...orders.filter(o => !idsNuvem.has(o.id))];
+            // Substitui completamente — não mescla com cache anterior
+            orders = mapped;
+            localStorage.setItem('f_orders', JSON.stringify(orders));
             renderOrders();
             // 🔊 Tocar som se chegou novo pedido em análise
             if (pedidosNovos.length > 0) {
@@ -6603,6 +6605,21 @@ async function authFazerLogin() {
 
         authSalvarSessao(SUPA_TOKEN, REST_ID, usuario.nome, usuario.role);
         document.getElementById('login-usuario-nome').textContent = usuario.nome || email;
+
+        // Limpar dados do restaurante anterior antes de carregar o novo
+        orders = [];
+        localStorage.removeItem('f_orders');
+        localStorage.removeItem('f_cats');
+        localStorage.removeItem('f_prods');
+        localStorage.removeItem('f_comps');
+        localStorage.removeItem('f_cfg_loja');
+        localStorage.removeItem('f_horarios');
+        localStorage.removeItem('f_taxas_config');
+        localStorage.removeItem('f_fidelidade_cfg');
+        localStorage.removeItem('f_fidelidade_cli');
+        localStorage.removeItem('f_cupons');
+        localStorage.removeItem('f_integracoes');
+
         esconderTelaLogin();
         inicializarSistema();
         supaCarregarCardapio();
