@@ -4192,9 +4192,10 @@ function impInicializar() {
     var cfg = impGetConfig();
     // Preenche campos
     var set = function(id,v){ var e=document.getElementById(id); if(e&&v!==undefined) e.value=v; };
-    set('imp-loja-nome', cfg.lojaNome||'');
-    set('imp-largura',   cfg.largura||'80');
-    set('imp-rodape',    cfg.rodape||'');
+    set('imp-loja-nome',  cfg.lojaNome||'');
+    set('imp-largura',    cfg.largura||'80');
+    set('imp-rodape',     cfg.rodape||'');
+    set('imp-modal-nome', cfg.impressora||''); // ← preenche impressora salva
     // Toggles de notinha
     var chk = function(id,v){ var e=document.getElementById(id); if(e) e.checked=(v!==false); };
     chk('imp-cnpj', cfg.cnpj); chk('imp-cat', cfg.cat); chk('imp-desc', cfg.desc);
@@ -4362,14 +4363,27 @@ function impVerificarStatus() {
 }
 
 function impBaixarConfig() {
-    var nome = (document.getElementById('imp-modal-nome')||{}).value||'';
-    var larg = (document.getElementById('imp-largura')||{}).value||'80';
-    var cfg = impGetConfig();
-    // Pega refresh_token da sessão salva para renovação automática
+    var cfg  = impGetConfig();
+    var nome = ((document.getElementById('imp-modal-nome')||{}).value||'').trim() || cfg.impressora || '';
+    var larg = (document.getElementById('imp-largura')||{}).value || cfg.largura || '80';
+
+    // Bloqueia se não tiver impressora definida
+    if (!nome) {
+        var el = document.getElementById('imp-modal-nome');
+        if (el) { el.style.borderColor='#e30613'; el.focus(); el.placeholder='⚠️ Digite o nome da impressora primeiro!'; }
+        impAddLog('⚠️ Digite o nome da impressora antes de baixar o config!', 'erro');
+        return;
+    }
+
+    // Salva impressora no config local
+    cfg.impressora = nome;
+    cfg.largura = parseInt(larg) || 80;
+    localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
+
     var sessao = {};
     try { sessao = JSON.parse(localStorage.getItem('supa_session') || '{}'); } catch(e) {}
     var obj = {
-        impressora: nome || cfg.impressora || '',
+        impressora: nome,
         largura: parseInt(larg) || 80,
         restaurante_id: REST_ID || '',
         token: SUPA_TOKEN || '',
@@ -4387,7 +4401,7 @@ function impBaixarConfig() {
         .replace(/^-+|-+$/g, '');
     a.download = 'assistente-config-' + nomeLoja + '.json';
     a.click();
-    impAddLog('✓ Config baixada! Coloque o arquivo na pasta do AssistenteImpressao.exe', 'ok');
+    impAddLog('✓ Config baixada! Impressora: ' + nome + ' | Coloque na pasta do AssistenteImpressao.exe', 'ok');
 }
 
 function impSalvarImpressora() {
