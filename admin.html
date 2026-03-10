@@ -3148,6 +3148,9 @@ function aplicarStatusLoja() {
 function toggleLojaStatus() {
     lojaPausada = !lojaPausada;
     localStorage.setItem('f_loja_pausada', JSON.stringify(lojaPausada));
+    // Salvar no Supabase para que o cardápio veja a mudança
+    supaUpsert('configuracoes', { pausada: lojaPausada }, 'restaurante_id')
+        .catch(e => console.warn('Supa toggleLoja:', e.message));
     cardapioSync();
     aplicarStatusLoja();
 }
@@ -4192,9 +4195,10 @@ function impInicializar() {
     var cfg = impGetConfig();
     // Preenche campos
     var set = function(id,v){ var e=document.getElementById(id); if(e&&v!==undefined) e.value=v; };
-    set('imp-loja-nome', cfg.lojaNome||'');
-    set('imp-largura',   cfg.largura||'80');
-    set('imp-rodape',    cfg.rodape||'');
+    set('imp-loja-nome',  cfg.lojaNome||'');
+    set('imp-largura',    cfg.largura||'80');
+    set('imp-rodape',     cfg.rodape||'');
+    set('imp-modal-nome', cfg.impressora||''); // ← preenche impressora salva
     // Toggles de notinha
     var chk = function(id,v){ var e=document.getElementById(id); if(e) e.checked=(v!==false); };
     chk('imp-cnpj', cfg.cnpj); chk('imp-cat', cfg.cat); chk('imp-desc', cfg.desc);
@@ -4262,14 +4266,6 @@ function impSalvar() {
     if ((gv = c('imp-show-subtotal')) !== null) cfg.showSubtotal = gv;
     if ((gv = c('imp-show-pgto'))     !== null) cfg.showPgto     = gv;
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-    // Salva lojaNome e largura no Supabase também para persistir entre contas
-    if (REST_ID && cfg.lojaNome) {
-        fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID, {
-            method: 'PATCH',
-            headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
-            body: JSON.stringify({ loja_nome: cfg.lojaNome, largura: parseInt(cfg.largura)||80 })
-        }).catch(function(){});
-    }
     var btn = document.getElementById('imp-btn-salvar');
     if (btn) {
         var orig = btn.innerHTML;
@@ -4342,23 +4338,9 @@ function impVerificarStatus() {
             // Preenche campo de impressora automaticamente se vazio
             if(row.impressora){
                 var el=document.getElementById('imp-modal-nome');
-                if(el) el.value=row.impressora;
+                if(el&&!el.value) el.value=row.impressora;
                 var hid=document.getElementById('imp-largura');
                 if(hid) hid.value=parseInt(row.largura)||80;
-                // Atualiza botões 58/80mm
-                document.querySelectorAll('.imp-largura-btn').forEach(function(b){
-                    b.classList.toggle('active', b.textContent.replace('mm','') === String(parseInt(row.largura)||80));
-                });
-            }
-            // Carrega nome da loja do Supabase
-            if(row.loja_nome){
-                var cfg = impGetConfig();
-                if(!cfg.lojaNome) {
-                    cfg.lojaNome = row.loja_nome;
-                    localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-                    var elNome = document.getElementById('imp-loja-nome');
-                    if(elNome && !elNome.value) elNome.value = row.loja_nome;
-                }
             }
             // Popula select com impressoras detectadas pelo assistente
             var sel=document.getElementById('imp-sel-sistema');
@@ -4384,14 +4366,27 @@ function impVerificarStatus() {
 }
 
 function impBaixarConfig() {
-    var nome = (document.getElementById('imp-modal-nome')||{}).value||'';
-    var larg = (document.getElementById('imp-largura')||{}).value||'80';
-    var cfg = impGetConfig();
-    // Pega refresh_token da sessão salva para renovação automática
+    var cfg  = impGetConfig();
+    var nome = ((document.getElementById('imp-modal-nome')||{}).value||'').trim() || cfg.impressora || '';
+    var larg = (document.getElementById('imp-largura')||{}).value || cfg.largura || '80';
+
+    // Bloqueia se não tiver impressora definida
+    if (!nome) {
+        var el = document.getElementById('imp-modal-nome');
+        if (el) { el.style.borderColor='#e30613'; el.focus(); el.placeholder='⚠️ Digite o nome da impressora primeiro!'; }
+        impAddLog('⚠️ Digite o nome da impressora antes de baixar o config!', 'erro');
+        return;
+    }
+
+    // Salva impressora no config local
+    cfg.impressora = nome;
+    cfg.largura = parseInt(larg) || 80;
+    localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
+
     var sessao = {};
     try { sessao = JSON.parse(localStorage.getItem('supa_session') || '{}'); } catch(e) {}
     var obj = {
-        impressora: nome || cfg.impressora || '',
+        impressora: nome,
         largura: parseInt(larg) || 80,
         restaurante_id: REST_ID || '',
         token: SUPA_TOKEN || '',
@@ -4409,7 +4404,7 @@ function impBaixarConfig() {
         .replace(/^-+|-+$/g, '');
     a.download = 'assistente-config-' + nomeLoja + '.json';
     a.click();
-    impAddLog('✓ Config baixada! Coloque o arquivo na pasta do AssistenteImpressao.exe', 'ok');
+    impAddLog('✓ Config baixada! Impressora: ' + nome + ' | Coloque na pasta do AssistenteImpressao.exe', 'ok');
 }
 
 function impSalvarImpressora() {
@@ -4431,7 +4426,6 @@ function impSalvarImpressora() {
             restaurante_id: REST_ID,
             impressora: nome,
             largura: parseInt(larg) || 80,
-            loja_nome: (impGetConfig().lojaNome || ''),
             atualizado_em: new Date().toISOString()
         })
     }).then(function() {
@@ -6691,15 +6685,23 @@ async function supaCarregarConfigs() {
             supaGet('taxas_entrega', ''),
             supaGet('integracoes', '')
         ]);
-        if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
-            const atual = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
-            if (!atual.nomeMarca) localStorage.setItem('f_cfg_loja', JSON.stringify(cfgRows[0].dados_extras));
-            // Atualizar nome no sidebar
-            var _cfgCarregada = cfgRows[0].dados_extras || {};
-            if (_cfgCarregada.nomeMarca) {
-                var _sn = document.getElementById('sidebar-nome-loja');
-                if (_sn) _sn.textContent = _cfgCarregada.nomeMarca;
-                document.title = _cfgCarregada.nomeMarca + ' — Admin';
+        if (cfgRows && cfgRows[0]) {
+            if (cfgRows[0].dados_extras) {
+                const atual = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
+                if (!atual.nomeMarca) localStorage.setItem('f_cfg_loja', JSON.stringify(cfgRows[0].dados_extras));
+                // Atualizar nome no sidebar
+                var _cfgCarregada = cfgRows[0].dados_extras || {};
+                if (_cfgCarregada.nomeMarca) {
+                    var _sn = document.getElementById('sidebar-nome-loja');
+                    if (_sn) _sn.textContent = _cfgCarregada.nomeMarca;
+                    document.title = _cfgCarregada.nomeMarca + ' — Admin';
+                }
+            }
+            // Sincronizar estado pausada do Supabase -> localStorage
+            if (typeof cfgRows[0].pausada !== 'undefined') {
+                lojaPausada = cfgRows[0].pausada === true;
+                localStorage.setItem('f_loja_pausada', JSON.stringify(lojaPausada));
+                aplicarStatusLoja();
             }
         }
         if (horRows && horRows[0] && horRows[0].dados)
@@ -8539,12 +8541,12 @@ function cfgSalvar() {
         document.title = obj.nomeMarca + ' — Admin';
     }
 
-    // Supabase
+    // Supabase — preserva o estado atual de pausada, não sobrescreve com false
     supaUpsert('configuracoes', {
         nome_marca: obj.nomeMarca, nome_unidade: obj.nomeUnidade,
         logo: obj.logo, capa: obj.capa,
         delivery_minimo: obj.deliveryMinimo || 0,
-        pausada: false, dados_extras: obj
+        pausada: lojaPausada, dados_extras: obj
     }, 'restaurante_id').catch(e => console.warn('Supa cfg:', e.message));
     cupToast('Configurações salvas!', '#16a34a');
 }
