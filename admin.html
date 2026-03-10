@@ -4319,12 +4319,46 @@ function impVerificarStatus() {
     fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID+'&select=*&limit=1',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}})
     .then(function(r){return r.json();}).then(function(rows){
         var row=Array.isArray(rows)?rows[0]:null;
-        if(!row){if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}if(txt)txt.textContent='Assistente não encontrado. Baixe e abra o programa abaixo.';impAddLog('Assistente offline','err');return;}
-        var ago=(Date.now()-new Date(row.atualizado_em).getTime())/1000;
-        if(ago<60){if(badge){badge.style.background='#dcfce7';badge.style.color='#16a34a';badge.textContent='● Online';}if(txt)txt.textContent='Assistente rodando · v'+(row.versao||'3');impAddLog('Assistente online','ok');
-            if(row.impressora){var el=document.getElementById('imp-modal-nome');if(el&&!el.value)el.value=row.impressora;var hid=document.getElementById('imp-largura');if(hid)hid.value=parseInt(row.largura)||80;}
-        }else{if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}if(txt)txt.textContent='Assistente não encontrado. Baixe e abra o programa abaixo.';impAddLog('Assistente offline ('+Math.round(ago)+'s)','err');}
-    }).catch(function(){if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}impAddLog('Assistente offline','err');});
+        if(!row){
+            if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}
+            if(txt)txt.textContent='Assistente não encontrado. Baixe e abra o programa abaixo.';
+            impAddLog('Assistente offline — nenhum registro no servidor','err');
+            return;
+        }
+        var ago=Math.round((Date.now()-new Date(row.atualizado_em).getTime())/1000);
+        if(ago < 90){
+            if(badge){badge.style.background='#dcfce7';badge.style.color='#16a34a';badge.textContent='● Online';}
+            var impNome = row.impressora || '(sem impressora)';
+            if(txt)txt.textContent='Assistente online · v'+(row.versao||'3')+' · '+impNome+' · '+row.impressoras.length+' impressoras';
+            impAddLog('Assistente online · '+impNome,'ok');
+            // Preenche campo de impressora automaticamente se vazio
+            if(row.impressora){
+                var el=document.getElementById('imp-modal-nome');
+                if(el&&!el.value) el.value=row.impressora;
+                var hid=document.getElementById('imp-largura');
+                if(hid) hid.value=parseInt(row.largura)||80;
+            }
+            // Popula select com impressoras detectadas pelo assistente
+            var sel=document.getElementById('imp-sel-sistema');
+            if(sel && row.impressoras && row.impressoras.length){
+                sel.innerHTML='<option value="">Selecione a impressora...</option>';
+                row.impressoras.forEach(function(n){
+                    var o=document.createElement('option');
+                    o.value=n; o.textContent=n;
+                    if(n===row.impressora) o.selected=true;
+                    sel.appendChild(o);
+                });
+                sel.onchange=function(){if(sel.value){var el=document.getElementById('imp-modal-nome');if(el)el.value=sel.value;}};
+            }
+        } else {
+            if(badge){badge.style.background='#fff7ed';badge.style.color='#c2410c';badge.textContent='● Inativo';}
+            if(txt)txt.textContent='Assistente parado há '+ago+'s. Verifique se o programa está aberto.';
+            impAddLog('Assistente offline ('+ago+'s atrás)','err');
+        }
+    }).catch(function(e){
+        if(badge){badge.style.background='#fecdd3';badge.style.color='#e30613';badge.textContent='● Offline';}
+        impAddLog('Erro ao verificar: '+(e.message||e),'err');
+    });
 }
 
 function impBaixarConfig() {
@@ -4351,24 +4385,37 @@ function impSalvarImpressora() {
     var nome  = (document.getElementById('imp-modal-nome')||{}).value||'';
     var larg  = (document.getElementById('imp-largura')||{}).value||'80';
     if (!nome.trim()) { impAddLog('Digite o nome da impressora!', 'err'); return; }
-    // Tenta salvar via HTTP no assistente
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', IMP_SERVIDOR + '/configurar', true);
-    xhr.setRequestHeader('Content-Type','application/json');
-    xhr.timeout = 4000;
-    xhr.onload = function() {
-        try {
-            var d = JSON.parse(xhr.responseText);
-            if (d.ok) { impAddLog('✓ Impressora salva: ' + nome, 'ok'); impFeedback('✓ Impressora salva!', '#16a34a'); }
-        } catch(e) {}
-    };
-    xhr.onerror = function() {
-        // Fallback: oferece download do config
-        impAddLog('Assistente offline — baixe o arquivo de config abaixo', 'err');
-        impBaixarConfig();
-    };
-    xhr.ontimeout = function() { impBaixarConfig(); };
-    xhr.send(JSON.stringify({ impressora: nome, largura: parseInt(larg), restaurante_id: REST_ID || '', token: SUPA_TOKEN || '' }));
+    if (!REST_ID) { impAddLog('Faça login primeiro!', 'err'); return; }
+
+    // 1) Salva no Supabase (assistente_status) — método principal e garantido
+    fetch(SUPA_URL+'/rest/v1/assistente_status?on_conflict=restaurante_id', {
+        method: 'POST',
+        headers: {
+            'apikey': SUPA_KEY,
+            'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+            restaurante_id: REST_ID,
+            impressora: nome,
+            largura: parseInt(larg) || 80,
+            atualizado_em: new Date().toISOString()
+        })
+    }).then(function() {
+        impAddLog('✓ Impressora salva no servidor: ' + nome, 'ok');
+        impFeedback('✓ Impressora salva!', '#16a34a');
+        // Atualiza o config local também
+        var cfg = impGetConfig();
+        cfg.impressora = nome;
+        cfg.largura = larg;
+        localStorage.setItem('f_impressora_cfg_' + (REST_ID||'default'), JSON.stringify(cfg));
+        impAddLog('→ Baixe o config atualizado para o .exe usar a nova impressora', 'info');
+        // Oferece download do config automaticamente
+        setTimeout(impBaixarConfig, 800);
+    }).catch(function(e) {
+        impAddLog('Erro ao salvar: ' + e.message, 'err');
+    });
 }
 
 // ── LISTA DE IMPRESSORAS ───────────────────────────
@@ -4430,11 +4477,23 @@ function impBuscarImpressoras() {
         if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';
         var row=Array.isArray(rows)?rows[0]:null;
         if(!row){impAddLog('Assistente offline. Abra o programa.','err');return;}
-        var ago=(Date.now()-new Date(row.atualizado_em).getTime())/1000;
-        if(ago>60){impAddLog('Assistente offline ('+Math.round(ago)+'s).','err');return;}
+        var ago=Math.round((Date.now()-new Date(row.atualizado_em).getTime())/1000);
+        if(ago>90){impAddLog('Assistente parado há '+ago+'s. Verifique se está aberto.','err');return;}
         var lista=row.impressoras||[];
-        if(sel){sel.innerHTML='<option value="">Selecione a impressora...</option>';lista.forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});sel.onchange=function(){if(sel.value){var el=document.getElementById('imp-modal-nome');if(el)el.value=sel.value;}};}
-        impAddLog('Encontradas '+lista.length+' impressoras',lista.length?'ok':'err');
+        var impressoraAtual=row.impressora||'';
+        if(sel){
+            sel.innerHTML='<option value="">Selecione a impressora...</option>';
+            lista.forEach(function(n){
+                var o=document.createElement('option');
+                o.value=n; o.textContent=n;
+                if(n===impressoraAtual) o.selected=true;
+                sel.appendChild(o);
+            });
+            sel.onchange=function(){if(sel.value){var el=document.getElementById('imp-modal-nome');if(el)el.value=sel.value;}};
+        }
+        // Auto-preenche o campo de nome com a impressora atual
+        if(impressoraAtual){var el=document.getElementById('imp-modal-nome');if(el&&!el.value)el.value=impressoraAtual;}
+        impAddLog('Encontradas '+lista.length+' impressoras'+(impressoraAtual?' · Atual: '+impressoraAtual:''),lista.length?'ok':'err');
     }).catch(function(e){if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';impAddLog('Erro: '+(e.message||e),'err');});
 }
 
