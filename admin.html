@@ -5154,8 +5154,18 @@ function intDesativar() {
 }
 
 function intSalvarSupabase(cfg) {
-    if (!REST_ID) return;
-    // Usa service_role key para garantir que passa pelo RLS (igual à impressora)
+    // Se REST_ID ainda não foi carregado, tenta pegar da sessão salva
+    var rid = REST_ID;
+    if (!rid) {
+        try { var s = JSON.parse(localStorage.getItem('supa_session') || '{}'); rid = s.restId || null; } catch(e) {}
+    }
+    if (!rid) {
+        console.error('[Integrações] REST_ID não disponível — não foi possível salvar no Supabase');
+        alert('Erro: sessão não identificada. Faça logout e login novamente.');
+        return;
+    }
+    console.log('[Integrações] Salvando para restaurante:', rid);
+    // Usa service_role key — bypassa RLS completamente
     fetch(SUPA_URL + '/rest/v1/integracoes?on_conflict=restaurante_id', {
         method: 'POST',
         headers: {
@@ -5164,14 +5174,20 @@ function intSalvarSupabase(cfg) {
             'Content-Type':  'application/json',
             'Prefer':        'return=minimal,resolution=merge-duplicates'
         },
-        body: JSON.stringify({ restaurante_id: REST_ID, dados: cfg })
+        body: JSON.stringify({ restaurante_id: rid, dados: cfg })
     }).then(function(r) {
         if (r.ok) {
-            console.log('[Integrações] Salvo no Supabase ✓');
+            console.log('[Integrações] ✅ Salvo no Supabase com sucesso');
         } else {
-            r.text().then(function(t) { console.error('[Integrações] Erro Supabase:', t); });
+            r.text().then(function(t) {
+                console.error('[Integrações] ❌ Erro Supabase:', t);
+                alert('Erro ao salvar integração: ' + t);
+            });
         }
-    }).catch(function(e) { console.error('[Integrações] Erro de rede:', e.message); });
+    }).catch(function(e) {
+        console.error('[Integrações] ❌ Erro de rede:', e.message);
+        alert('Erro de rede ao salvar integração: ' + e.message);
+    });
 }
 
 function intFecharModal() {
