@@ -2123,7 +2123,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <button onclick="impTestar()" style="background:#16a34a; border:none; color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px;">
                         <i class="fas fa-print"></i> Imprimir Teste
                     </button>
-                    <a id="imp-btn-baixar" href="https://oijcggqfcgjkgcaymjqx.supabase.co/storage/v1/object/sign/downloads/server%20(1).exe?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85MTdlOTE2Yi04ODdiLTQ0NmUtOWRiOC1kMDBkN2FjMDE5NDQiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJkb3dubG9hZHMvc2VydmVyICgxKS5leGUiLCJpYXQiOjE3NzMxOTIzMzAsImV4cCI6NDU0ODM2MDMzMH0.9u1FimAv7FK0ml-v_qLN6ndNdtWm2Nq2egPY4t7YECI" download style="background:#e30613; border:none; color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
+                    <a id="imp-btn-baixar" href="https://oijcggqfcgjkgcaymjqx.supabase.co/storage/v1/object/sign/downloads/server.exe?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85MTdlOTE2Yi04ODdiLTQ0NmUtOWRiOC1kMDBkN2FjMDE5NDQiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJkb3dubG9hZHMvc2VydmVyLmV4ZSIsImlhdCI6MTc3MzEwMDAwMywiZXhwIjo0Mjk1OTgwMDAzfQ.4udMGYoyGBOWgiyEvWGYt3RHNqgvXP8kjf9to6s-KNg" download style="background:#e30613; border:none; color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
                         <i class="fas fa-download"></i> Baixar .exe
                     </a>
                     <button onclick="impBaixarConfig()" style="background:#0f172a; border:none; color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px;">
@@ -2913,12 +2913,6 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                         <div id="pdv-linha-taxa" style="display:none; justify-content:space-between; font-size:13px; color:#16a34a; margin-bottom:4px; font-weight:600;">
                             <span>Taxa de entrega</span><span>R$ <span id="pdv-taxa-display">0,00</span></span>
                         </div>
-                        <div id="pdv-linha-cupom" style="display:none; justify-content:space-between; font-size:13px; color:#15803d; margin-bottom:4px; font-weight:600;">
-                            <span>🏷️ Cupom <span id="pdv-cupom-codigo"></span></span><span>-R$ <span id="pdv-cupom-display">0,00</span></span>
-                        </div>
-                        <div id="pdv-linha-pontos" style="display:none; justify-content:space-between; font-size:13px; color:#b45309; margin-bottom:4px; font-weight:600;">
-                            <span>🎁 Desconto pontos</span><span>-R$ <span id="pdv-pontos-display">0,00</span></span>
-                        </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; font-weight:bold; font-size:20px; border-top:1px solid #f1f5f9; padding-top:8px; margin-top:4px;">
                             <span style="font-size:13px; color:#666;">Total</span>
                             <span>R$ <span id="pdv-total">0,00</span></span>
@@ -3026,9 +3020,6 @@ let tempImg               = "";
 let tempImgData           = "";
 let modoEdicaoPDV         = false;
 let editandoPedidoId      = null;
-let pdvDescontoCupom      = 0;   // desconto de cupom ao editar pedido
-let pdvDescontoPontos     = 0;   // desconto de pontos de fidelidade ao editar pedido
-let pdvCupomCodigo        = '';  // código do cupom ao editar pedido
 
 // ── INICIALIZAÇÃO ──────────────────────────────────────────
 // Conecta SSE para receber pedidos online em tempo real
@@ -3157,9 +3148,6 @@ function aplicarStatusLoja() {
 function toggleLojaStatus() {
     lojaPausada = !lojaPausada;
     localStorage.setItem('f_loja_pausada', JSON.stringify(lojaPausada));
-    // Salvar no Supabase para que o cardápio veja a mudança
-    supaUpsert('configuracoes', { pausada: lojaPausada }, 'restaurante_id')
-        .catch(e => console.warn('Supa toggleLoja:', e.message));
     cardapioSync();
     aplicarStatusLoja();
 }
@@ -3242,9 +3230,6 @@ function editarPedido(id) {
     editandoPedidoId = id;
     carrinhoPDV      = (o.items || []).map(i => Object.assign({}, i));
     totalCarrinhoPDV = carrinhoPDV.reduce((s,i) => s + i.price * i.qtd, 0);
-    pdvDescontoCupom   = parseFloat(o.descontoCupom  || 0);
-    pdvDescontoPontos  = parseFloat(o.descontoPontos || o.desconto_pontos || 0);
-    pdvCupomCodigo     = o.cupom || '';
     _preencherPDV(o);
     document.getElementById('pdv-titulo').textContent = '✏️ Editando ' + o.id;
     document.getElementById('btn-finalizar-pdv').textContent = 'Salvar Alterações';
@@ -3284,22 +3269,16 @@ function _preencherPDV(o) {
 
 function closeModalNovoPedido() {
     document.getElementById('modal-pdv').classList.remove('pdv-visivel');
-    carrinhoPDV       = [];
-    totalCarrinhoPDV  = 0;
-    modoEdicaoPDV     = false;
-    editandoPedidoId  = null;
-    pdvDescontoCupom  = 0;
-    pdvDescontoPontos = 0;
-    pdvCupomCodigo    = '';
+    carrinhoPDV      = [];
+    totalCarrinhoPDV = 0;
+    modoEdicaoPDV    = false;
+    editandoPedidoId = null;
     fecharDropdownClientes();
 }
 
 function resetarPDV() {
     carrinhoPDV      = [];
     totalCarrinhoPDV = 0;
-    pdvDescontoCupom  = 0;
-    pdvDescontoPontos = 0;
-    pdvCupomCodigo    = '';
     atualizarCarrinho();
     document.getElementById('pdv-busca-cliente').value = '';
     document.getElementById('pdv-nome').value          = '';
@@ -3751,36 +3730,19 @@ function pdvEscHtml(s) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function pdvAtualizarTotalDisplay() {
-    var totalEl    = document.getElementById('pdv-total');
+    var totalEl = document.getElementById('pdv-total');
     var subtotalEl = document.getElementById('pdv-subtotal-display');
-    var taxaEl     = document.getElementById('pdv-taxa-display');
-    var linhaS     = document.getElementById('pdv-linha-subtotal');
-    var linhaT     = document.getElementById('pdv-linha-taxa');
-    var linhaC     = document.getElementById('pdv-linha-cupom');
-    var linhaP     = document.getElementById('pdv-linha-pontos');
-    var cupomEl    = document.getElementById('pdv-cupom-display');
-    var cupomCodEl = document.getElementById('pdv-cupom-codigo');
-    var pontosEl   = document.getElementById('pdv-pontos-display');
+    var taxaEl  = document.getElementById('pdv-taxa-display');
+    var linhaS  = document.getElementById('pdv-linha-subtotal');
+    var linhaT  = document.getElementById('pdv-linha-taxa');
     if (!totalEl) return;
-    var total = Math.max(0, totalCarrinhoPDV + pdvTaxaEntregaAtual - pdvDescontoCupom - pdvDescontoPontos);
+    var total = totalCarrinhoPDV + pdvTaxaEntregaAtual;
     totalEl.textContent = total.toFixed(2).replace('.', ',');
     if (subtotalEl) subtotalEl.textContent = totalCarrinhoPDV.toFixed(2).replace('.', ',');
     if (taxaEl)     taxaEl.textContent     = pdvTaxaEntregaAtual.toFixed(2).replace('.', ',');
-    // Subtotal e taxa — mostra se há taxa ou descontos
-    var temDetalhes = pdvTaxaEntregaAtual > 0 || pdvDescontoCupom > 0 || pdvDescontoPontos > 0;
-    if (linhaS) linhaS.style.display = temDetalhes ? 'flex' : 'none';
+    // Mostra linhas detalhadas só se tiver taxa de entrega
+    if (linhaS) linhaS.style.display = pdvTaxaEntregaAtual > 0 ? 'flex' : 'none';
     if (linhaT) linhaT.style.display = pdvTaxaEntregaAtual > 0 ? 'flex' : 'none';
-    // Cupom
-    if (linhaC) {
-        linhaC.style.display = pdvDescontoCupom > 0 ? 'flex' : 'none';
-        if (cupomEl)    cupomEl.textContent    = pdvDescontoCupom.toFixed(2).replace('.', ',');
-        if (cupomCodEl) cupomCodEl.textContent = pdvCupomCodigo ? '(' + pdvCupomCodigo + ')' : '';
-    }
-    // Pontos de fidelidade
-    if (linhaP) {
-        linhaP.style.display = pdvDescontoPontos > 0 ? 'flex' : 'none';
-        if (pontosEl) pontosEl.textContent = pdvDescontoPontos.toFixed(2).replace('.', ',');
-    }
 }
 
 function pdvEsconderTaxaCard() {
@@ -4119,10 +4081,7 @@ function renderOrders() {
                     '<i class="fas fa-location-dot" style="font-size:9px; color:#cbd5e1; margin-right:4px;"></i>' + o.address +
                 '</div>' +
                 '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px solid #f1f5f9;">' +
-                    '<div>' +
-                        '<span class="order-total">R$ ' + o.total.toFixed(2) + '</span>' +
-                        (o.cupom ? '<div style="font-size:10px;font-weight:700;color:#15803d;margin-top:2px;">🏷️ Cupom ' + o.cupom + ' (-R$ ' + parseFloat(o.descontoCupom||0).toFixed(2).replace('.',',') + ')</div>' : '') +
-                    '</div>' +
+                    '<span class="order-total">R$ ' + o.total.toFixed(2) + '</span>' +
                     pgtoTag +
                 '</div>' +
                 avancarBtn;
@@ -4233,10 +4192,9 @@ function impInicializar() {
     var cfg = impGetConfig();
     // Preenche campos
     var set = function(id,v){ var e=document.getElementById(id); if(e&&v!==undefined) e.value=v; };
-    set('imp-loja-nome',  cfg.lojaNome||'');
-    set('imp-largura',    cfg.largura||'80');
-    set('imp-rodape',     cfg.rodape||'');
-    set('imp-modal-nome', cfg.impressora||''); // ← preenche impressora salva
+    set('imp-loja-nome', cfg.lojaNome||'');
+    set('imp-largura',   cfg.largura||'80');
+    set('imp-rodape',    cfg.rodape||'');
     // Toggles de notinha
     var chk = function(id,v){ var e=document.getElementById(id); if(e) e.checked=(v!==false); };
     chk('imp-cnpj', cfg.cnpj); chk('imp-cat', cfg.cat); chk('imp-desc', cfg.desc);
@@ -4304,6 +4262,14 @@ function impSalvar() {
     if ((gv = c('imp-show-subtotal')) !== null) cfg.showSubtotal = gv;
     if ((gv = c('imp-show-pgto'))     !== null) cfg.showPgto     = gv;
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
+    // Salva lojaNome e largura no Supabase também para persistir entre contas
+    if (REST_ID && cfg.lojaNome) {
+        fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID, {
+            method: 'PATCH',
+            headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
+            body: JSON.stringify({ loja_nome: cfg.lojaNome, largura: parseInt(cfg.largura)||80 })
+        }).catch(function(){});
+    }
     var btn = document.getElementById('imp-btn-salvar');
     if (btn) {
         var orig = btn.innerHTML;
@@ -4376,9 +4342,23 @@ function impVerificarStatus() {
             // Preenche campo de impressora automaticamente se vazio
             if(row.impressora){
                 var el=document.getElementById('imp-modal-nome');
-                if(el&&!el.value) el.value=row.impressora;
+                if(el) el.value=row.impressora;
                 var hid=document.getElementById('imp-largura');
                 if(hid) hid.value=parseInt(row.largura)||80;
+                // Atualiza botões 58/80mm
+                document.querySelectorAll('.imp-largura-btn').forEach(function(b){
+                    b.classList.toggle('active', b.textContent.replace('mm','') === String(parseInt(row.largura)||80));
+                });
+            }
+            // Carrega nome da loja do Supabase
+            if(row.loja_nome){
+                var cfg = impGetConfig();
+                if(!cfg.lojaNome) {
+                    cfg.lojaNome = row.loja_nome;
+                    localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
+                    var elNome = document.getElementById('imp-loja-nome');
+                    if(elNome && !elNome.value) elNome.value = row.loja_nome;
+                }
             }
             // Popula select com impressoras detectadas pelo assistente
             var sel=document.getElementById('imp-sel-sistema');
@@ -4404,27 +4384,14 @@ function impVerificarStatus() {
 }
 
 function impBaixarConfig() {
-    var cfg  = impGetConfig();
-    var nome = ((document.getElementById('imp-modal-nome')||{}).value||'').trim() || cfg.impressora || '';
-    var larg = (document.getElementById('imp-largura')||{}).value || cfg.largura || '80';
-
-    // Bloqueia se não tiver impressora definida
-    if (!nome) {
-        var el = document.getElementById('imp-modal-nome');
-        if (el) { el.style.borderColor='#e30613'; el.focus(); el.placeholder='⚠️ Digite o nome da impressora primeiro!'; }
-        impAddLog('⚠️ Digite o nome da impressora antes de baixar o config!', 'erro');
-        return;
-    }
-
-    // Salva impressora no config local
-    cfg.impressora = nome;
-    cfg.largura = parseInt(larg) || 80;
-    localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-
+    var nome = (document.getElementById('imp-modal-nome')||{}).value||'';
+    var larg = (document.getElementById('imp-largura')||{}).value||'80';
+    var cfg = impGetConfig();
+    // Pega refresh_token da sessão salva para renovação automática
     var sessao = {};
     try { sessao = JSON.parse(localStorage.getItem('supa_session') || '{}'); } catch(e) {}
     var obj = {
-        impressora: nome,
+        impressora: nome || cfg.impressora || '',
         largura: parseInt(larg) || 80,
         restaurante_id: REST_ID || '',
         token: SUPA_TOKEN || '',
@@ -4442,7 +4409,7 @@ function impBaixarConfig() {
         .replace(/^-+|-+$/g, '');
     a.download = 'assistente-config-' + nomeLoja + '.json';
     a.click();
-    impAddLog('✓ Config baixada! Impressora: ' + nome + ' | Coloque na pasta do AssistenteImpressao.exe', 'ok');
+    impAddLog('✓ Config baixada! Coloque o arquivo na pasta do AssistenteImpressao.exe', 'ok');
 }
 
 function impSalvarImpressora() {
@@ -4464,6 +4431,7 @@ function impSalvarImpressora() {
             restaurante_id: REST_ID,
             impressora: nome,
             largura: parseInt(larg) || 80,
+            loja_nome: (impGetConfig().lojaNome || ''),
             atualizado_em: new Date().toISOString()
         })
     }).then(function() {
@@ -4536,15 +4504,9 @@ function impBuscarImpressoras() {
     if(btn)btn.innerHTML='<i class="fas fa-rotate fa-spin"></i> Buscando...';
     impAddLog('Buscando impressoras...','info');
     if(!REST_ID){if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';impAddLog('Faça login primeiro.','err');return;}
-    fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID+'&select=*&limit=1',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}})
-    .then(function(r){return r.json();}).then(function(rows){
+
+    function preencherLista(lista, impressoraAtual) {
         if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';
-        var row=Array.isArray(rows)?rows[0]:null;
-        if(!row){impAddLog('Assistente offline. Abra o programa.','err');return;}
-        var ago=Math.round((Date.now()-new Date(row.atualizado_em).getTime())/1000);
-        if(ago>90){impAddLog('Assistente parado há '+ago+'s. Verifique se está aberto.','err');return;}
-        var lista=row.impressoras||[];
-        var impressoraAtual=row.impressora||'';
         if(sel){
             sel.innerHTML='<option value="">Selecione a impressora...</option>';
             lista.forEach(function(n){
@@ -4555,10 +4517,37 @@ function impBuscarImpressoras() {
             });
             sel.onchange=function(){if(sel.value){var el=document.getElementById('imp-modal-nome');if(el)el.value=sel.value;}};
         }
-        // Auto-preenche o campo de nome com a impressora atual
         if(impressoraAtual){var el=document.getElementById('imp-modal-nome');if(el&&!el.value)el.value=impressoraAtual;}
         impAddLog('Encontradas '+lista.length+' impressoras'+(impressoraAtual?' · Atual: '+impressoraAtual:''),lista.length?'ok':'err');
-    }).catch(function(e){if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';impAddLog('Erro: '+(e.message||e),'err');});
+    }
+
+    // Tenta primeiro direto no servidor local (funciona mesmo sem config)
+    fetch('http://127.0.0.1:9876/status')
+    .then(function(r){return r.json();}).then(function(d){
+        var lista = d.impressoras||[];
+        if(lista.length > 0) {
+            impAddLog('Impressoras detectadas localmente!','ok');
+            preencherLista(lista, '');
+        } else {
+            impAddLog('Servidor local sem impressoras — tentando Supabase...','info');
+            buscarDoSupabase();
+        }
+    }).catch(function(){
+        // Servidor local não responde — tenta Supabase
+        buscarDoSupabase();
+    });
+
+    function buscarDoSupabase() {
+        fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID+'&select=*&limit=1',{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY}})
+        .then(function(r){return r.json();}).then(function(rows){
+            if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';
+            var row=Array.isArray(rows)?rows[0]:null;
+            if(!row){impAddLog('Assistente offline. Abra o programa.','err');return;}
+            var ago=Math.round((Date.now()-new Date(row.atualizado_em).getTime())/1000);
+            if(ago>90){impAddLog('Assistente parado há '+ago+'s. Verifique se está aberto.','err');return;}
+            preencherLista(row.impressoras||[], row.impressora||'');
+        }).catch(function(e){if(btn)btn.innerHTML='<i class="fas fa-magnifying-glass"></i> Buscar';impAddLog('Erro: '+(e.message||e),'err');});
+    }
 }
 
 function impFecharModal() {
@@ -6410,11 +6399,6 @@ async function supaCarregarPedidos() {
                     tipo: r.tipo, 
                     pagamento: r.pagamento, 
                     troco: r.troco,
-                    subtotal: r.subtotal,
-                    taxaEntrega: r.taxa_entrega,
-                    descontoPontos: r.desconto_pontos,
-                    cupom: r.cupom || '',
-                    descontoCupom: parseFloat(r.desconto_cupom || 0),
                     total: r.total, 
                     status: r.status,
                     items: itens, 
@@ -6728,23 +6712,15 @@ async function supaCarregarConfigs() {
             supaGet('taxas_entrega', ''),
             supaGet('integracoes', '')
         ]);
-        if (cfgRows && cfgRows[0]) {
-            if (cfgRows[0].dados_extras) {
-                const atual = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
-                if (!atual.nomeMarca) localStorage.setItem('f_cfg_loja', JSON.stringify(cfgRows[0].dados_extras));
-                // Atualizar nome no sidebar
-                var _cfgCarregada = cfgRows[0].dados_extras || {};
-                if (_cfgCarregada.nomeMarca) {
-                    var _sn = document.getElementById('sidebar-nome-loja');
-                    if (_sn) _sn.textContent = _cfgCarregada.nomeMarca;
-                    document.title = _cfgCarregada.nomeMarca + ' — Admin';
-                }
-            }
-            // Sincronizar estado pausada do Supabase -> localStorage
-            if (typeof cfgRows[0].pausada !== 'undefined') {
-                lojaPausada = cfgRows[0].pausada === true;
-                localStorage.setItem('f_loja_pausada', JSON.stringify(lojaPausada));
-                aplicarStatusLoja();
+        if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
+            const atual = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
+            if (!atual.nomeMarca) localStorage.setItem('f_cfg_loja', JSON.stringify(cfgRows[0].dados_extras));
+            // Atualizar nome no sidebar
+            var _cfgCarregada = cfgRows[0].dados_extras || {};
+            if (_cfgCarregada.nomeMarca) {
+                var _sn = document.getElementById('sidebar-nome-loja');
+                if (_sn) _sn.textContent = _cfgCarregada.nomeMarca;
+                document.title = _cfgCarregada.nomeMarca + ' — Admin';
             }
         }
         if (horRows && horRows[0] && horRows[0].dados)
@@ -8584,12 +8560,12 @@ function cfgSalvar() {
         document.title = obj.nomeMarca + ' — Admin';
     }
 
-    // Supabase — preserva o estado atual de pausada, não sobrescreve com false
+    // Supabase
     supaUpsert('configuracoes', {
         nome_marca: obj.nomeMarca, nome_unidade: obj.nomeUnidade,
         logo: obj.logo, capa: obj.capa,
         delivery_minimo: obj.deliveryMinimo || 0,
-        pausada: lojaPausada, dados_extras: obj
+        pausada: false, dados_extras: obj
     }, 'restaurante_id').catch(e => console.warn('Supa cfg:', e.message));
     cupToast('Configurações salvas!', '#16a34a');
 }
