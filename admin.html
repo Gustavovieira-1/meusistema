@@ -3052,6 +3052,8 @@ function inicializarSistema() {
     
     // 🔄 Renovar token a cada 50 minutos (antes de expirar em 1 hora)
     setInterval(authRenovarToken, 50 * 60 * 1000);
+    // Renova imediatamente ao carregar (caso sessão esteja próxima de expirar)
+    setTimeout(authRenovarToken, 3000);
 }
 
 // Inicialização: verificar sessão salva primeiro
@@ -6570,6 +6572,12 @@ async function authRenovarToken() {
         console.log('[AUTH] Renovando token...');
         
         // Chamar refresh_token do Supabase
+        // IMPORTANTE: usar sess.refresh_token (não sess.token que é o access_token)
+        const refreshTkn = sess.refresh_token || '';
+        if (!refreshTkn) {
+            console.warn('[AUTH] Sem refresh_token salvo — não é possível renovar.');
+            return;
+        }
         const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
             method: 'POST',
             headers: {
@@ -6577,7 +6585,7 @@ async function authRenovarToken() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                refresh_token: sess.token
+                refresh_token: refreshTkn
             })
         });
         
@@ -6590,8 +6598,8 @@ async function authRenovarToken() {
         const data = await r.json();
         SUPA_TOKEN = data.access_token;
         
-        // Salvar novo token
-        authSalvarSessao(data.access_token, sess.restId, sess.nomeUsuario, sess.role);
+        // Salvar novo access_token E novo refresh_token (Supabase rotaciona o refresh_token)
+        authSalvarSessao(data.access_token, sess.restId, sess.nomeUsuario, sess.role, data.refresh_token || refreshTkn);
         console.log('[AUTH] ✅ Token renovado com sucesso');
         
     } catch(e) {
@@ -6613,7 +6621,7 @@ async function authVerificarSessao() {
         SUPA_TOKEN = sess.token;
         REST_ID    = sess.restId;
         if (!REST_ID && SUPA_TOKEN) {
-            try { const u = await authGetRestaurante(SUPA_TOKEN); REST_ID = u.restaurante_id; authSalvarSessao(SUPA_TOKEN, REST_ID, sess.nomeUsuario, sess.role); } catch(e) { return false; }
+            try { const u = await authGetRestaurante(SUPA_TOKEN); REST_ID = u.restaurante_id; authSalvarSessao(SUPA_TOKEN, REST_ID, sess.nomeUsuario, sess.role, sess.refresh_token || ''); } catch(e) { return false; }
         }
         if (!REST_ID) return false;
         impAtualizarChaves();
