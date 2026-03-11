@@ -4371,9 +4371,7 @@ function impSalvarComValidacao() {
     var ftEl = document.getElementById('imp-font-tamanho');
     var nomeImp = (document.getElementById('imp-modal-nome')||{}).value || (impGetConfig().impressora || '');
     if (!nomeImp.trim()) {
-        alert('⚠️ Configure a impressora antes de salvar!
-
-Vá até o card "Impressora", selecione ou digite o nome da impressora e clique em Salvar.');
+        alert('⚠️ Configure a impressora antes de salvar!\n\nVá até o card "Impressora", selecione ou digite o nome da impressora e clique em Salvar.');
         return;
     }
     if (fnEl && !fnEl.value) {
