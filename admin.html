@@ -2902,6 +2902,16 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                         <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Troco para quanto? (R$)</label>
                         <input type="number" id="pdv-troco" placeholder="Ex: 100.00" min="0" step="0.50" style="margin-bottom:0; width:100%; box-sizing:border-box;">
                     </div>
+                    <!-- Cupom de desconto -->
+                    <div style="margin-top:10px;">
+                        <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Cupom de desconto</label>
+                        <div style="display:flex; gap:6px;">
+                            <input type="text" id="pdv-cupom" placeholder="Código do cupom" style="flex:1; text-transform:uppercase; margin-bottom:0;">
+                            <button type="button" onclick="pdvAplicarCupom()" style="background:#1e293b; color:white; border:none; border-radius:8px; padding:0 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">Aplicar</button>
+                            <button type="button" id="pdv-btn-remover-cupom" onclick="pdvRemoverCupom()" style="display:none; background:#fee2e2; color:#e30613; border:none; border-radius:8px; padding:0 10px; font-size:12px; font-weight:700; cursor:pointer;">✕</button>
+                        </div>
+                        <div id="pdv-cupom-msg" style="font-size:11px; margin-top:4px; display:none;"></div>
+                    </div>
                 </div>
 
                 <!-- Total e botão finalizar -->
@@ -2912,6 +2922,9 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                         </div>
                         <div id="pdv-linha-taxa" style="display:none; justify-content:space-between; font-size:13px; color:#16a34a; margin-bottom:4px; font-weight:600;">
                             <span>Taxa de entrega</span><span>R$ <span id="pdv-taxa-display">0,00</span></span>
+                        </div>
+                        <div id="pdv-linha-desconto-cupom" style="display:none; justify-content:space-between; font-size:13px; color:#e30613; margin-bottom:4px; font-weight:600;">
+                            <span>Desconto cupom</span><span>-R$ <span id="pdv-desconto-cupom-display">0,00</span></span>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; font-weight:bold; font-size:20px; border-top:1px solid #f1f5f9; padding-top:8px; margin-top:4px;">
                             <span style="font-size:13px; color:#666;">Total</span>
@@ -3292,6 +3305,12 @@ function resetarPDV() {
     pdvFecharSugestoes();
     pdvTaxaEntregaAtual = 0; pdvEsconderTaxaCard(); pdvAtualizarTotalDisplay();
     document.getElementById('pdv-pagamento').value     = 'Pix';
+    // Reset cupom
+    pdvCupomAtual = null;
+    var cpEl = document.getElementById('pdv-cupom'); if (cpEl) cpEl.value = '';
+    var cpMsg = document.getElementById('pdv-cupom-msg'); if (cpMsg) cpMsg.style.display = 'none';
+    var cpBtn = document.getElementById('pdv-btn-remover-cupom'); if (cpBtn) cpBtn.style.display = 'none';
+    var cpDes = document.getElementById('pdv-linha-desconto-cupom'); if (cpDes) cpDes.style.display = 'none';
     document.querySelectorAll('.pgto-btn').forEach(b => b.classList.remove('active'));
     const pixBtn = document.getElementById('pgto-pix');
     if (pixBtn) pixBtn.classList.add('active');
@@ -3864,6 +3883,72 @@ function pdvGeocodificarECalcular(rua, numero, cidade) {
             pdvTaxaEntregaAtual = taxa; pdvAtualizarTotalDisplay();
         });
 }
+
+// ── Cupom PDV ────────────────────────────────────────────────────────────────
+var pdvCupomAtual = null; // { codigo, tipo, valor, desconto }
+
+async function pdvAplicarCupom() {
+    const codigo = (document.getElementById('pdv-cupom').value || '').trim().toUpperCase();
+    const msg    = document.getElementById('pdv-cupom-msg');
+    if (!codigo) return;
+
+    // Busca cupom no Supabase
+    try {
+        const rows = await supaReq('GET', 'cupons?restaurante_id=eq.' + REST_ID + '&codigo=eq.' + encodeURIComponent(codigo) + '&ativo=eq.true&select=*&limit=1');
+        if (!Array.isArray(rows) || rows.length === 0) {
+            pdvCupomAtual = null;
+            msg.textContent = '❌ Cupom inválido ou inativo.';
+            msg.style.color = '#e30613'; msg.style.display = 'block';
+            pdvRecalcularTotal();
+            return;
+        }
+        const cup = rows[0];
+        // Calcula desconto
+        const sub = totalCarrinhoPDV;
+        var descCupom = 0;
+        if (cup.tipo === 'percentual') descCupom = parseFloat((sub * cup.valor / 100).toFixed(2));
+        else descCupom = Math.min(parseFloat(cup.valor), sub);
+        pdvCupomAtual = { codigo: cup.codigo, tipo: cup.tipo, valor: cup.valor, desconto: descCupom };
+
+        msg.textContent = '✅ Cupom aplicado: -R$ ' + descCupom.toFixed(2).replace('.', ',');
+        msg.style.color = '#16a34a'; msg.style.display = 'block';
+        document.getElementById('pdv-btn-remover-cupom').style.display = 'inline-flex';
+        pdvRecalcularTotal();
+    } catch(e) {
+        msg.textContent = '❌ Erro ao verificar cupom.';
+        msg.style.color = '#e30613'; msg.style.display = 'block';
+    }
+}
+
+function pdvRemoverCupom() {
+    pdvCupomAtual = null;
+    document.getElementById('pdv-cupom').value = '';
+    const msg = document.getElementById('pdv-cupom-msg');
+    msg.style.display = 'none';
+    document.getElementById('pdv-btn-remover-cupom').style.display = 'none';
+    pdvRecalcularTotal();
+}
+
+function pdvRecalcularTotal() {
+    const taxaEntrega = (typeof pdvTaxaEntregaAtual !== 'undefined' && tipoPedidoSelecionado === 'Entrega') ? pdvTaxaEntregaAtual : 0;
+    const descCupom   = pdvCupomAtual ? pdvCupomAtual.desconto : 0;
+    const total       = Math.max(0, totalCarrinhoPDV + taxaEntrega - descCupom);
+    const el = document.getElementById('pdv-total');
+    if (el) el.textContent = total.toFixed(2).replace('.', ',');
+    // Linha desconto
+    const linhaDes = document.getElementById('pdv-linha-desconto-cupom');
+    const dispDes  = document.getElementById('pdv-desconto-cupom-display');
+    if (linhaDes && dispDes) {
+        if (descCupom > 0) {
+            dispDes.textContent = descCupom.toFixed(2).replace('.', ',');
+            linhaDes.style.display = 'flex';
+        } else {
+            linhaDes.style.display = 'none';
+        }
+    }
+}
+// ── /Cupom PDV ───────────────────────────────────────────────────────────────
+
 function salvarPedidoPDV() {
     const nome     = document.getElementById('pdv-nome').value.trim();
     const telefone = document.getElementById('pdv-tel').value.trim();
@@ -3898,11 +3983,13 @@ function salvarPedidoPDV() {
     var previsao    = new Date(Date.now() + minutos * 60000);
     var previsaoStr = previsao.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
 
-    // Subtotal = carrinho, total = subtotal + taxa
-    var subtotal = totalCarrinhoPDV;
-    var total    = subtotal + taxaEntrega;
-    var cobrar   = total; // cobrar do cliente
-    var troco    = trocoVal > 0 ? trocoVal - cobrar : 0;
+    // Subtotal = carrinho, total = subtotal + taxa - desconto cupom
+    var subtotal    = totalCarrinhoPDV;
+    var descCupom   = pdvCupomAtual ? pdvCupomAtual.desconto : 0;
+    var codigoCupom = pdvCupomAtual ? pdvCupomAtual.codigo   : '';
+    var total       = Math.max(0, subtotal + taxaEntrega - descCupom);
+    var cobrar      = total;
+    var troco       = trocoVal > 0 ? trocoVal - cobrar : 0;
 
     if (modoEdicaoPDV && editandoPedidoId) {
         const idx = orders.findIndex(o => o.id === editandoPedidoId);
@@ -3910,7 +3997,7 @@ function salvarPedidoPDV() {
             orders[idx] = Object.assign(orders[idx], {
                 client: nome, phone: telefone || orders[idx].phone,
                 address: enderecoFinal, numero, bairro, complemento, cidade,
-                total: cobrar, subtotal, taxaEntrega, troco,
+                total: cobrar, subtotal, taxaEntrega, descontoCupom: descCupom, cupom: codigoCupom, troco,
                 tipo: tipoPedidoSelecionado, pagamento, previsao: previsaoStr,
                 items: carrinhoPDV.map(i => Object.assign({}, i))
             });
@@ -3920,7 +4007,7 @@ function salvarPedidoPDV() {
             id: 'B-' + Date.now(),
             client: nome, phone: telefone || '(00) 00000-0000',
             address: enderecoFinal, numero, bairro, complemento, cidade,
-            total: cobrar, subtotal, taxaEntrega, troco,
+            total: cobrar, subtotal, taxaEntrega, descontoCupom: descCupom, cupom: codigoCupom, troco,
             status: 'analise', tipo: tipoPedidoSelecionado,
             pagamento, previsao: previsaoStr,
             items: carrinhoPDV.map(i => Object.assign({}, i)),
@@ -6471,6 +6558,7 @@ async function supaSalvarPedido(pedido) {
             pagamento: pedido.pagamento, troco: pedido.troco || 0,
             itens: pedido.items || [], subtotal: pedido.subtotal || pedido.total,
             taxa_entrega: pedido.taxaEntrega || 0, desconto_pontos: pedido.descontoPontos || 0,
+            desconto_cupom: pedido.descontoCupom || 0, cupom: pedido.cupom || '',
             total: pedido.total, status: pedido.status || 'analise',
             impresso: false
         });
