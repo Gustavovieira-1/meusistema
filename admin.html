@@ -3524,8 +3524,8 @@ function mcpSalvar() {
     const prod = db.prods.find(p => p.id === _mcpProdId);
     if (!prod) return;
 
-    // Coleta seleções de complementos
-    const compsSel = {};
+    // Coleta seleções de complementos — salva como [{name, price}] igual ao site
+    const compsSel = [];
     const compsVinculados = (prod.comps || []).map(cid => db.comps.find(c => c.id === cid)).filter(Boolean);
     let extraPreco = 0;
 
@@ -3533,19 +3533,23 @@ function mcpSalvar() {
         if (grupo.type === 'radio') {
             const checked = document.querySelector('input[name="comp_' + grupo.id + '"]:checked');
             if (checked) {
-                compsSel[grupo.id] = checked.value;
                 const oi = parseInt(checked.value.split('_')[1]);
-                extraPreco += parseFloat(grupo.options[oi].p) || 0;
+                const opt = grupo.options[oi];
+                if (opt) {
+                    extraPreco += parseFloat(opt.p) || 0;
+                    compsSel.push({ name: opt.n, price: parseFloat(opt.p) || 0 });
+                }
             }
         } else {
             const checados = document.querySelectorAll('input[name="comp_' + grupo.id + '"]:checked');
-            const vals = [];
             checados.forEach(ch => {
-                vals.push(ch.value);
                 const oi = parseInt(ch.value.split('_')[1]);
-                extraPreco += parseFloat(grupo.options[oi].p) || 0;
+                const opt = grupo.options[oi];
+                if (opt) {
+                    extraPreco += parseFloat(opt.p) || 0;
+                    compsSel.push({ name: opt.n, price: parseFloat(opt.p) || 0 });
+                }
             });
-            if (vals.length) compsSel[grupo.id] = vals;
         }
     });
 
