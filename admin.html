@@ -4255,11 +4255,17 @@ function updateOrderStatus(id, newStatus) {
         }
         localStorage.setItem('f_orders', JSON.stringify(orders));
         renderOrders();
-        // Auto-impressao ao aceitar pedido
-        var autoImp = document.getElementById('imp-auto');
-        var ativarImp = document.getElementById('imp-ativar');
-        if ((!ativarImp || ativarImp.checked) && (!autoImp || autoImp.checked)
-            && statusAnterior === 'analise' && newStatus === 'preparo') {
+        // ── AUTOMAÇÕES ──────────────────────────────────────────────
+        var elAtivar  = document.getElementById('imp-ativar');
+        var elAuto    = document.getElementById('imp-auto');
+        var elAceitar = document.getElementById('imp-aceitar');
+        var togAtivo  = function(el) { return !el || !el.classList.contains('off'); };
+        var ativarOn  = togAtivo(elAtivar);
+        var autoOn    = togAtivo(elAuto);
+        var aceitarOn = togAtivo(elAceitar);
+
+        // Auto-impressão: só imprime quando entra em PREPARO (nunca em analise)
+        if (ativarOn && autoOn && newStatus === 'preparo') {
             setTimeout(function(){ imprimirPedido(id); }, 300);
         }
     }
@@ -4327,6 +4333,25 @@ function impInicializar() {
     tog('imp-ativar',  cfg.ativar!==false);
     tog('imp-auto',    cfg.auto!==false);
     tog('imp-aceitar', cfg.aceitar!==false);
+    // Também busca do Supabase para garantir que esteja em sinc
+    if (REST_ID) {
+        fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID+'&select=ativar,auto_impressao,auto_aceitar&limit=1', {
+            headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY)}
+        }).then(function(r){ return r.json(); }).then(function(rows) {
+            if (rows && rows[0]) {
+                var row = rows[0];
+                if (row.ativar  !== null && row.ativar  !== undefined) tog('imp-ativar',  row.ativar);
+                if (row.auto_impressao !== null && row.auto_impressao !== undefined) tog('imp-auto', row.auto_impressao);
+                if (row.auto_aceitar  !== null && row.auto_aceitar  !== undefined) tog('imp-aceitar', row.auto_aceitar);
+                // Sincroniza no localStorage também
+                var cfgS = impGetConfig();
+                if (row.ativar  !== null) cfgS.ativar  = row.ativar;
+                if (row.auto_impressao !== null) cfgS.auto    = row.auto_impressao;
+                if (row.auto_aceitar  !== null) cfgS.aceitar = row.auto_aceitar;
+                localStorage.setItem(IMP_KEY, JSON.stringify(cfgS));
+            }
+        }).catch(function(){});
+    }
     var setToggle = function(chkId, togId, val) {
         var chk = document.getElementById(chkId);
         var tog = document.getElementById(togId);
@@ -4412,11 +4437,17 @@ function impSalvar() {
     if ((gv = g('imp-font-tamanho'))  !== null) cfg.fontTamanho  = gv || '8';
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
     // Salva lojaNome e largura no Supabase também para persistir entre contas
-    if (REST_ID && cfg.lojaNome) {
+    if (REST_ID) {
         fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID, {
             method: 'PATCH',
             headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
-            body: JSON.stringify({ loja_nome: cfg.lojaNome, largura: parseInt(cfg.largura)||80 })
+            body: JSON.stringify({
+                loja_nome: cfg.lojaNome || '',
+                largura: parseInt(cfg.largura)||80,
+                ativar: cfg.ativar !== false,
+                auto_impressao: cfg.auto !== false,
+                auto_aceitar: cfg.aceitar !== false
+            })
         }).catch(function(){});
     }
     var btn = document.getElementById('imp-btn-salvar');
@@ -4433,6 +4464,30 @@ function impToggle(el, chkId) {
     var chk = document.getElementById(chkId);
     if (chk) chk.checked = !el.classList.contains('off');
     impAtualizarPreview();
+    // Salva o toggle imediatamente no Supabase
+    impSalvarTogglesSupabase();
+}
+
+function impSalvarTogglesSupabase() {
+    if (!REST_ID) return;
+    var c = function(id) { var e = document.getElementById(id); return e ? !e.classList.contains('off') : true; };
+    var ativar  = c('imp-ativar');
+    var auto    = c('imp-auto');
+    var aceitar = c('imp-aceitar');
+    // Salva também no localStorage
+    var cfg = impGetConfig();
+    cfg.ativar  = ativar;
+    cfg.auto    = auto;
+    cfg.aceitar = aceitar;
+    localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
+    // Salva no Supabase
+    fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID, {
+        method: 'PATCH',
+        headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
+        body: JSON.stringify({ ativar: ativar, auto_impressao: auto, auto_aceitar: aceitar })
+    }).then(function(r) {
+        if (r.ok) impAddLog('✓ Automação salva', 'ok');
+    }).catch(function(){});
 }
 
 function impSetModo(modo, btn) {
@@ -5383,6 +5438,8 @@ function imprimirPedido(id, pedidoOverride) {
                 fontTamanho:   cfg.fontTamanho || '8'
             }
         };
+        // manual:true = clique manual do admin, imprime independente do toggle auto_impressao
+        dadosImp.manual = true;
         // Marca impresso=false para o assistente pegar + salva config da nota
         supaReq('PATCH', 'pedidos?id=eq.' + o._supa_id + '&restaurante_id=eq.' + REST_ID,
             { impresso: false, dados_impressao: dadosImp })
@@ -6568,6 +6625,14 @@ async function supaCarregarPedidos() {
             // 🔊 Tocar som se chegou novo pedido em análise
             if (pedidosNovos.length > 0) {
                 tocarSomNotificacao();
+                // Auto-aceitar: move direto para preparo se toggle ativo
+                var elAceitar = document.getElementById('imp-aceitar');
+                var aceitarOn = !elAceitar || !elAceitar.classList.contains('off');
+                if (aceitarOn) {
+                    pedidosNovos.forEach(function(o) {
+                        setTimeout(function() { updateOrderStatus(o.id, 'preparo'); }, 600);
+                    });
+                }
             }
             console.log('[Supabase] Pedidos:', mapped.length);
         }
