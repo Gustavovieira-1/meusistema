@@ -4255,15 +4255,14 @@ function updateOrderStatus(id, newStatus) {
         }
         localStorage.setItem('f_orders', JSON.stringify(orders));
         renderOrders();
-        // ── AUTOMAÇÕES — lê divs com ID (classe 'off' = desligado) ───
-        var togOn = function(divId) {
-            var d = document.getElementById(divId);
-            return d ? !d.classList.contains('off') : true;
-        };
-        var ativarOn = togOn('imp-tog-ativar');
-        var autoOn   = togOn('imp-tog-auto');
+        // ── AUTOMAÇÕES ─────────────────────────────────────────────────
+        // Lê do localStorage — fonte de verdade, sempre sincronizado pelo impToggle
+        // NÃO usa os divs pois podem não existir (usuário pode estar em outra aba/seção)
+        var cfgAuto = impGetConfig();
+        var ativarOn = cfgAuto.ativar !== false;
+        var autoOn   = cfgAuto.auto   !== false;
 
-        // Auto-impressão: só imprime quando entra em PREPARO, não foi movimento automático (silencioso)
+        // Auto-impressão: só imprime ao entrar em PREPARO, nunca em movimentos automáticos
         if (!silencioso && ativarOn && autoOn && newStatus === 'preparo') {
             setTimeout(function(){ imprimirPedido(id); }, 300);
         }
@@ -6651,8 +6650,9 @@ async function supaCarregarPedidos() {
             if (pedidosNovos.length > 0) {
                 tocarSomNotificacao();
                 // Auto-aceitar: move direto para preparo se toggle ativo
-                var elAceitar = document.getElementById('imp-tog-aceitar');
-                var aceitarOn = elAceitar ? !elAceitar.classList.contains('off') : false;
+                // Lê do localStorage — fonte de verdade (div pode não existir no DOM)
+                var cfgAceitar = impGetConfig();
+                var aceitarOn = cfgAceitar.aceitar !== false;
                 if (aceitarOn) {
                     pedidosNovos.forEach(function(o) {
                         setTimeout(function() { updateOrderStatus(o.id, 'preparo'); }, 600);
