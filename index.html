@@ -560,13 +560,14 @@ async function init(){
         console.log('[INIT] ✅ REST_ID carregado:', REST_ID);
 
         // Buscar cardápio, configs e taxas em paralelo
-        const [cats, prods, comps, cfgRows, txRows, horRows] = await Promise.all([
+        const [cats, prods, comps, cfgRows, txRows, horRows, intRows] = await Promise.all([
             supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=*'),
             supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
-            supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
+            supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1')
         ]);
 
         db.categories = (cats||[]).map(c => ({id: c.id, name: c.nome, active: true}));
@@ -594,7 +595,9 @@ async function init(){
             tempoRetirada: txRows[0].tempo_retirada || 20,
             taxaPadrao: parseFloat(txRows[0].taxa_padrao) || 0
         } : {};
-        db.horarios = (horRows&&horRows[0]) ? (horRows[0].dados || []) : [];
+        db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados || []) : [];
+        db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados || {}) : {};
+        pixelInicializar(db.integracoes);
 
         // Verificar se loja está aberta
         aberta = !cfg.pausada;
@@ -733,6 +736,7 @@ function abrirProd(id){
     atualizaBtnAdd();
     document.getElementById('overlay-prod').classList.add('open');
     document.body.style.overflow='hidden';
+    pixelViewContent(prodAtual); // Pixel: cliente visualizou produto
 }
 
 function selComp(gid,oi,tipo){
@@ -752,7 +756,9 @@ function fecharProd(e){if(!e||e.target===document.getElementById('overlay-prod')
 function adicionarCarrinho(){
     for(var i=0;i<(prodAtual.comps||[]).length;i++){var gid=prodAtual.comps[i];var g=db.comps.find(function(c){return String(c.id)===String(gid);});if(g&&g.type==='radio'&&!compsAtual[gid]){alert('Selecione: '+g.title);return;}}
     var arr=[];Object.keys(compsAtual).forEach(function(gid){var g=db.comps.find(function(c){return String(c.id)===String(gid);});if(!g)return;(Array.isArray(compsAtual[gid])?compsAtual[gid]:[compsAtual[gid]]).forEach(function(opId){var oi=parseInt(String(opId).split('_')[1]);if(g.options[oi])arr.push({name:g.options[oi].n,price:parseFloat(g.options[oi].p||0)});});});
+    var itemPreco = calcPreco(prodAtual, compsAtual, qtdAtual);
     carrinho.push({id:prodAtual.id,name:prodAtual.name,price:parseFloat(prodAtual.price||0),qtd:qtdAtual,comps:arr,obs:document.getElementById('sheet-obs').value.trim()});
+    pixelAddToCart(prodAtual, itemPreco); // Pixel: cliente adicionou ao carrinho
     atualizaFab();fecharProd();
 }
 
@@ -900,6 +906,8 @@ async function finalizarPedido(){
     var msgs={Entrega:'Pedido recebido! Tempo estimado: ~'+(tx.tempoEntrega||40)+' min.',Retirada:'Pedido recebido! Retire em ~'+(tx.tempoRetirada||20)+' min.',Balcão:'Pedido registrado! Em breve ficará pronto.'};
     document.getElementById('suc-msg').textContent=msgs[tipoAtual]||'Pedido recebido!';
     fidelMostrarSucesso(pedido.total);
+    // Disparar evento de compra no Pixel da Meta
+    pixelPurchase(pedido);
     document.getElementById('sucesso-overlay').classList.add('open');
     btn.disabled=false;btn.textContent='Fazer pedido';
 }
@@ -908,6 +916,121 @@ function novoPedido(){carrinho=[];cupomRemover();atualizaFab();document.getEleme
 
 init();
 
+
+// ════════════════════════════════════════════════════
+// PIXEL DA META — Facebook Pixel + Conversions API
+// ════════════════════════════════════════════════════
+var _pixelId    = null;
+var _pixelToken = null; // Token para Conversions API (server-side via fetch direto)
+var _pixelReady = false;
+
+function pixelInicializar(integracoes) {
+    var cfg = integracoes && integracoes.pixel;
+    if (!cfg || !cfg.ativo || !cfg.valor) return; // Pixel não configurado
+
+    _pixelId    = cfg.valor.trim();
+    _pixelToken = (cfg.valor2 || '').trim();
+
+    // Injeta o código base do Facebook Pixel no <head> dinamicamente
+    if (!document.getElementById('fb-pixel-script')) {
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+        n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+        (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+
+        var noScript = document.createElement('noscript');
+        noScript.innerHTML = '<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id='+_pixelId+'&ev=PageView&noscript=1"/>';
+        document.head.appendChild(noScript);
+    }
+
+    window.fbq('init', _pixelId);
+    window.fbq('track', 'PageView');
+    _pixelReady = true;
+    console.log('[Pixel] Inicializado:', _pixelId);
+}
+
+function pixelPurchase(pedido) {
+    if (!_pixelReady || !_pixelId) return;
+    var valor  = parseFloat(pedido.total) || 0;
+    var orderId = String(pedido.id || '');
+
+    // Evento browser-side (padrão)
+    try {
+        window.fbq('track', 'Purchase', {
+            value:        valor,
+            currency:     'BRL',
+            content_type: 'product',
+            content_ids:  (pedido.items||[]).map(function(i){ return String(i.id||i.name||''); }),
+            order_id:     orderId
+        });
+        console.log('[Pixel] Purchase disparado:', valor, 'BRL');
+    } catch(e) { console.warn('[Pixel] Erro browser:', e); }
+
+    // Conversions API (server-side via fetch do browser — sem precisar de servidor próprio)
+    // Isso contorna AdBlockers e melhora a qualidade do sinal enviado à Meta
+    if (_pixelToken) {
+        try {
+            var eventId = orderId + '_' + Date.now(); // ID único para deduplicação
+            var payload = {
+                data: [{
+                    event_name:       'Purchase',
+                    event_time:       Math.floor(Date.now() / 1000),
+                    event_id:         eventId,
+                    event_source_url: window.location.href,
+                    action_source:    'website',
+                    user_data: {
+                        client_user_agent: navigator.userAgent,
+                        client_ip_address: '' // preenchido automaticamente pela Meta
+                    },
+                    custom_data: {
+                        value:        valor,
+                        currency:     'BRL',
+                        order_id:     orderId,
+                        content_type: 'product',
+                        content_ids:  (pedido.items||[]).map(function(i){ return String(i.id||i.name||''); })
+                    }
+                }],
+                test_event_code: '' // deixe vazio em produção
+            };
+            fetch('https://graph.facebook.com/v19.0/'+_pixelId+'/events?access_token='+_pixelToken, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload)
+            }).then(function(r){ return r.json(); }).then(function(d){
+                console.log('[Pixel] Conversions API:', d.events_received, 'evento(s) recebido(s)');
+            }).catch(function(e){ console.warn('[Pixel] Conversions API erro:', e); });
+        } catch(e) { console.warn('[Pixel] Conversions API erro:', e); }
+    }
+}
+
+// ViewContent: disparado quando cliente abre detalhes de um produto
+function pixelViewContent(produto) {
+    if (!_pixelReady || !_pixelId) return;
+    try {
+        window.fbq('track', 'ViewContent', {
+            content_name: produto.name || produto.nome || '',
+            content_ids:  [String(produto.id || '')],
+            content_type: 'product',
+            value:        parseFloat(produto.price || produto.preco) || 0,
+            currency:     'BRL'
+        });
+    } catch(e) {}
+}
+
+// AddToCart: disparado quando cliente adiciona item ao carrinho
+function pixelAddToCart(produto, valor) {
+    if (!_pixelReady || !_pixelId) return;
+    try {
+        window.fbq('track', 'AddToCart', {
+            content_name: produto.name || produto.nome || '',
+            content_ids:  [String(produto.id || '')],
+            content_type: 'product',
+            value:        parseFloat(valor || produto.price || 0),
+            currency:     'BRL'
+        });
+    } catch(e) {}
+}
 
 // ════════════════════════════════════════════════════
 // FIDELIDADE — cliente
