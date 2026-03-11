@@ -3052,7 +3052,7 @@ function inicializarSistema() {
     
     // 🔄 Renovar token a cada 50 minutos (antes de expirar em 1 hora)
     setInterval(authRenovarToken, 50 * 60 * 1000);
-    // Renova imediatamente ao carregar (caso sessão esteja próxima de expirar)
+    // Renova imediatamente ao carregar (caso a sessão esteja próxima de expirar)
     setTimeout(authRenovarToken, 3000);
 }
 
@@ -6398,14 +6398,9 @@ async function supaCarregarPedidos() {
                     phone: r.telefone,
                     address: r.endereco, 
                     bairro: r.bairro,
-                    complemento: r.complemento || '',
-                    cidade: r.cidade || '',
                     tipo: r.tipo, 
                     pagamento: r.pagamento, 
                     troco: r.troco,
-                    subtotal: r.subtotal,
-                    taxaEntrega: r.taxa_entrega,
-                    descontoPontos: r.desconto_pontos,
                     total: r.total, 
                     status: r.status,
                     items: itens, 
@@ -6469,6 +6464,26 @@ audio.src = 'https://oijcggqfcgjkgcaymjqx.supabase.co/storage/v1/object/sign/Aud
 
 async function supaSalvarPedido(pedido) {
     try {
+        // Inclui dados_impressao com config atual para o server.js imprimir corretamente
+        var _impCfg  = impGetConfig();
+        var _txCfg   = txGetConfig();
+        var _dadosImp = {
+            config: {
+                lojaNome:      _impCfg.lojaNome  || '',
+                largura:       _impCfg.largura   || '80',
+                rodape:        _impCfg.rodape    || '',
+                showCodigo:    _impCfg.showCodigo   !== false,
+                showData:      _impCfg.showData     !== false,
+                showPrevisao:  _impCfg.showPrevisao !== false,
+                showTotLoja:   _impCfg.showTotLoja  !== false,
+                showCelular:   _impCfg.showCelular  !== false,
+                showEndereco:  _impCfg.showEndereco !== false,
+                showSubtotal:  _impCfg.showSubtotal !== false,
+                showPgto:      _impCfg.showPgto     !== false,
+                tempoEntrega:  _txCfg.tempoEntrega  || 40,
+                tempoRetirada: _txCfg.tempoRetirada || 20
+            }
+        };
         const r = await supaInsert('pedidos', {
             numero: pedido.id, cliente: pedido.client, telefone: pedido.phone,
             tipo: pedido.tipo, endereco: pedido.address, bairro: pedido.bairro || '',
@@ -6477,7 +6492,7 @@ async function supaSalvarPedido(pedido) {
             itens: pedido.items || [], subtotal: pedido.subtotal || pedido.total,
             taxa_entrega: pedido.taxaEntrega || 0, desconto_pontos: pedido.descontoPontos || 0,
             total: pedido.total, status: pedido.status || 'analise',
-            impresso: false
+            impresso: false, dados_impressao: _dadosImp
         });
         if (r && r[0]) pedido._supa_id = r[0].id;
     } catch(e) { console.warn('[Supabase] Salvar pedido:', e.message); }
@@ -6576,10 +6591,11 @@ async function authRenovarToken() {
         
         console.log('[AUTH] Renovando token...');
         
-        // IMPORTANTE: usar sess.refresh_token (não sess.token que é o access_token JWT)
+        // Chamar refresh_token do Supabase
+        // IMPORTANTE: usar sess.refresh_token (não sess.token que é o access_token)
         const refreshTkn = sess.refresh_token || '';
         if (!refreshTkn) {
-            console.warn('[AUTH] Sem refresh_token salvo — não é possível renovar.');
+            console.warn('[AUTH] Sem refresh_token salvo. Faça login novamente para renovar.');
             return;
         }
         const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
