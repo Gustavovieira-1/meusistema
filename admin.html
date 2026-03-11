@@ -2913,6 +2913,12 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                         <div id="pdv-linha-taxa" style="display:none; justify-content:space-between; font-size:13px; color:#16a34a; margin-bottom:4px; font-weight:600;">
                             <span>Taxa de entrega</span><span>R$ <span id="pdv-taxa-display">0,00</span></span>
                         </div>
+                        <div id="pdv-linha-cupom" style="display:none; justify-content:space-between; font-size:13px; color:#15803d; margin-bottom:4px; font-weight:600;">
+                            <span>🏷️ Cupom <span id="pdv-cupom-codigo"></span></span><span>-R$ <span id="pdv-cupom-display">0,00</span></span>
+                        </div>
+                        <div id="pdv-linha-pontos" style="display:none; justify-content:space-between; font-size:13px; color:#b45309; margin-bottom:4px; font-weight:600;">
+                            <span>🎁 Desconto pontos</span><span>-R$ <span id="pdv-pontos-display">0,00</span></span>
+                        </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; font-weight:bold; font-size:20px; border-top:1px solid #f1f5f9; padding-top:8px; margin-top:4px;">
                             <span style="font-size:13px; color:#666;">Total</span>
                             <span>R$ <span id="pdv-total">0,00</span></span>
@@ -3020,6 +3026,9 @@ let tempImg               = "";
 let tempImgData           = "";
 let modoEdicaoPDV         = false;
 let editandoPedidoId      = null;
+let pdvDescontoCupom      = 0;   // desconto de cupom ao editar pedido
+let pdvDescontoPontos     = 0;   // desconto de pontos de fidelidade ao editar pedido
+let pdvCupomCodigo        = '';  // código do cupom ao editar pedido
 
 // ── INICIALIZAÇÃO ──────────────────────────────────────────
 // Conecta SSE para receber pedidos online em tempo real
@@ -3233,6 +3242,9 @@ function editarPedido(id) {
     editandoPedidoId = id;
     carrinhoPDV      = (o.items || []).map(i => Object.assign({}, i));
     totalCarrinhoPDV = carrinhoPDV.reduce((s,i) => s + i.price * i.qtd, 0);
+    pdvDescontoCupom   = parseFloat(o.descontoCupom  || 0);
+    pdvDescontoPontos  = parseFloat(o.descontoPontos || o.desconto_pontos || 0);
+    pdvCupomCodigo     = o.cupom || '';
     _preencherPDV(o);
     document.getElementById('pdv-titulo').textContent = '✏️ Editando ' + o.id;
     document.getElementById('btn-finalizar-pdv').textContent = 'Salvar Alterações';
@@ -3272,16 +3284,22 @@ function _preencherPDV(o) {
 
 function closeModalNovoPedido() {
     document.getElementById('modal-pdv').classList.remove('pdv-visivel');
-    carrinhoPDV      = [];
-    totalCarrinhoPDV = 0;
-    modoEdicaoPDV    = false;
-    editandoPedidoId = null;
+    carrinhoPDV       = [];
+    totalCarrinhoPDV  = 0;
+    modoEdicaoPDV     = false;
+    editandoPedidoId  = null;
+    pdvDescontoCupom  = 0;
+    pdvDescontoPontos = 0;
+    pdvCupomCodigo    = '';
     fecharDropdownClientes();
 }
 
 function resetarPDV() {
     carrinhoPDV      = [];
     totalCarrinhoPDV = 0;
+    pdvDescontoCupom  = 0;
+    pdvDescontoPontos = 0;
+    pdvCupomCodigo    = '';
     atualizarCarrinho();
     document.getElementById('pdv-busca-cliente').value = '';
     document.getElementById('pdv-nome').value          = '';
@@ -3733,19 +3751,36 @@ function pdvEscHtml(s) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function pdvAtualizarTotalDisplay() {
-    var totalEl = document.getElementById('pdv-total');
+    var totalEl    = document.getElementById('pdv-total');
     var subtotalEl = document.getElementById('pdv-subtotal-display');
-    var taxaEl  = document.getElementById('pdv-taxa-display');
-    var linhaS  = document.getElementById('pdv-linha-subtotal');
-    var linhaT  = document.getElementById('pdv-linha-taxa');
+    var taxaEl     = document.getElementById('pdv-taxa-display');
+    var linhaS     = document.getElementById('pdv-linha-subtotal');
+    var linhaT     = document.getElementById('pdv-linha-taxa');
+    var linhaC     = document.getElementById('pdv-linha-cupom');
+    var linhaP     = document.getElementById('pdv-linha-pontos');
+    var cupomEl    = document.getElementById('pdv-cupom-display');
+    var cupomCodEl = document.getElementById('pdv-cupom-codigo');
+    var pontosEl   = document.getElementById('pdv-pontos-display');
     if (!totalEl) return;
-    var total = totalCarrinhoPDV + pdvTaxaEntregaAtual;
+    var total = Math.max(0, totalCarrinhoPDV + pdvTaxaEntregaAtual - pdvDescontoCupom - pdvDescontoPontos);
     totalEl.textContent = total.toFixed(2).replace('.', ',');
     if (subtotalEl) subtotalEl.textContent = totalCarrinhoPDV.toFixed(2).replace('.', ',');
     if (taxaEl)     taxaEl.textContent     = pdvTaxaEntregaAtual.toFixed(2).replace('.', ',');
-    // Mostra linhas detalhadas só se tiver taxa de entrega
-    if (linhaS) linhaS.style.display = pdvTaxaEntregaAtual > 0 ? 'flex' : 'none';
+    // Subtotal e taxa — mostra se há taxa ou descontos
+    var temDetalhes = pdvTaxaEntregaAtual > 0 || pdvDescontoCupom > 0 || pdvDescontoPontos > 0;
+    if (linhaS) linhaS.style.display = temDetalhes ? 'flex' : 'none';
     if (linhaT) linhaT.style.display = pdvTaxaEntregaAtual > 0 ? 'flex' : 'none';
+    // Cupom
+    if (linhaC) {
+        linhaC.style.display = pdvDescontoCupom > 0 ? 'flex' : 'none';
+        if (cupomEl)    cupomEl.textContent    = pdvDescontoCupom.toFixed(2).replace('.', ',');
+        if (cupomCodEl) cupomCodEl.textContent = pdvCupomCodigo ? '(' + pdvCupomCodigo + ')' : '';
+    }
+    // Pontos de fidelidade
+    if (linhaP) {
+        linhaP.style.display = pdvDescontoPontos > 0 ? 'flex' : 'none';
+        if (pontosEl) pontosEl.textContent = pdvDescontoPontos.toFixed(2).replace('.', ',');
+    }
 }
 
 function pdvEsconderTaxaCard() {
