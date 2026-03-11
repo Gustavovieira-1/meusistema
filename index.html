@@ -110,6 +110,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .sucesso-overlay{align-items:center;z-index:800;}
 .sucesso-overlay.open{display:flex;}
 .cart-overlay{z-index:600;}
+@media(min-width:600px){.cart-overlay{align-items:center;}.cart-sheet{border-radius:20px;max-height:90vh;}}
 
 /* SHEET */
 .cart-sheet{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;animation:sheetUp .26s cubic-bezier(.22,.68,0,1.2);}
@@ -229,6 +230,18 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .suc-pontos{background:#edfaf3;border:1px solid #6ee7b7;border-radius:10px;padding:14px 16px;margin:10px 0 18px;}
 .suc-pontos-val{font-size:24px;font-weight:800;color:#15803d;}
 .suc-pontos-lbl{font-size:12px;color:#16a34a;margin-top:2px;}
+
+/* CUPOM */
+.cupom-wrap{margin-bottom:14px;}
+.cupom-row{display:flex;gap:8px;}
+.cupom-input{flex:1;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border-color .15s;text-transform:uppercase;letter-spacing:.5px;}
+.cupom-input:focus{border-color:var(--text);}
+.cupom-btn{padding:11px 16px;border:none;border-radius:10px;background:var(--text);color:var(--white);font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s;}
+.cupom-btn:active{background:#333;}
+.cupom-tag{display:flex;align-items:center;justify-content:space-between;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:9px 13px;margin-top:8px;}
+.cupom-tag-txt{font-size:12px;font-weight:700;color:#15803d;}
+.cupom-tag-rem{background:none;border:none;font-size:16px;cursor:pointer;color:#16a34a;line-height:1;padding:0;}
+.resumo-linha.cupom-linha{color:#15803d;font-weight:600;}
 </style>
 </head>
 <body>
@@ -364,6 +377,18 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
         <label class="campo-lbl">Troco para quanto?</label>
         <input id="ch-troco" type="number" placeholder="Ex: 50,00">
       </div>
+      <!-- Cupom de desconto -->
+      <div class="cupom-wrap">
+        <div class="sec-title">Cupom de desconto</div>
+        <div class="cupom-row">
+          <input class="cupom-input" id="cupom-input" type="text" placeholder="Código do cupom" maxlength="20">
+          <button class="cupom-btn" onclick="cupomAplicar()">Aplicar</button>
+        </div>
+        <div id="cupom-tag" style="display:none;">
+          <div class="cupom-tag-txt" id="cupom-tag-txt"></div>
+          <button class="cupom-tag-rem" onclick="cupomRemover()">✕</button>
+        </div>
+      </div>
       <!-- Resgate de pontos -->
       <div id="fidel-wrap" style="display:none;">
         <div class="fidel-banner">
@@ -375,6 +400,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       <div class="resumo">
         <div class="resumo-linha"><span>Subtotal</span><span id="res-sub">R$ 0,00</span></div>
         <div class="resumo-linha" id="res-taxa-linha"><span>Taxa de entrega</span><span id="res-taxa">R$ 0,00</span></div>
+        <div class="resumo-linha cupom-linha" id="res-cupom-linha" style="display:none;"><span>🏷️ Cupom <span id="res-cupom-codigo"></span></span><span id="res-cupom-val">-R$ 0,00</span></div>
         <div class="resumo-linha fidel-linha" id="res-desconto-linha" style="display:none;"><span>🎁 Desconto pontos</span><span id="res-desconto">-R$ 0,00</span></div>
         <div class="resumo-linha resumo-total"><span>Total</span><span id="res-total">R$ 0,00</span></div>
       </div>
@@ -410,6 +436,89 @@ var db={categories:[],prods:[],comps:[],cfg:{},txCfg:{}};
 var carrinho=[],prodAtual=null,qtdAtual=1,compsAtual={},tipoAtual='Entrega',pgtoAtual='Pix',aberta=true;
 var REST_SLUG = null;
 var REST_ID   = null;
+
+// ── CUPOM ──
+var cupomAtual = null; // { codigo, tipo, valor, minimo, desconto }
+var _cuponsCache = null; // cache dos cupons carregados do Supabase
+
+async function cupomCarregar() {
+    if (_cuponsCache !== null) return _cuponsCache;
+    try {
+        const rows = await supaFetch('cupons?restaurante_id=eq.' + REST_ID + '&ativo=eq.true&select=*');
+        _cuponsCache = rows || [];
+    } catch(e) { _cuponsCache = []; }
+    return _cuponsCache;
+}
+
+async function cupomAplicar() {
+    var codigo = (document.getElementById('cupom-input').value || '').trim().toUpperCase();
+    if (!codigo) { cupomMensagem('Digite o código do cupom.', false); return; }
+    var btn = document.querySelector('.cupom-btn');
+    btn.disabled = true; btn.textContent = '...';
+    var lista = await cupomCarregar();
+    btn.disabled = false; btn.textContent = 'Aplicar';
+    var cup = lista.find(function(c){ return c.codigo === codigo; });
+    if (!cup) { cupomMensagem('Cupom inválido ou inativo.', false); return; }
+    // Verificar validade
+    if (cup.validade) {
+        var hoje = new Date(); hoje.setHours(0,0,0,0);
+        var val  = new Date(cup.validade + 'T00:00:00');
+        if (hoje > val) { cupomMensagem('Cupom expirado.', false); return; }
+    }
+    // Verificar limite de usos
+    if (cup.usos_max && cup.usos_atual >= cup.usos_max) { cupomMensagem('Cupom esgotado.', false); return; }
+    // Calcular desconto
+    var sub = carrinho.reduce(function(s,it){ return s + subTotal(it); }, 0);
+    if (cup.minimo && sub < cup.minimo) {
+        cupomMensagem('Pedido mínimo de R$ ' + parseFloat(cup.minimo).toFixed(2).replace('.',',') + ' para este cupom.', false);
+        return;
+    }
+    var desconto = 0;
+    var label = '';
+    if (cup.tipo === 'percentual') {
+        desconto = parseFloat((sub * cup.valor / 100).toFixed(2));
+        label = cup.codigo + ' (' + cup.valor + '% off)';
+    } else if (cup.tipo === 'fixo') {
+        desconto = Math.min(parseFloat(cup.valor), sub);
+        label = cup.codigo + ' (-R$ ' + parseFloat(cup.valor).toFixed(2).replace('.',',') + ')';
+    } else if (cup.tipo === 'frete') {
+        desconto = 0; // será descontado da taxa
+        label = cup.codigo + ' (frete grátis)';
+    }
+    cupomAtual = { codigo: cup.codigo, tipo: cup.tipo, valor: cup.valor, minimo: cup.minimo, desconto: desconto, label: label };
+    document.getElementById('cupom-tag-txt').textContent = '✓ ' + label;
+    document.getElementById('cupom-tag').style.display = '';
+    document.getElementById('cupom-input').style.display = 'none';
+    document.querySelector('.cupom-btn').style.display = 'none';
+    atualizaResumo();
+}
+
+function cupomRemover() {
+    cupomAtual = null;
+    document.getElementById('cupom-input').value = '';
+    document.getElementById('cupom-input').style.display = '';
+    document.querySelector('.cupom-btn').style.display = '';
+    document.getElementById('cupom-tag').style.display = 'none';
+    atualizaResumo();
+}
+
+function cupomMensagem(msg, ok) {
+    var inp = document.getElementById('cupom-input');
+    inp.style.borderColor = ok ? '#16a34a' : '#dc2626';
+    setTimeout(function(){ inp.style.borderColor = ''; }, 2500);
+    // Toast rápido
+    var t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:'+(ok?'#15803d':'#dc2626')+';color:white;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;white-space:nowrap;';
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 2500);
+}
+
+function cupomGetDesconto(sub, taxa) {
+    if (!cupomAtual) return 0;
+    if (cupomAtual.tipo === 'frete') return taxa; // desconta taxa inteira
+    return cupomAtual.desconto || 0;
+}
 
 async function supaFetch(path) {
     const r = await fetch(SUPA_URL + '/rest/v1/' + path, {
@@ -614,7 +723,8 @@ function adicionarCarrinho(){
 
 function subTotal(it){return(it.price+it.comps.reduce(function(s,c){return s+(c.price||0);},0))*it.qtd;}
 function atualizaFab(){var qtd=carrinho.reduce(function(s,it){return s+it.qtd;},0),tot=carrinho.reduce(function(s,it){return s+subTotal(it);},0);document.getElementById('fab-qtd').textContent=qtd;document.getElementById('fab-total').textContent='R$ '+tot.toFixed(2).replace('.',',');document.getElementById('fab').classList.toggle('show',qtd>0);}
-function abrirCarrinho(){renderCarrinho();fidelIniciarCarrinho();document.getElementById('cart-overlay').classList.add('open');document.body.style.overflow='hidden';}
+function abrirCarrinho(){
+    _cuponsCache = null; // força rebuscar cupons do SupabaserenderCarrinho();fidelIniciarCarrinho();document.getElementById('cart-overlay').classList.add('open');document.body.style.overflow='hidden';}
 function fecharCarrinho(e){if(!e||e.target===document.getElementById('cart-overlay')){document.getElementById('cart-overlay').classList.remove('open');document.body.style.overflow='';}}
 
 function renderCarrinho(){
@@ -629,14 +739,27 @@ function atualizaResumo(){
     var sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0);
     var taxa=tipoAtual==='Entrega'?parseFloat((db.txCfg||{}).taxaPadrao||(db.cfg||{}).taxaEntrega||0):0;
     var desc=fidelGetDesconto();
-    var total=Math.max(0, sub+taxa-desc);
+    var descCupom=cupomGetDesconto(sub, taxa);
+    // Se cupom é frete grátis, zera taxa no display
+    var taxaDisplay=(cupomAtual&&cupomAtual.tipo==='frete')?0:taxa;
+    var total=Math.max(0, sub+taxaDisplay-desc-descCupom);
     document.getElementById('res-sub').textContent='R$ '+sub.toFixed(2).replace('.',',');
-    document.getElementById('res-taxa').textContent='R$ '+taxa.toFixed(2).replace('.',',');
+    document.getElementById('res-taxa').textContent='R$ '+taxaDisplay.toFixed(2).replace('.',',');
     document.getElementById('res-total').textContent='R$ '+total.toFixed(2).replace('.',',');
     document.getElementById('res-taxa-linha').style.display=tipoAtual==='Entrega'?'':'none';
     var dlinha=document.getElementById('res-desconto-linha');
     if(desc>0){dlinha.style.display='';document.getElementById('res-desconto').textContent='-R$ '+desc.toFixed(2).replace('.',',');}
     else{dlinha.style.display='none';}
+    var clinha=document.getElementById('res-cupom-linha');
+    if(descCupom>0){
+        clinha.style.display='';
+        document.getElementById('res-cupom-codigo').textContent=cupomAtual?cupomAtual.codigo:'';
+        document.getElementById('res-cupom-val').textContent='-R$ '+descCupom.toFixed(2).replace('.',',');
+    } else if(cupomAtual&&cupomAtual.tipo==='frete'){
+        clinha.style.display='';
+        document.getElementById('res-cupom-codigo').textContent=cupomAtual.codigo;
+        document.getElementById('res-cupom-val').textContent='Grátis';
+    } else { clinha.style.display='none'; }
 }
 function setTipo(tipo,el){tipoAtual=tipo;document.querySelectorAll('.tipo-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');document.getElementById('wrap-end').style.display=tipo==='Entrega'?'':'none';atualizaResumo();}
 function setPgto(pgto,el){pgtoAtual=pgto;document.querySelectorAll('.pgto-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');document.getElementById('wrap-troco').style.display=pgto==='Dinheiro'?'':'none';}
@@ -663,7 +786,9 @@ async function finalizarPedido(){
     console.log('[PEDIDO] ✅ REST_ID validado, prosseguindo...');
     var cfg=db.cfg||{},tx=db.txCfg||{},sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0),taxa=tipoAtual==='Entrega'?parseFloat(tx.taxaPadrao||cfg.taxaEntrega||0):0,troco=pgtoAtual==='Dinheiro'?parseFloat(document.getElementById('ch-troco').value||0):0;
     var desc=fidelGetDesconto();
-    var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value:'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:cfg.cidade||'',subtotal:sub,taxaEntrega:taxa,descontoPontos:desc,resgPontos:fidelResgSel,total:Math.max(0,sub+taxa-desc),items:carrinho.slice()};
+    var taxaFinal=tipoAtual==='Entrega'?(cupomAtual&&cupomAtual.tipo==='frete'?0:taxa):0;
+    var descCupom=cupomGetDesconto(sub,taxa);
+    var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value:'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:cfg.cidade||'',subtotal:sub,taxaEntrega:taxaFinal,descontoPontos:desc,descontoCupom:descCupom,cupom:cupomAtual?cupomAtual.codigo:'',resgPontos:fidelResgSel,total:Math.max(0,sub+taxaFinal-desc-descCupom),items:carrinho.slice()};
     var btn=document.getElementById('btn-fin');btn.disabled=true;btn.textContent='Enviando...';
     // Gerar número do pedido localmente
     const _numPed = 'B-' + Math.floor(100000 + Math.random() * 900000);
@@ -698,7 +823,9 @@ async function finalizarPedido(){
                 itens: JSON.stringify(pedido.items||[]),
                 subtotal: parseFloat(pedido.subtotal||pedido.total), 
                 taxa_entrega: parseFloat(pedido.taxaEntrega||0),
-                desconto_pontos: parseFloat(pedido.descontoPontos||0), 
+                desconto_pontos: parseFloat(pedido.descontoPontos||0),
+                desconto_cupom: parseFloat(pedido.descontoCupom||0),
+                cupom: pedido.cupom||'',
                 total: parseFloat(pedido.total), 
                 status: 'analise'
             };
@@ -743,7 +870,7 @@ async function finalizarPedido(){
     btn.disabled=false;btn.textContent='Fazer pedido';
 }
 
-function novoPedido(){carrinho=[];atualizaFab();document.getElementById('sucesso-overlay').classList.remove('open');document.body.style.overflow='';}
+function novoPedido(){carrinho=[];cupomRemover();atualizaFab();document.getElementById('sucesso-overlay').classList.remove('open');document.body.style.overflow='';}
 
 init();
 
