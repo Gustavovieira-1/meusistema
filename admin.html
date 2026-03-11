@@ -4461,16 +4461,24 @@ function impSalvar() {
 
 function impToggle(el, chkId) {
     el.classList.toggle('off');
+    var isOn = !el.classList.contains('off');
     var chk = document.getElementById(chkId);
-    if (chk) chk.checked = !el.classList.contains('off');
+    if (chk) chk.checked = isOn;
     impAtualizarPreview();
-    // Salva o toggle imediatamente no Supabase
+    // Salva imediatamente no Supabase
     impSalvarTogglesSupabase();
 }
 
 function impSalvarTogglesSupabase() {
     if (!REST_ID) return;
-    var c = function(id) { var e = document.getElementById(id); return e ? !e.classList.contains('off') : true; };
+    // Lê estado pelo div toggle (tem classe 'off' quando desligado), não pelo input hidden
+    var c = function(chkId) {
+        var div = document.querySelector('.imp-toggle[onclick*="\'' + chkId + '\'"]');
+        if (div) return !div.classList.contains('off');
+        // fallback: lê pelo input checkbox
+        var inp = document.getElementById(chkId);
+        return inp ? inp.checked : true;
+    };
     var ativar  = c('imp-ativar');
     var auto    = c('imp-auto');
     var aceitar = c('imp-aceitar');
@@ -4486,8 +4494,12 @@ function impSalvarTogglesSupabase() {
         headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
         body: JSON.stringify({ ativar: ativar, auto_impressao: auto, auto_aceitar: aceitar })
     }).then(function(r) {
-        if (r.ok) impAddLog('✓ Automação salva', 'ok');
-    }).catch(function(){});
+        if (r.ok) {
+            impAddLog('✓ Automação salva: ativar='+ativar+' auto='+auto+' aceitar='+aceitar, 'ok');
+        } else {
+            r.text().then(function(t){ impAddLog('⚠ Erro ao salvar automação: '+t.substring(0,80), 'err'); });
+        }
+    }).catch(function(e){ impAddLog('⚠ Erro ao salvar automação: '+e.message, 'err'); });
 }
 
 function impSetModo(modo, btn) {
