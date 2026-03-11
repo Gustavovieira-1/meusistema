@@ -3189,8 +3189,34 @@ function aplicarStatusLoja() {
 function toggleLojaStatus() {
     lojaPausada = !lojaPausada;
     localStorage.setItem('f_loja_pausada', JSON.stringify(lojaPausada));
-    cardapioSync();
     aplicarStatusLoja();
+    // Salva pausada no Supabase para o site (index.html) ler
+    if (REST_ID) {
+        fetch(SUPA_URL + '/rest/v1/configuracoes?restaurante_id=eq.' + REST_ID, {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': 'Bearer ' + SUPA_KEY,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ pausada: lojaPausada })
+        }).then(function(r) {
+            if (!r.ok) {
+                // Se não existe registro ainda, faz INSERT
+                return fetch(SUPA_URL + '/rest/v1/configuracoes', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPA_KEY,
+                        'Authorization': 'Bearer ' + SUPA_KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ restaurante_id: REST_ID, pausada: lojaPausada })
+                });
+            }
+        }).catch(function(e) { console.warn('[Loja] Erro ao salvar status:', e.message); });
+    }
 }
 
 // Reavalia a cada minuto automaticamente
