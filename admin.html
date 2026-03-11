@@ -4436,9 +4436,13 @@ function impSalvar() {
     if ((gv = g('imp-loja-nome')) !== null) cfg.lojaNome = gv;
     if ((gv = g('imp-largura'))   !== null) cfg.largura  = gv || '80';
     if ((gv = g('imp-rodape'))    !== null) cfg.rodape   = gv;
-    if ((gv = c('imp-ativar'))    !== null) cfg.ativar   = gv;
-    if ((gv = c('imp-auto'))      !== null) cfg.auto     = gv;
-    if ((gv = c('imp-aceitar'))   !== null) cfg.aceitar  = gv;
+    // Lê toggles de automação direto dos divs (existem pois Salvar só é clicável nessa seção)
+    var dAt = document.getElementById('imp-tog-ativar');
+    var dAu = document.getElementById('imp-tog-auto');
+    var dAc = document.getElementById('imp-tog-aceitar');
+    if (dAt) cfg.ativar  = !dAt.classList.contains('off');
+    if (dAu) cfg.auto    = !dAu.classList.contains('off');
+    if (dAc) cfg.aceitar = !dAc.classList.contains('off');
     // Campos da notinha — só salva se o elemento existe na tela
     if ((gv = c('imp-show-codigo'))   !== null) cfg.showCodigo   = gv;
     if ((gv = c('imp-show-data'))     !== null) cfg.showData     = gv;
@@ -4486,15 +4490,15 @@ function impToggle(el, chkId) {
 
 function impSalvarTogglesSupabase() {
     if (!REST_ID) return;
-    // Lê estado pelo div toggle (tem classe 'off' quando desligado)
-    var togVal = function(divId) {
-        var div = document.getElementById(divId);
-        return div ? !div.classList.contains('off') : true;
-    };
-    var ativar  = togVal('imp-tog-ativar');
-    var auto    = togVal('imp-tog-auto');
-    var aceitar = togVal('imp-tog-aceitar');
-    // Salva também no localStorage
+    // Só executa se os divs existem no DOM (seção impressora está visível)
+    var divAtivar  = document.getElementById('imp-tog-ativar');
+    var divAuto    = document.getElementById('imp-tog-auto');
+    var divAceitar = document.getElementById('imp-tog-aceitar');
+    if (!divAtivar || !divAuto || !divAceitar) return; // divs não estão no DOM agora
+    var ativar  = !divAtivar.classList.contains('off');
+    var auto    = !divAuto.classList.contains('off');
+    var aceitar = !divAceitar.classList.contains('off');
+    // Salva no localStorage
     var cfg = impGetConfig();
     cfg.ativar  = ativar;
     cfg.auto    = auto;
