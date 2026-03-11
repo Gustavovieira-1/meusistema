@@ -4233,7 +4233,7 @@ function cancelarPedido(id) {
     updateOrderStatus(id, 'cancelado');
 }
 
-function updateOrderStatus(id, newStatus) {
+function updateOrderStatus(id, newStatus, silencioso) {
     if (newStatus === 'finalizado') {
         const pedFid = orders.find(o => o.id === id);
         if (pedFid) {
@@ -4258,14 +4258,13 @@ function updateOrderStatus(id, newStatus) {
         // ── AUTOMAÇÕES ──────────────────────────────────────────────
         var elAtivar  = document.getElementById('imp-ativar');
         var elAuto    = document.getElementById('imp-auto');
-        var elAceitar = document.getElementById('imp-aceitar');
         var togAtivo  = function(el) { return !el || !el.classList.contains('off'); };
         var ativarOn  = togAtivo(elAtivar);
         var autoOn    = togAtivo(elAuto);
-        var aceitarOn = togAtivo(elAceitar);
 
-        // Auto-impressão: só imprime quando entra em PREPARO (nunca em analise)
-        if (ativarOn && autoOn && newStatus === 'preparo') {
+        // Auto-impressão: só imprime quando entra em PREPARO, não foi movimento automático (silencioso)
+        // e os dois toggles estão ativos
+        if (!silencioso && ativarOn && autoOn && newStatus === 'preparo') {
             setTimeout(function(){ imprimirPedido(id); }, 300);
         }
     }
@@ -4488,10 +4487,10 @@ function impSalvarTogglesSupabase() {
     cfg.auto    = auto;
     cfg.aceitar = aceitar;
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-    // Salva no Supabase
+    // Salva no Supabase usando service_role key (bypassa RLS)
     fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID, {
         method: 'PATCH',
-        headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
+        headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
         body: JSON.stringify({ ativar: ativar, auto_impressao: auto, auto_aceitar: aceitar })
     }).then(function(r) {
         if (r.ok) {
@@ -6642,7 +6641,8 @@ async function supaCarregarPedidos() {
                 var aceitarOn = !elAceitar || !elAceitar.classList.contains('off');
                 if (aceitarOn) {
                     pedidosNovos.forEach(function(o) {
-                        setTimeout(function() { updateOrderStatus(o.id, 'preparo'); }, 600);
+                        // silencioso=true: o server.js cuida da impressão, não o admin
+                        setTimeout(function() { updateOrderStatus(o.id, 'preparo', true); }, 600);
                     });
                 }
             }
