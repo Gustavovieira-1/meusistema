@@ -2126,9 +2126,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <a id="imp-btn-baixar" href="https://oijcggqfcgjkgcaymjqx.supabase.co/storage/v1/object/sign/downloads/server.exe?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV85MTdlOTE2Yi04ODdiLTQ0NmUtOWRiOC1kMDBkN2FjMDE5NDQiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJkb3dubG9hZHMvc2VydmVyLmV4ZSIsImlhdCI6MTc3MzEwMDAwMywiZXhwIjo0Mjk1OTgwMDAzfQ.4udMGYoyGBOWgiyEvWGYt3RHNqgvXP8kjf9to6s-KNg" download style="background:#e30613; border:none; color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px; text-decoration:none;">
                         <i class="fas fa-download"></i> Baixar .exe
                     </a>
-                    <button onclick="impBaixarConfig()" style="background:#0f172a; border:none; color:white; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px;">
-                        <i class="fas fa-gear"></i> Baixar Config
-                    </button>
+
                 </div>
             </div>
 
@@ -2252,8 +2250,11 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <input id="imp-rodape" type="text" placeholder="Ex: Obrigado pela preferência! 😊" oninput="impAtualizarPreview()" style="width:100%; padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
                 </div>
                 <div style="display:flex; gap:8px;">
-                    <button onclick="impSalvar()" style="background:#16a34a; border:none; color:white; padding:9px 18px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:7px;">
+                    <button onclick="impSalvarComValidacao()" style="background:#16a34a; border:none; color:white; padding:9px 18px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:7px;">
                         <i class="fas fa-floppy-disk"></i> Salvar configurações
+                    </button>
+                    <button onclick="impBaixarConfig()" style="background:#0f172a; border:none; color:white; padding:9px 18px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:7px;">
+                        <i class="fas fa-download"></i> Baixar Config
                     </button>
                 </div>
             </div>
@@ -4365,6 +4366,29 @@ function impInicializar() {
     _impStatusTimer = setInterval(impVerificarStatus, 30000);
 }
 
+function impSalvarComValidacao() {
+    var fnEl = document.getElementById('imp-font-nome');
+    var ftEl = document.getElementById('imp-font-tamanho');
+    var nomeImp = (document.getElementById('imp-modal-nome')||{}).value || (impGetConfig().impressora || '');
+    if (!nomeImp.trim()) {
+        alert('⚠️ Configure a impressora antes de salvar!
+
+Vá até o card "Impressora", selecione ou digite o nome da impressora e clique em Salvar.');
+        return;
+    }
+    if (fnEl && !fnEl.value) {
+        alert('⚠️ Selecione o tipo de fonte antes de salvar!');
+        fnEl.focus();
+        return;
+    }
+    if (ftEl && !ftEl.value) {
+        alert('⚠️ Selecione o tamanho da fonte antes de salvar!');
+        ftEl.focus();
+        return;
+    }
+    impSalvar();
+}
+
 function impSalvar() {
     var cfg = impGetConfig(); // já tem os valores salvos como base
     // Só sobrescreve campos que existem no DOM agora
@@ -4524,7 +4548,9 @@ function impBaixarConfig() {
         token: SUPA_TOKEN || '',
         refresh_token: sessao.refresh_token || '',
         lojaNome: cfg.lojaNome || '',
-        rodape: cfg.rodape || ''
+        rodape: cfg.rodape || '',
+        fontNome: cfg.fontNome || 'Courier New',
+        fontTamanho: cfg.fontTamanho || '8'
     };
     var blob = new Blob([JSON.stringify(obj, null, 2)], {type: 'application/json'});
     var a = document.createElement('a');
@@ -4569,9 +4595,7 @@ function impSalvarImpressora() {
         cfg.impressora = nome;
         cfg.largura = larg;
         localStorage.setItem('f_impressora_cfg_' + (REST_ID||'default'), JSON.stringify(cfg));
-        impAddLog('→ Baixe o config atualizado para o .exe usar a nova impressora', 'info');
-        // Oferece download do config automaticamente
-        setTimeout(impBaixarConfig, 800);
+        impAddLog('→ Clique em "Salvar configurações" abaixo e depois "Baixar Config" para atualizar o .exe', 'info');
     }).catch(function(e) {
         impAddLog('Erro ao salvar: ' + e.message, 'err');
     });
