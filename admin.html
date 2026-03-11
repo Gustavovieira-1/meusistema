@@ -2223,6 +2223,31 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     </div>
                 </div>
                 <div style="padding:14px; background:white; border:1.5px solid #f1f5f9; border-radius:10px;">
+                    <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:8px;">Fonte da impressão</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <div>
+                            <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">Tipo de fonte</label>
+                            <select id="imp-font-nome" onchange="impAtualizarPreview()" style="width:100%; padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:12px; color:#1e293b; font-family:inherit; outline:none; background:white; box-sizing:border-box;" onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
+                                <option value="Courier New">Courier New (padrão)</option>
+                                <option value="Lucida Console">Lucida Console</option>
+                                <option value="Consolas">Consolas</option>
+                                <option value="Arial">Arial</option>
+                                <option value="Tahoma">Tahoma</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:11px; color:#94a3b8; display:block; margin-bottom:4px;">Tamanho</label>
+                            <select id="imp-font-tamanho" onchange="impAtualizarPreview()" style="width:100%; padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:12px; color:#1e293b; font-family:inherit; outline:none; background:white; box-sizing:border-box;" onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
+                                <option value="7">7pt — bem pequena</option>
+                                <option value="8" selected>8pt — padrão</option>
+                                <option value="9">9pt — média</option>
+                                <option value="10">10pt — grande</option>
+                                <option value="11">11pt — bem grande</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding:14px; background:white; border:1.5px solid #f1f5f9; border-radius:10px;">
                     <div style="font-size:12px; font-weight:700; color:#475569; margin-bottom:8px;">Mensagem de rodapé</div>
                     <input id="imp-rodape" type="text" placeholder="Ex: Obrigado pela preferência! 😊" oninput="impAtualizarPreview()" style="width:100%; padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;" onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
                 </div>
@@ -4271,6 +4296,8 @@ function impGetConfig() {
         if (cfg.showEndereco === undefined) cfg.showEndereco = true;
         if (cfg.showSubtotal === undefined) cfg.showSubtotal = true;
         if (cfg.showPgto     === undefined) cfg.showPgto     = true;
+        if (!cfg.fontNome)    cfg.fontNome    = 'Courier New';
+        if (!cfg.fontTamanho) cfg.fontTamanho = '8';
         return cfg;
     } catch(e) { return {}; }
 }
@@ -4314,6 +4341,11 @@ function impInicializar() {
     setToggle('imp-show-endereco', 'imp-tog-endereco', cfg.showEndereco);
     setToggle('imp-show-subtotal', 'imp-tog-subtotal', cfg.showSubtotal);
     setToggle('imp-show-pgto',     'imp-tog-pgto',     cfg.showPgto);
+    // Fonte
+    var fnEl = document.getElementById('imp-font-nome');
+    if (fnEl) fnEl.value = cfg.fontNome || 'Courier New';
+    var ftEl = document.getElementById('imp-font-tamanho');
+    if (ftEl) ftEl.value = cfg.fontTamanho || '8';
     // Botão largura
     var larg = cfg.largura||'80';
     document.querySelectorAll('.imp-largura-btn').forEach(function(b){
@@ -4354,6 +4386,8 @@ function impSalvar() {
     if ((gv = c('imp-show-endereco')) !== null) cfg.showEndereco = gv;
     if ((gv = c('imp-show-subtotal')) !== null) cfg.showSubtotal = gv;
     if ((gv = c('imp-show-pgto'))     !== null) cfg.showPgto     = gv;
+    if ((gv = g('imp-font-nome'))     !== null) cfg.fontNome     = gv || 'Courier New';
+    if ((gv = g('imp-font-tamanho'))  !== null) cfg.fontTamanho  = gv || '8';
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
     // Salva lojaNome e largura no Supabase também para persistir entre contas
     if (REST_ID && cfg.lojaNome) {
@@ -5322,7 +5356,9 @@ function imprimirPedido(id, pedidoOverride) {
                 tempoEntrega:  cfgTx.tempoEntrega  || 40,
                 tempoRetirada: cfgTx.tempoRetirada || 20,
                 taxaPadrao:    cfgTx.taxaPadrao    || 5,
-                dbComps:       db.comps || []
+                dbComps:       db.comps || [],
+                fontNome:      cfg.fontNome    || 'Courier New',
+                fontTamanho:   cfg.fontTamanho || '8'
             }
         };
         // Marca impresso=false para o assistente pegar + salva config da nota
@@ -5355,7 +5391,9 @@ function imprimirPedido(id, pedidoOverride) {
             tempoEntrega:  cfgTx.tempoEntrega  || 40,
             tempoRetirada: cfgTx.tempoRetirada || 20,
             taxaPadrao:    cfgTx.taxaPadrao    || 5,
-            dbComps:       db.comps || []
+            dbComps:       db.comps || [],
+            fontNome:      cfg.fontNome    || 'Courier New',
+            fontTamanho:   cfg.fontTamanho || '8'
         },
         impressora: impGetNomeImpressora() || IMP_NOME_IMPRESSORA
     };
