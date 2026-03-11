@@ -6398,9 +6398,14 @@ async function supaCarregarPedidos() {
                     phone: r.telefone,
                     address: r.endereco, 
                     bairro: r.bairro,
+                    complemento: r.complemento || '',
+                    cidade: r.cidade || '',
                     tipo: r.tipo, 
                     pagamento: r.pagamento, 
                     troco: r.troco,
+                    subtotal: r.subtotal,
+                    taxaEntrega: r.taxa_entrega,
+                    descontoPontos: r.desconto_pontos,
                     total: r.total, 
                     status: r.status,
                     items: itens, 
@@ -6571,8 +6576,7 @@ async function authRenovarToken() {
         
         console.log('[AUTH] Renovando token...');
         
-        // Chamar refresh_token do Supabase
-        // IMPORTANTE: usar sess.refresh_token (não sess.token que é o access_token)
+        // IMPORTANTE: usar sess.refresh_token (não sess.token que é o access_token JWT)
         const refreshTkn = sess.refresh_token || '';
         if (!refreshTkn) {
             console.warn('[AUTH] Sem refresh_token salvo — não é possível renovar.');
