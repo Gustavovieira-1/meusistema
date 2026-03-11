@@ -4084,7 +4084,10 @@ function renderOrders() {
                     '<i class="fas fa-location-dot" style="font-size:9px; color:#cbd5e1; margin-right:4px;"></i>' + o.address +
                 '</div>' +
                 '<div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding-top:10px; border-top:1px solid #f1f5f9;">' +
-                    '<span class="order-total">R$ ' + o.total.toFixed(2) + '</span>' +
+                    '<div>' +
+                        '<span class="order-total">R$ ' + o.total.toFixed(2) + '</span>' +
+                        (o.cupom ? '<div style="font-size:10px;font-weight:700;color:#15803d;margin-top:2px;">🏷️ Cupom ' + o.cupom + ' (-R$ ' + parseFloat(o.descontoCupom||0).toFixed(2).replace('.',',') + ')</div>' : '') +
+                    '</div>' +
                     pgtoTag +
                 '</div>' +
                 avancarBtn;
@@ -6372,6 +6375,11 @@ async function supaCarregarPedidos() {
                     tipo: r.tipo, 
                     pagamento: r.pagamento, 
                     troco: r.troco,
+                    subtotal: r.subtotal,
+                    taxaEntrega: r.taxa_entrega,
+                    descontoPontos: r.desconto_pontos,
+                    cupom: r.cupom || '',
+                    descontoCupom: parseFloat(r.desconto_cupom || 0),
                     total: r.total, 
                     status: r.status,
                     items: itens, 
