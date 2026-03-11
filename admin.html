@@ -5137,7 +5137,7 @@ function intSalvar() {
     cfg[_intAtual] = { valor: val, ativo: true };
     if (val2) cfg[_intAtual].valor2 = val2;
     localStorage.setItem(INT_KEY, JSON.stringify(cfg));
-    supaUpsert('integracoes',{dados:cfg},'restaurante_id').catch(e=>console.warn('Supa int:',e.message));
+    intSalvarSupabase(cfg);
     intFecharModal();
     intInicializar();
 }
@@ -5148,8 +5148,30 @@ function intDesativar() {
     var cfg = intGetConfig();
     delete cfg[_intAtual];
     localStorage.setItem(INT_KEY, JSON.stringify(cfg));
+    intSalvarSupabase(cfg); // também salva remoção no Supabase
     intFecharModal();
     intInicializar();
+}
+
+function intSalvarSupabase(cfg) {
+    if (!REST_ID) return;
+    // Usa service_role key para garantir que passa pelo RLS (igual à impressora)
+    fetch(SUPA_URL + '/rest/v1/integracoes?on_conflict=restaurante_id', {
+        method: 'POST',
+        headers: {
+            'apikey':        SUPA_KEY,
+            'Authorization': 'Bearer ' + SUPA_KEY,
+            'Content-Type':  'application/json',
+            'Prefer':        'return=minimal,resolution=merge-duplicates'
+        },
+        body: JSON.stringify({ restaurante_id: REST_ID, dados: cfg })
+    }).then(function(r) {
+        if (r.ok) {
+            console.log('[Integrações] Salvo no Supabase ✓');
+        } else {
+            r.text().then(function(t) { console.error('[Integrações] Erro Supabase:', t); });
+        }
+    }).catch(function(e) { console.error('[Integrações] Erro de rede:', e.message); });
 }
 
 function intFecharModal() {
