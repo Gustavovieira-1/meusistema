@@ -616,6 +616,33 @@ async function init(){
 
         renderHeader(); renderCardapio();
 
+        // Polling leve a cada 60s para atualizar status da loja em tempo real
+        setInterval(async function() {
+            try {
+                var cfgRows = await supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=pausada&limit=1');
+                var horRows = await supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1');
+                var cfg2 = (cfgRows && cfgRows[0]) || {};
+                db.horarios = (horRows && horRows[0]) ? (horRows[0].dados || []) : db.horarios;
+                aberta = !cfg2.pausada;
+                if (db.horarios && db.horarios.length) {
+                    var agora2 = new Date();
+                    var dia2 = db.horarios[agora2.getDay()];
+                    if (dia2 && dia2.aberta && dia2.periodos && dia2.periodos.length) {
+                        var min2 = agora2.getHours()*60 + agora2.getMinutes();
+                        var dentro2 = dia2.periodos.some(function(p) {
+                            var ah = parseInt((p.ini||'00:00').split(':')[0]), am = parseInt((p.ini||'00:00').split(':')[1]);
+                            var fh = parseInt((p.fim||'23:59').split(':')[0]), fm = parseInt((p.fim||'23:59').split(':')[1]);
+                            return min2 >= ah*60+am && min2 < fh*60+fm;
+                        });
+                        if (!dentro2) aberta = false;
+                    } else if (dia2 && !dia2.aberta) {
+                        aberta = false;
+                    }
+                }
+                renderHeader();
+            } catch(e) {}
+        }, 60000);
+
         // Tentar conectar ao servidor local em background (impressora/SSE)
         if (SERVIDOR) {
             fetch(SERVIDOR+'/cardapio/dados').then(r=>r.json()).then(d=>{
