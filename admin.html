@@ -2166,17 +2166,17 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                 <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:2px;">Automações</div>
                 <label style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
                     <span style="font-size:13px; color:#334155; font-weight:500;">Ativar uso do Assistente</span>
-                    <div class="imp-toggle" onclick="impToggle(this,'imp-ativar')"><div class="imp-toggle-thumb"></div></div>
+                    <div class="imp-toggle" id="imp-tog-ativar" onclick="impToggle(this,'imp-ativar')"><div class="imp-toggle-thumb"></div></div>
                     <input type="checkbox" id="imp-ativar" style="display:none;" checked>
                 </label>
                 <label style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
                     <span style="font-size:13px; color:#334155; font-weight:500;">Impressão automática de pedidos</span>
-                    <div class="imp-toggle" onclick="impToggle(this,'imp-auto')"><div class="imp-toggle-thumb"></div></div>
+                    <div class="imp-toggle" id="imp-tog-auto" onclick="impToggle(this,'imp-auto')"><div class="imp-toggle-thumb"></div></div>
                     <input type="checkbox" id="imp-auto" style="display:none;" checked>
                 </label>
                 <label style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
                     <span style="font-size:13px; color:#334155; font-weight:500;">Aceitar pedidos automaticamente</span>
-                    <div class="imp-toggle" onclick="impToggle(this,'imp-aceitar')"><div class="imp-toggle-thumb"></div></div>
+                    <div class="imp-toggle" id="imp-tog-aceitar" onclick="impToggle(this,'imp-aceitar')"><div class="imp-toggle-thumb"></div></div>
                     <input type="checkbox" id="imp-aceitar" style="display:none;" checked>
                 </label>
             </div>
@@ -4233,7 +4233,7 @@ function cancelarPedido(id) {
     updateOrderStatus(id, 'cancelado');
 }
 
-function updateOrderStatus(id, newStatus, silencioso) {
+function updateOrderStatus(id, newStatus) {
     if (newStatus === 'finalizado') {
         const pedFid = orders.find(o => o.id === id);
         if (pedFid) {
@@ -4255,15 +4255,15 @@ function updateOrderStatus(id, newStatus, silencioso) {
         }
         localStorage.setItem('f_orders', JSON.stringify(orders));
         renderOrders();
-        // ── AUTOMAÇÕES ──────────────────────────────────────────────
-        var elAtivar  = document.getElementById('imp-ativar');
-        var elAuto    = document.getElementById('imp-auto');
-        var togAtivo  = function(el) { return !el || !el.classList.contains('off'); };
-        var ativarOn  = togAtivo(elAtivar);
-        var autoOn    = togAtivo(elAuto);
+        // ── AUTOMAÇÕES — lê divs com ID (classe 'off' = desligado) ───
+        var togOn = function(divId) {
+            var d = document.getElementById(divId);
+            return d ? !d.classList.contains('off') : true;
+        };
+        var ativarOn = togOn('imp-tog-ativar');
+        var autoOn   = togOn('imp-tog-auto');
 
         // Auto-impressão: só imprime quando entra em PREPARO, não foi movimento automático (silencioso)
-        // e os dois toggles estão ativos
         if (!silencioso && ativarOn && autoOn && newStatus === 'preparo') {
             setTimeout(function(){ imprimirPedido(id); }, 300);
         }
@@ -4332,6 +4332,14 @@ function impInicializar() {
     tog('imp-ativar',  cfg.ativar!==false);
     tog('imp-auto',    cfg.auto!==false);
     tog('imp-aceitar', cfg.aceitar!==false);
+    // Também aplica diretamente nos divs com ID
+    var aplicaTog = function(divId, on) {
+        var d = document.getElementById(divId);
+        if (d) { if(on) d.classList.remove('off'); else d.classList.add('off'); }
+    };
+    aplicaTog('imp-tog-ativar',  cfg.ativar!==false);
+    aplicaTog('imp-tog-auto',    cfg.auto!==false);
+    aplicaTog('imp-tog-aceitar', cfg.aceitar!==false);
     // Também busca do Supabase para garantir que esteja em sinc
     if (REST_ID) {
         fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID+'&select=ativar,auto_impressao,auto_aceitar&limit=1', {
@@ -4339,9 +4347,18 @@ function impInicializar() {
         }).then(function(r){ return r.json(); }).then(function(rows) {
             if (rows && rows[0]) {
                 var row = rows[0];
-                if (row.ativar  !== null && row.ativar  !== undefined) tog('imp-ativar',  row.ativar);
-                if (row.auto_impressao !== null && row.auto_impressao !== undefined) tog('imp-auto', row.auto_impressao);
-                if (row.auto_aceitar  !== null && row.auto_aceitar  !== undefined) tog('imp-aceitar', row.auto_aceitar);
+                if (row.ativar  !== null && row.ativar  !== undefined) {
+                    tog('imp-ativar', row.ativar);
+                    var d=document.getElementById('imp-tog-ativar'); if(d){ if(row.ativar) d.classList.remove('off'); else d.classList.add('off'); }
+                }
+                if (row.auto_impressao !== null && row.auto_impressao !== undefined) {
+                    tog('imp-auto', row.auto_impressao);
+                    var d=document.getElementById('imp-tog-auto'); if(d){ if(row.auto_impressao) d.classList.remove('off'); else d.classList.add('off'); }
+                }
+                if (row.auto_aceitar  !== null && row.auto_aceitar  !== undefined) {
+                    tog('imp-aceitar', row.auto_aceitar);
+                    var d=document.getElementById('imp-tog-aceitar'); if(d){ if(row.auto_aceitar) d.classList.remove('off'); else d.classList.add('off'); }
+                }
                 // Sincroniza no localStorage também
                 var cfgS = impGetConfig();
                 if (row.ativar  !== null) cfgS.ativar  = row.ativar;
@@ -4470,27 +4487,24 @@ function impToggle(el, chkId) {
 
 function impSalvarTogglesSupabase() {
     if (!REST_ID) return;
-    // Lê estado pelo div toggle (tem classe 'off' quando desligado), não pelo input hidden
-    var c = function(chkId) {
-        var div = document.querySelector('.imp-toggle[onclick*="\'' + chkId + '\'"]');
-        if (div) return !div.classList.contains('off');
-        // fallback: lê pelo input checkbox
-        var inp = document.getElementById(chkId);
-        return inp ? inp.checked : true;
+    // Lê estado pelo div toggle (tem classe 'off' quando desligado)
+    var togVal = function(divId) {
+        var div = document.getElementById(divId);
+        return div ? !div.classList.contains('off') : true;
     };
-    var ativar  = c('imp-ativar');
-    var auto    = c('imp-auto');
-    var aceitar = c('imp-aceitar');
+    var ativar  = togVal('imp-tog-ativar');
+    var auto    = togVal('imp-tog-auto');
+    var aceitar = togVal('imp-tog-aceitar');
     // Salva também no localStorage
     var cfg = impGetConfig();
     cfg.ativar  = ativar;
     cfg.auto    = auto;
     cfg.aceitar = aceitar;
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-    // Salva no Supabase usando service_role key (bypassa RLS)
+    // Salva no Supabase
     fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID, {
         method: 'PATCH',
-        headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+        headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
         body: JSON.stringify({ ativar: ativar, auto_impressao: auto, auto_aceitar: aceitar })
     }).then(function(r) {
         if (r.ok) {
@@ -6637,12 +6651,11 @@ async function supaCarregarPedidos() {
             if (pedidosNovos.length > 0) {
                 tocarSomNotificacao();
                 // Auto-aceitar: move direto para preparo se toggle ativo
-                var elAceitar = document.getElementById('imp-aceitar');
-                var aceitarOn = !elAceitar || !elAceitar.classList.contains('off');
+                var elAceitar = document.getElementById('imp-tog-aceitar');
+                var aceitarOn = elAceitar ? !elAceitar.classList.contains('off') : false;
                 if (aceitarOn) {
                     pedidosNovos.forEach(function(o) {
-                        // silencioso=true: o server.js cuida da impressão, não o admin
-                        setTimeout(function() { updateOrderStatus(o.id, 'preparo', true); }, 600);
+                        setTimeout(function() { updateOrderStatus(o.id, 'preparo'); }, 600);
                     });
                 }
             }
