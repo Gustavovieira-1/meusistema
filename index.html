@@ -536,6 +536,36 @@ async function supaFetch(path) {
     return r.json();
 }
 
+// ── PRÉ-INICIALIZAÇÃO DO PIXEL ─────────────────────────────
+// Roda IMEDIATAMENTE ao carregar a página, antes de qualquer fetch ao Supabase
+// Usa o pixelId em cache no localStorage de visitas anteriores
+(function() {
+    try {
+        var cached = localStorage.getItem('f_pixel_id');
+        if (cached) {
+            // Inicializa fbq na memória para capturar eventos desde o primeiro ms
+            if (!window.fbq) {
+                var fbq = window.fbq = function() {
+                    if (fbq.callMethod) fbq.callMethod.apply(fbq, arguments);
+                    else fbq.queue.push(arguments);
+                };
+                if (!window._fbq) window._fbq = fbq;
+                fbq.push = fbq; fbq.loaded = true; fbq.version = '2.0'; fbq.queue = [];
+            }
+            window.fbq('init', cached);
+            window.fbq('track', 'PageView');
+            // Carrega fbevents.js imediatamente
+            if (!document.getElementById('fb-pixel-script')) {
+                var s = document.createElement('script');
+                s.id = 'fb-pixel-script'; s.async = true;
+                s.src = 'https://connect.facebook.net/en_US/fbevents.js';
+                document.head.appendChild(s);
+            }
+            window._pixelPreInit = cached; // marca que já fez pre-init
+        }
+    } catch(e) {}
+})();
+
 async function init(){
     console.log('[INIT] Iniciando carregamento de dados...');
     // Pegar slug da URL: /?r=fogueiro-burguer  OU  /fogueiro-burguer
@@ -946,20 +976,29 @@ function pixelInicializar(integracoes) {
     }
 
     // Passo 2: Chama init e PageView ANTES do script carregar — ficam na fila
+    // Salva pixelId no localStorage para pre-init na próxima visita (velocidade)
+    try { localStorage.setItem('f_pixel_id', _pixelId); } catch(e) {}
+
+    // Se já fez pre-init com o mesmo pixel, só marca como ready (evita double-init)
+    if (window._pixelPreInit === _pixelId) {
+        _pixelReady = true;
+        console.log('[Pixel] ✅ Já inicializado via pre-init:', _pixelId);
+        return;
+    }
+
+    // Primeira visita (sem cache): inicializa agora
     window.fbq('init', _pixelId);
     window.fbq('track', 'PageView');
     _pixelReady = true;
     console.log('[Pixel] Inicializado:', _pixelId);
 
-    // Passo 3: Carrega o fbevents.js (processa a fila quando terminar de baixar)
+    // Carrega fbevents.js
     if (!document.getElementById('fb-pixel-script')) {
         var s = document.createElement('script');
         s.id  = 'fb-pixel-script';
         s.async = true;
         s.src = 'https://connect.facebook.net/en_US/fbevents.js';
         document.head.appendChild(s);
-
-        // noscript fallback
         var ns = document.createElement('noscript');
         ns.innerHTML = '<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id='+_pixelId+'&ev=PageView&noscript=1"/>';
         document.head.appendChild(ns);
