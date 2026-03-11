@@ -833,7 +833,8 @@ async function finalizarPedido(){
                 desconto_cupom: parseFloat(pedido.descontoCupom||0),
                 cupom: pedido.cupom||'',
                 total: parseFloat(pedido.total), 
-                status: 'analise'
+                status: 'analise',
+                impresso: false
             };
             
             console.log('[DEBUG] Enviando para Supabase:', bodyObj);
