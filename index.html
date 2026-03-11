@@ -926,28 +926,44 @@ var _pixelReady = false;
 
 function pixelInicializar(integracoes) {
     var cfg = integracoes && integracoes.pixel;
-    if (!cfg || !cfg.ativo || !cfg.valor) return; // Pixel não configurado
+    if (!cfg || !cfg.ativo || !cfg.valor) return;
 
     _pixelId    = cfg.valor.trim();
     _pixelToken = (cfg.valor2 || '').trim();
 
-    // Injeta o código base do Facebook Pixel no <head> dinamicamente
-    if (!document.getElementById('fb-pixel-script')) {
-        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-        n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-        n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-        t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
-        (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-
-        var noScript = document.createElement('noscript');
-        noScript.innerHTML = '<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id='+_pixelId+'&ev=PageView&noscript=1"/>';
-        document.head.appendChild(noScript);
+    // Passo 1: Inicializa o objeto fbq ANTES de carregar o script
+    // Isso garante que fbq('init') e fbq('track') ficam na fila mesmo antes do JS baixar
+    if (!window.fbq) {
+        var fbq = window.fbq = function() {
+            if (fbq.callMethod) fbq.callMethod.apply(fbq, arguments);
+            else fbq.queue.push(arguments);
+        };
+        if (!window._fbq) window._fbq = fbq;
+        fbq.push = fbq;
+        fbq.loaded = true;
+        fbq.version = '2.0';
+        fbq.queue = [];
     }
 
+    // Passo 2: Chama init e PageView ANTES do script carregar — ficam na fila
     window.fbq('init', _pixelId);
     window.fbq('track', 'PageView');
     _pixelReady = true;
     console.log('[Pixel] Inicializado:', _pixelId);
+
+    // Passo 3: Carrega o fbevents.js (processa a fila quando terminar de baixar)
+    if (!document.getElementById('fb-pixel-script')) {
+        var s = document.createElement('script');
+        s.id  = 'fb-pixel-script';
+        s.async = true;
+        s.src = 'https://connect.facebook.net/en_US/fbevents.js';
+        document.head.appendChild(s);
+
+        // noscript fallback
+        var ns = document.createElement('noscript');
+        ns.innerHTML = '<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id='+_pixelId+'&ev=PageView&noscript=1"/>';
+        document.head.appendChild(ns);
+    }
 }
 
 function pixelPurchase(pedido) {
