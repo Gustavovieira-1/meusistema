@@ -620,7 +620,7 @@ async function init(){
         // Salvar fidelidade_config no localStorage para uso offline/carrinho
         if (fidRows && fidRows[0]) {
             const fr = fidRows[0];
-            localStorage.setItem(IDX_FIDEL_KEY, JSON.stringify({
+            localStorage.setItem('f_fidelidade_cfg', JSON.stringify({
                 ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
                 descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
