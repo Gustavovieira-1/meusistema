@@ -5668,7 +5668,7 @@ function imprimirNavegador(o, cfg, cfgTx, totalPedidosLoja) {
     var largura  = parseInt(cfg.largura) || 80;
     var rodape   = cfg.rodape || '';
 
-    var dt    = o.timestamp ? new Date(o.timestamp) : new Date();
+    var dt    = parseDateUTC(o.finalizadoEm || o.timestamp) || new Date();
     var dtStr = dt.toLocaleDateString('pt-BR') + ' ' +
                 dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
 
@@ -7671,7 +7671,7 @@ function relRenderGrafico() {
     var grupos = {};
 
     lista.forEach(function(o) {
-        var ts = new Date(o.timestamp);
+        var ts = parseDateUTC(o.timestamp) || new Date(0);
         var key;
         if (relAgrupamento === 'dia') {
             key = ts.getFullYear() + '-' + String(ts.getMonth()+1).padStart(2,'0') + '-' + String(ts.getDate()).padStart(2,'0');
@@ -7987,7 +7987,7 @@ function relFiltrarTodos() {
     // Inclui pedidos ainda no kanban (não finalizados) que sejam do período
     var doKanban = (orders || []).filter(function(o) {
         if (idsHist.has(o.id)) return false;
-        var ts = new Date(o.timestamp || 0);
+        var ts = parseDateUTC(o.timestamp) || new Date(0);
         return ts >= ini && ts <= fim;
     });
     return doHist.concat(doKanban);
@@ -8130,7 +8130,7 @@ function rvRenderTabela() {
 
     tbody.innerHTML = lista.map(function(o) {
         var isOk  = !!conf[o.id];
-        var dt    = o.timestamp ? new Date(o.timestamp) : null;
+        var dt    = parseDateUTC(o.finalizadoEm || o.timestamp);
         var dtStr = dt ? dt.toLocaleDateString('pt-BR') + ', ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '—';
         var pgCor = pgtoColors[o.pagamento] || '#64748b';
         var pgIco = pgtoIcons[o.pagamento]  || 'fa-circle';
