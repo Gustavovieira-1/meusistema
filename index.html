@@ -1206,6 +1206,8 @@ function fidelIniciarCarrinho() {
 
 // Atualiza saldo quando o cliente digita o telefone
 async function fidelAtualizaSaldo() {
+    // Garante que fidelCfg está carregado mesmo antes de abrir o carrinho
+    if (!fidelCfg.ativo) fidelCfg = fidelGetCfg();
     if (!fidelCfg.ativo) return;
     const tel = (document.getElementById('ch-tel').value || '').replace(/\D/g,'');
     // Primeiro mostra saldo do localStorage (rápido)
