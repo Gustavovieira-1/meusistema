@@ -6778,9 +6778,7 @@ async function supaSalvarPedido(pedido) {
 async function supaAtualizarStatus(pedido, novoStatus) {
     try {
         if (!pedido._supa_id) return;
-        var payload = { status: novoStatus, atualizado_em: new Date().toISOString() };
-        if (novoStatus === 'finalizado') payload.finalizado_em = new Date().toISOString();
-        await supaUpdate('pedidos', pedido._supa_id, payload);
+        await supaUpdate('pedidos', pedido._supa_id, { status: novoStatus, atualizado_em: new Date().toISOString() });
     } catch(e) { console.warn('[Supabase] Status pedido:', e.message); }
 }
 
@@ -7328,32 +7326,24 @@ async function histCarregarDoSupabase(forcar) {
     }
     _histCarregando = true;
     try {
-        // FONTE DE VERDADE: tabela pedidos com status=finalizado
+        // Busca todos os registros do Supabase (sem limite de data)
         var rows = await supaReq('GET',
-            'pedidos?restaurante_id=eq.' + REST_ID +
-            '&status=eq.finalizado&order=finalizado_em.desc&limit=10000&select=*',
+            'historico_pedidos?restaurante_id=eq.' + REST_ID +
+            '&select=dados,finalizado_em&order=finalizado_em.desc&limit=10000',
             null
         );
         if (rows && rows.length) {
             var doSupa = rows.map(function(r) {
-                var itens = r.itens || [];
-                if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
-                return {
-                    id:           r.numero || r.id,
-                    _supa_id:     r.id,
-                    client:       r.cliente,
-                    phone:        r.telefone,
-                    address:      r.endereco,
-                    bairro:       r.bairro,
-                    tipo:         r.tipo,
-                    pagamento:    r.pagamento,
-                    troco:        r.troco,
-                    total:        r.total,
-                    status:       r.status,
-                    items:        itens,
-                    timestamp:    r.criado_em,
-                    finalizadoEm: r.finalizado_em || r.atualizado_em || r.criado_em
-                };
+                var d;
+                if (typeof r.dados === 'string') {
+                    if (!r.dados || r.dados === 'undefined' || r.dados === 'null') return null;
+                    try { d = JSON.parse(r.dados); } catch(e) { return null; }
+                } else {
+                    d = r.dados || null;
+                }
+                if (!d) return null;
+                d.finalizadoEm = d.finalizadoEm || r.finalizado_em;
+                return d;
             }).filter(function(d){ return d && d.id; });
 
             // Supabase é fonte de verdade absoluta.
@@ -7421,7 +7411,10 @@ function histRegistrar(pedido) {
 
 /** Upsert no Supabase — insert ou update se já existir */
 async function supaHistUpsert(pedido) {
-    if (!REST_ID) return;
+    if (!REST_ID || !pedido || !pedido.id) return;
+    var dadosStr;
+    try { dadosStr = JSON.stringify(pedido); } catch(e) { console.warn('[HistUpsert] Erro ao serializar pedido:', e.message); return; }
+    if (!dadosStr || dadosStr === 'undefined') { console.warn('[HistUpsert] dados inválidos para pedido', pedido.id); return; }
     await fetch(SUPA_URL + '/rest/v1/historico_pedidos?on_conflict=pedido_id,restaurante_id', {
         method: 'POST',
         headers: {
@@ -7433,7 +7426,7 @@ async function supaHistUpsert(pedido) {
         body: JSON.stringify({
             restaurante_id: REST_ID,
             pedido_id:      pedido.id,
-            dados:          pedido,
+            dados:          dadosStr,
             finalizado_em:  pedido.finalizadoEm || new Date().toISOString()
         })
     });
