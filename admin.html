@@ -6778,8 +6778,11 @@ async function supaSalvarPedido(pedido) {
 
 function parseDateUTC(str) {
     if (!str) return null;
-    // Supabase retorna "2026-03-12 05:30:38+00" — normaliza para ISO com T e Z
+    // Supabase retorna "2026-03-12 05:30:38+00" ou "2026-03-12 05:30:38+00:00"
     var s = str.toString().replace(' ', 'T');
+    // Normaliza offset sem dois-pontos: "+00" → "+00:00", "-03" → "-03:00"
+    s = s.replace(/([+-])(\d{2})$/, '$1$2:00');
+    // Se não tem nenhum offset nem Z, assume UTC
     if (!s.endsWith('Z') && !s.match(/[+-]\d{2}:\d{2}$/)) s += 'Z';
     var d = new Date(s);
     return isNaN(d) ? null : d;
