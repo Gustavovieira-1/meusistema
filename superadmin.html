@@ -1060,7 +1060,7 @@ function saCalcularMetricas() {
     document.getElementById('m-receita').textContent   = money(receita);
 
     const hoje = new Date(); hoje.setHours(0,0,0,0);
-    saFetch('GET', `pedidos?select=id&created_at=gte.${hoje.toISOString()}`)
+    saFetch('GET', `pedidos?select=id&criado_em=gte.${hoje.toISOString()}`)
         .then(r => { document.getElementById('m-pedidos').textContent = (r || []).length; })
         .catch(() => { document.getElementById('m-pedidos').textContent = '—'; });
 }
@@ -1570,7 +1570,7 @@ async function saCarregarPedidos(restId) {
     const el = document.getElementById('tabela-pedidos-body');
     el.innerHTML = '<div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--accent);"></i><span>Carregando...</span></div>';
     try {
-        let path = 'pedidos?select=*&order=created_at.desc&limit=200';
+        let path = 'pedidos?select=*&order=criado_em.desc&limit=200';
         if (restId) path += `&restaurante_id=eq.${restId}`;
         const statusFiltro = document.getElementById('filtro-status-pedido')?.value;
         if (statusFiltro) path += `&status=eq.${statusFiltro}`;
@@ -1597,7 +1597,7 @@ async function saCarregarPedidos(restId) {
                 </td>
                 <td><strong style="font-family:'Syne',sans-serif;">${money(p.total)}</strong></td>
                 <td><span style="background:${statusColor[p.status]||'#6b7280'}22;color:${statusColor[p.status]||'#6b7280'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">${p.status||'—'}</span></td>
-                <td style="font-size:12px;color:var(--muted);">${p.created_at ? new Date(p.created_at).toLocaleString('pt-BR') : '—'}</td>
+                <td style="font-size:12px;color:var(--muted);">${(p.criado_em||p.created_at) ? new Date(p.criado_em||p.created_at).toLocaleString('pt-BR') : '—'}</td>
             </tr>`).join('')}
             </tbody>
         </table>`;
