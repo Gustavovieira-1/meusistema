@@ -6689,7 +6689,7 @@ async function supaCarregarPedidos() {
                     status: r.status,
                     items: itens, 
                     timestamp: r.criado_em,
-                    finalizadoEm: r.finalizadoEm || (r.status === 'finalizado' ? r.criado_em : null)
+                    finalizadoEm: r.finalizado_em || r.finalizadoEm || (r.status === 'finalizado' ? r.atualizado_em : null)
                 };
             });
             const idsNuvem = new Set(mapped.map(o => o.id));
@@ -6774,6 +6774,15 @@ async function supaSalvarPedido(pedido) {
         });
         if (r && r[0]) pedido._supa_id = r[0].id;
     } catch(e) { console.warn('[Supabase] Salvar pedido:', e.message); }
+}
+
+function parseDateUTC(str) {
+    if (!str) return null;
+    // Supabase retorna "2026-03-12 05:30:38+00" — normaliza para ISO com T e Z
+    var s = str.toString().replace(' ', 'T');
+    if (!s.endsWith('Z') && !s.match(/[+-]\d{2}:\d{2}$/)) s += 'Z';
+    var d = new Date(s);
+    return isNaN(d) ? null : d;
 }
 
 async function supaAtualizarStatus(pedido, novoStatus) {
@@ -7570,7 +7579,7 @@ function histRender() {
 
     tbody.innerHTML = lista.map(function(o) {
         var ts    = o.finalizadoEm || o.timestamp;
-        var dt    = ts ? new Date(ts) : null;
+        var dt    = parseDateUTC(ts);
         var dtStr = dt ? dt.toLocaleDateString('pt-BR') + ' '
                        + dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '—';
         var pg = o.pagamento || '—';
@@ -8110,7 +8119,7 @@ function rvRenderTabela() {
 
     tbody.innerHTML = lista.map(function(o) {
         var isOk  = !!conf[o.id];
-        var dt    = o.timestamp ? new Date(o.timestamp) : null;
+        var dt    = parseDateUTC(o.finalizadoEm || o.timestamp);
         var dtStr = dt ? dt.toLocaleDateString('pt-BR') + ', ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '—';
         var pgCor = pgtoColors[o.pagamento] || '#64748b';
         var pgIco = pgtoIcons[o.pagamento]  || 'fa-circle';
