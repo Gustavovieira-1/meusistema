@@ -3239,7 +3239,7 @@ function showSec(id, btn) {
     if (id === 'gestor')           renderOrders();
     if (id === 'produtos')         { renderCategories(); renderProds(); }
     if (id === 'clientes') {
-        // Sincroniza o filtro de clientes com o período global automaticamente
+        // Ao abrir a aba, sincroniza automaticamente com o período global (relDataIni/relDataFim)
         clientesFiltroAtivo = true;
         clientesFiltroIni   = relDataIni;
         clientesFiltroFim   = relDataFim;
@@ -3248,7 +3248,7 @@ function showSec(id, btn) {
         if (txtC) {
             var sI = relDataIni.toLocaleDateString('pt-BR');
             var sF = relDataFim.toLocaleDateString('pt-BR');
-            txtC.textContent = sI === sF ? sI : sI + ' – ' + sF;
+            txtC.textContent = sI === sF ? sI : sI + ' \u2013 ' + sF;
         }
         if (btnC) btnC.style.display = 'flex';
         histCarregarDoSupabase().then(function(){ renderClientes(); });
@@ -6289,16 +6289,16 @@ function chaveCliente(nome, telefone) {
     return t ? t : n; // prefere telefone como chave; se não tiver, usa nome
 }
 
-// Constrói a lista consolidada de clientes a partir de:
-//   1. orders (gestor de pedidos)
-//   2. f_clientes_externos (futuro index/cardápio online)
-function consolidarClientes() {
-    const mapa = {}; // chave → objeto do cliente
+// Constrói a lista de clientes a partir de uma lista de pedidos.
+// FONTE ÚNICA: deriva sempre de histGetFiltrados() (mesmo dado que o Histórico exibe),
+// garantindo a cadeia: Supabase → historico_pedidos → histGetTodos → Clientes.
+// O parâmetro opcional `pedidos` permite passar uma lista já filtrada pelo período.
+function consolidarClientes(pedidos) {
+    const mapa = {};
 
-    // Absorve um pedido finalizado no mapa de clientes
     function absorver(o) {
         if (!o.client || o.client.trim() === '') return;
-        if (o.status !== 'finalizado') return; // só finalizados entram nos totais
+        if (o.status !== 'finalizado') return;
         const chave = chaveCliente(o.client, o.phone);
         if (!mapa[chave]) {
             mapa[chave] = {
@@ -6313,7 +6313,7 @@ function consolidarClientes() {
             };
         }
         const c  = mapa[chave];
-        // Usa finalizadoEm como referência de data (timestamp é data de criação, não finalização)
+        // finalizadoEm = data real de finalização (timestamp = criação, não usar para datas)
         const ts = o.finalizadoEm || null;
         if (o.address && o.address !== 'Retirada' && o.address !== 'Balc\u00e3o' && o.address !== 'Endere\u00e7o pendente')
             c.endereco = o.address;
@@ -6325,61 +6325,27 @@ function consolidarClientes() {
         }
     }
 
-    // ── Fonte única: histórico permanente (cache já populado pelo histCarregarDoSupabase) ──
-    // Inclui também finalizados ainda no kanban que ainda não migraram
-    var todosHist = histGetTodos();
-    todosHist.forEach(o => absorver(o));
-
-    // ── Fonte 2: clientes externos (futuro índice/cardápio online) ──
-    try {
-        const externos = JSON.parse(localStorage.getItem(CLIENTES_KEY)) || [];
-        externos.forEach(ext => {
-            if (!ext.nome) return;
-            const chave = chaveCliente(ext.nome, ext.telefone);
-
-            if (!mapa[chave]) {
-                mapa[chave] = {
-                    nome:           ext.nome,
-                    telefone:       ext.telefone || '—',
-                    endereco:       ext.endereco  || '',
-                    totalPedidos:   ext.totalPedidos  || 0,
-                    totalGasto:     ext.totalGasto     || 0,
-                    primeiroPedido: ext.primeiroPedido || null,
-                    ultimoPedido:   ext.ultimoPedido   || null,
-                    fonte:          'externo'
-                };
-            } else {
-                // Mescla com o que já veio do gestor
-                const c = mapa[chave];
-                c.totalPedidos += ext.totalPedidos || 0;
-                c.totalGasto   += ext.totalGasto   || 0;
-                if (ext.primeiroPedido && (!c.primeiroPedido || ext.primeiroPedido < c.primeiroPedido))
-                    c.primeiroPedido = ext.primeiroPedido;
-                if (ext.ultimoPedido && (!c.ultimoPedido || ext.ultimoPedido > c.ultimoPedido))
-                    c.ultimoPedido = ext.ultimoPedido;
-                c.fonte = 'ambos';
-            }
-        });
-    } catch(e) { /* ignora erros de parse */ }
+    // Usa a lista passada (já filtrada pelo período) ou todos os finalizados do histórico
+    var lista = pedidos || histGetTodos().filter(function(o){ return o.status === 'finalizado'; });
+    lista.forEach(o => absorver(o));
 
     // Ordena por total gasto (maior primeiro)
     return Object.values(mapa).sort((a, b) => b.totalGasto - a.totalGasto);
 }
-
 // Renderiza a tela de clientes
 // ── Estado do filtro de clientes ──────────────────────────────────
-// Clientes usa o mesmo período global dos outros relatórios (relDataIni/relDataFim)
-// clientesFiltroAtivo=true = filtra pelo período; false = mostra todos os clientes
 var clientesFiltroAtivo = false;
 var clientesFiltroIni   = null;
 var clientesFiltroFim   = null;
 
 function clientesAbrirFiltro() {
-    // Abre o picker global pré-selecionado com o período atual (relDataIni/relDataFim)
-    relCalAno  = relDataIni.getFullYear();
-    relCalMes  = relDataIni.getMonth();
-    relCalSel1 = new Date(relDataIni);
-    relCalSel2 = new Date(relDataFim);
+    // Abre o picker global usando o período atual de clientes (ou relDataIni/relDataFim)
+    var iniRef = clientesFiltroAtivo ? clientesFiltroIni : relDataIni;
+    var fimRef = clientesFiltroAtivo ? clientesFiltroFim : relDataFim;
+    relCalAno  = iniRef.getFullYear();
+    relCalMes  = iniRef.getMonth();
+    relCalSel1 = new Date(iniRef);
+    relCalSel2 = new Date(fimRef);
     relRenderCalendarioEm('rel-calendario-g','rel-mes-label-g','rel-range-label-g');
     var overlay = document.getElementById('picker-global-overlay');
     if (overlay) {
@@ -6419,18 +6385,26 @@ function clientesAplicarFiltro(ini, fim) {
 }
 
 function renderClientes(termoBusca) {
-    let lista = consolidarClientes();
-
-    // Filtra pelo último pedido se houver filtro de data ativo
+    // ── FONTE ÚNICA: mesmos pedidos que o Histórico de Pedidos exibe ──
+    // Se filtro de período ativo → pedidos finalizados naquele período
+    // Se sem filtro → todos os finalizados do histórico completo
+    var pedidosDoPeriodo;
     if (clientesFiltroAtivo && clientesFiltroIni && clientesFiltroFim) {
-        const ini = new Date(clientesFiltroIni); ini.setHours(0,0,0,0);
-        const fim = new Date(clientesFiltroFim); fim.setHours(23,59,59,999);
-        lista = lista.filter(c => {
-            if (!c.ultimoPedido) return false;
-            const ts = new Date(c.ultimoPedido);
+        var ini = new Date(clientesFiltroIni); ini.setHours(0,0,0,0);
+        var fim = new Date(clientesFiltroFim); fim.setHours(23,59,59,999);
+        pedidosDoPeriodo = histGetTodos().filter(function(o) {
+            if (o.status !== 'finalizado') return false;
+            var ts = o.finalizadoEm ? new Date(o.finalizadoEm) : null;
+            if (!ts || isNaN(ts)) return false;
             return ts >= ini && ts <= fim;
         });
+    } else {
+        // Sem filtro: todos os finalizados do histórico
+        pedidosDoPeriodo = histGetTodos().filter(function(o){ return o.status === 'finalizado'; });
     }
+
+    // Agrupa os pedidos do período por cliente (telefone como chave)
+    let lista = consolidarClientes(pedidosDoPeriodo);
 
     // Filtra se houver busca textual
     if (termoBusca && termoBusca.trim() !== '') {
@@ -6451,7 +6425,7 @@ function renderClientes(termoBusca) {
 
     if (!tbody) return;
 
-    // Cards de resumo refletem a lista FILTRADA (período selecionado)
+    // Cards de resumo refletem exatamente os pedidos do período selecionado
     const totalClientes = lista.length;
     const totalPedidos  = lista.reduce((s, c) => s + c.totalPedidos, 0);
     const receitaTotal  = lista.reduce((s, c) => s + c.totalGasto,   0);
@@ -8256,23 +8230,23 @@ function relPickerGlobalSelecionar() {
     }
     var overlay = document.getElementById('picker-global-overlay');
     if (overlay) overlay.style.display = 'none';
-    // Modo clientes: usa o mesmo relDataIni/relDataFim e atualiza aba clientes
+    // Modo clientes: atualiza período global E filtro de clientes juntos (sempre em sincronia)
     if (overlay && overlay._modoClientes) {
         overlay._modoClientes = false;
         relAtualizarLabel();
         relAtualizarTodosLabelesPeriodo();
-        // Sincroniza o label do picker de clientes com o período global
-        var txtC = document.getElementById('clientes-periodo-txt');
-        var btnC = document.getElementById('clientes-limpar-btn');
-        if (txtC) {
-            var sIni = relDataIni.toLocaleDateString('pt-BR');
-            var sFim = relDataFim.toLocaleDateString('pt-BR');
-            txtC.textContent = sIni === sFim ? sIni : sIni + ' – ' + sFim;
-        }
-        if (btnC) btnC.style.display = 'flex';
+        // Sincroniza clientesFiltro* com o período global recém-selecionado
         clientesFiltroAtivo = true;
         clientesFiltroIni   = relDataIni;
         clientesFiltroFim   = relDataFim;
+        var txtC = document.getElementById('clientes-periodo-txt');
+        var btnC = document.getElementById('clientes-limpar-btn');
+        if (txtC) {
+            var sI = relDataIni.toLocaleDateString('pt-BR');
+            var sF = relDataFim.toLocaleDateString('pt-BR');
+            txtC.textContent = sI === sF ? sI : sI + ' \u2013 ' + sF;
+        }
+        if (btnC) btnC.style.display = 'flex';
         histCarregarDoSupabase().then(function(){
             renderClientes(document.getElementById('clientes-search') ? document.getElementById('clientes-search').value : '');
         });
