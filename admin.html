@@ -6689,17 +6689,17 @@ async function supaCarregarPedidos() {
                     status: r.status,
                     items: itens, 
                     timestamp: r.criado_em,
-                    finalizadoEm: r.finalizado_em || r.finalizadoEm || (r.status === 'finalizado' ? r.atualizado_em : null)
+                    finalizadoEm: r.finalizadoEm || (r.status === 'finalizado' ? r.criado_em : null)
                 };
             });
             const idsNuvem = new Set(mapped.map(o => o.id));
             const pedidosNovos = mapped.filter(o => !orders.find(ord => ord.id === o.id) && o.status === 'analise');
-            // Preserva TODOS finalizados e cancelados em memória (Supabase não os retorna na query)
-            // Só são removidos pelo cfgAplicarLimpeza
+            // Preserva finalizados e cancelados que já estão em memória
+            // (o Supabase não retorna esses status na query — eles só somem via cfgAplicarLimpeza)
             const preservados = orders.filter(function(o) {
-                return o.status === 'finalizado' || o.status === 'cancelado';
+                return (o.status === 'finalizado' || o.status === 'cancelado') && !idsNuvem.has(o.id);
             });
-            orders = preservados.concat(mapped.filter(o => o.status !== 'finalizado' && o.status !== 'cancelado'));
+            orders = preservados.concat(mapped);
             localStorage.setItem('f_orders', JSON.stringify(orders));
             renderOrders();
             // 🔊 Tocar som se chegou novo pedido em análise
@@ -6785,16 +6785,23 @@ function parseDateUTC(str) {
     return isNaN(d) ? null : d;
 }
 
-/** Retorna ISO string no horário LOCAL do navegador (com offset), ex: "2026-03-12T02:30:00-03:00"
+/** Retorna ISO string no horário LOCAL do navegador com offset, ex: "2026-03-12T02:30:00-03:00"
  *  Use no lugar de new Date().toISOString() para salvar timestamps com fuso correto. */
 function nowLocalISO() {
     var now = new Date();
-    var off = -now.getTimezoneOffset(); // minutos, ex: 180 para UTC-3
-    var sign = off >= 0 ? '+' : '-';
-    var absOff = Math.abs(off);
+    var off = -now.getTimezoneOffset(); // minutos positivos para UTC-3 = 180? Não: getTimezoneOffset retorna -(-180)=180 para UTC-3? Não: UTC-3 → getTimezoneOffset()=+180, off=-180? Vamos calcular correto:
+    // getTimezoneOffset() retorna minutos que devem ser SUBTRAÍDOS de local para obter UTC
+    // UTC-3: local = UTC - 3h → getTimezoneOffset() = +180 (positivo)
+    // off = -180 → sign = '-', absOff = 180 → offset string = "-03:00" ← ERRADO
+    // Correto: offset no ISO8601 representa local - UTC
+    // Se local está em UTC-3, offset ISO = "-03:00"
+    // getTimezoneOffset() = local_minutes_behind_UTC = +180 para UTC-3
+    // ISO offset = -getTimezoneOffset()
+    var tzo = -now.getTimezoneOffset();
+    var sign = tzo >= 0 ? '+' : '-';
+    var absOff = Math.abs(tzo);
     var hh = String(Math.floor(absOff / 60)).padStart(2, '0');
     var mm = String(absOff % 60).padStart(2, '0');
-    // Formata como ISO local com offset
     var pad = function(n){ return String(n).padStart(2,'0'); };
     return now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
            'T' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds()) +
@@ -7595,7 +7602,7 @@ function histRender() {
 
     tbody.innerHTML = lista.map(function(o) {
         var ts    = o.finalizadoEm || o.timestamp;
-        var dt    = parseDateUTC(ts);
+        var dt    = ts ? parseDateUTC(ts) : null;
         var dtStr = dt ? dt.toLocaleDateString('pt-BR') + ' '
                        + dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' }) : '—';
         var pg = o.pagamento || '—';
@@ -7985,7 +7992,7 @@ function relFiltrarTodos() {
     var fim = new Date(relDataFim); fim.setHours(23,59,59,999);
     var doHist = histGetTodos().filter(function(o) {
         // Finalizados: filtra por finalizadoEm; outros: por timestamp de criação
-        var ts = o.finalizadoEm ? parseDateUTC(o.finalizadoEm) : parseDateUTC(o.timestamp) || new Date(0);
+        var ts = o.finalizadoEm ? parseDateUTC(o.finalizadoEm) : (parseDateUTC(o.timestamp) || new Date(0));
         return ts >= ini && ts <= fim;
     });
     var idsHist = new Set(doHist.map(function(p){ return p.id; }));
@@ -8135,7 +8142,7 @@ function rvRenderTabela() {
 
     tbody.innerHTML = lista.map(function(o) {
         var isOk  = !!conf[o.id];
-        var dt    = parseDateUTC(o.finalizadoEm || o.timestamp);
+        var dt    = o.timestamp ? new Date(o.timestamp) : null;
         var dtStr = dt ? dt.toLocaleDateString('pt-BR') + ', ' + dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '—';
         var pgCor = pgtoColors[o.pagamento] || '#64748b';
         var pgIco = pgtoIcons[o.pagamento]  || 'fa-circle';
