@@ -908,6 +908,10 @@ async function finalizarPedido(){
                 throw new Error('HTTP '+sr.status+': '+respText); 
             }
             console.log('[SUCCESS] Pedido salvo com sucesso!');
+            // Debitar pontos resgatados no Supabase
+            if (pedido.resgPontos && pedido.resgPontos.pts > 0 && pedido.phone) {
+                fidelDebitarPontosResgate(pedido.phone, pedido.client, pedido.resgPontos.pts);
+            }
             _enviado = true;
         } catch(e) { 
             console.error('[ERROR]', e);
@@ -1052,6 +1056,41 @@ function pixelAddToCart(produto, valor) {
 // ════════════════════════════════════════════════════
 const IDX_FIDEL_KEY     = 'f_fidelidade_cfg';
 const IDX_FIDEL_CLI_KEY = 'f_fidelidade_cli';
+
+// Debita pontos resgatados do cliente no localStorage e Supabase
+async function fidelDebitarPontosResgate(phone, nome, ptsDebitar) {
+    try {
+        const norm = phone.replace(/\D/g, '');
+        if (!norm || !ptsDebitar) return;
+        // Busca saldo atual direto do Supabase para garantir consistência
+        const rows = await supaFetch('fidelidade_clientes?restaurante_id=eq.' + REST_ID + '&telefone=eq.' + norm + '&select=pontos,nome&limit=1');
+        const atual = (rows && rows[0]) ? parseInt(rows[0].pontos || 0) : fidelGetSaldo(norm);
+        const novoSaldo = Math.max(0, atual - ptsDebitar);
+        // Atualiza localStorage
+        const clientes = fidelGetClientes();
+        const idx = clientes.findIndex(c => c.phone === norm);
+        if (idx >= 0) {
+            clientes[idx].pontos = novoSaldo;
+        } else {
+            clientes.push({ phone: norm, nome: nome || 'Cliente', pontos: novoSaldo, ultimo: new Date().toLocaleDateString('pt-BR') });
+        }
+        localStorage.setItem(IDX_FIDEL_CLI_KEY, JSON.stringify(clientes));
+        // Upsert no Supabase
+        await fetch(SUPA_URL + '/rest/v1/fidelidade_clientes?restaurante_id=eq.' + REST_ID + '&telefone=eq.' + norm, {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': 'Bearer ' + SUPA_KEY,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ pontos: novoSaldo, ultimo_pedido: new Date().toISOString() })
+        });
+        console.log('[Fidelidade] Pontos debitados:', ptsDebitar, '→ saldo:', novoSaldo);
+    } catch(e) {
+        console.warn('[Fidelidade] Erro ao debitar pontos:', e.message);
+    }
+}
 
 var fidelCfg       = {};
 var fidelSaldoPts  = 0;
