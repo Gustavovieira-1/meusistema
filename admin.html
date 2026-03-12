@@ -3005,7 +3005,6 @@ var db = {
 };
 
 let orders = JSON.parse(localStorage.getItem('f_orders')) || [];
-var silencioso = false; // flag global — true quando updateOrderStatus é chamado por automação (evita impressão dupla)
 
 // Migração: garante que todo pedido tenha timestamp real
 (function migrarTimestamps() {
@@ -6597,8 +6596,7 @@ async function supaReq(method, path, body) {
     const r = await fetch(SUPA_URL + '/rest/v1/' + path, opts);
     if (!r.ok) { const e = await r.text(); throw new Error(e); }
     const txt = await r.text();
-    if (!txt || txt === 'undefined' || txt === 'null') return null;
-    try { return JSON.parse(txt); } catch(e) { return null; }
+    return txt ? JSON.parse(txt) : null;
 }
 async function supaGet(table, query) {
     if (!REST_ID && SUPA_TOKEN) {
@@ -6639,8 +6637,7 @@ async function supaUpsert(table, obj, onConflict) {
     });
     if (!r.ok) { const e = await r.text(); throw new Error(e); }
     const txt = await r.text();
-    if (!txt || txt === 'undefined' || txt === 'null') return null;
-    try { return JSON.parse(txt); } catch(e) { return null; }
+    return txt ? JSON.parse(txt) : null;
 }
 
 async function supaCarregarCardapio() {
@@ -6698,8 +6695,12 @@ async function supaCarregarPedidos() {
             });
             const idsNuvem = new Set(mapped.map(o => o.id));
             const pedidosNovos = mapped.filter(o => !orders.find(ord => ord.id === o.id) && o.status === 'analise');
-            // Substitui completamente — não mescla com cache anterior
-            orders = mapped;
+            // Preserva finalizados e cancelados que já estão em memória
+            // (o Supabase não retorna esses status na query — eles só somem via cfgAplicarLimpeza)
+            const preservados = orders.filter(function(o) {
+                return (o.status === 'finalizado' || o.status === 'cancelado') && !idsNuvem.has(o.id);
+            });
+            orders = preservados.concat(mapped);
             localStorage.setItem('f_orders', JSON.stringify(orders));
             renderOrders();
             // 🔊 Tocar som se chegou novo pedido em análise
