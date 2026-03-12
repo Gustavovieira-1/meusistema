@@ -839,9 +839,6 @@ function abrirCarrinho(){
     fidelIniciarCarrinho();
     document.getElementById('cart-overlay').classList.add('open');
     document.body.style.overflow='hidden';
-    // Se já tem telefone digitado, re-busca saldo (inclusive do Supabase)
-    var tel = (document.getElementById('ch-tel').value || '').replace(/\D/g,'');
-    if (tel.length >= 10) fidelAtualizaSaldo();
 }
 function fecharCarrinho(e){if(!e||e.target===document.getElementById('cart-overlay')){document.getElementById('cart-overlay').classList.remove('open');document.body.style.overflow='';}}
 
@@ -1211,6 +1208,8 @@ function fidelIniciarCarrinho() {
     const tel = (document.getElementById('ch-tel').value || '').replace(/\D/g,'');
     fidelSaldoPts = fidelGetSaldo(tel);
     fidelRenderCarrinho();
+    // Sempre busca saldo real do Supabase ao abrir o carrinho (não depende do localStorage)
+    if (tel.length >= 10) fidelAtualizaSaldo();
 }
 
 // Atualiza saldo quando o cliente digita o telefone
