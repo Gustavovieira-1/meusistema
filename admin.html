@@ -3239,10 +3239,9 @@ function showSec(id, btn) {
     if (id === 'gestor')           renderOrders();
     if (id === 'produtos')         { renderCategories(); renderProds(); }
     if (id === 'clientes') {
-        // Ao abrir a aba, sincroniza automaticamente com o período global (relDataIni/relDataFim)
+        // Filtro ativo por padrão = usa o mesmo período dos outros relatórios (relDataIni/relDataFim)
         clientesFiltroAtivo = true;
-        clientesFiltroIni   = relDataIni;
-        clientesFiltroFim   = relDataFim;
+        // Atualiza label do botão de período
         var txtC = document.getElementById('clientes-periodo-txt');
         var btnC = document.getElementById('clientes-limpar-btn');
         if (txtC) {
@@ -3251,7 +3250,7 @@ function showSec(id, btn) {
             txtC.textContent = sI === sF ? sI : sI + ' \u2013 ' + sF;
         }
         if (btnC) btnC.style.display = 'flex';
-        // Força recarregamento do Supabase (forcar=true) para garantir dados atualizados
+        // Força busca no Supabase e renderiza
         histCarregarDoSupabase(true).then(function(){ renderClientes(); });
     }
     if (id === 'complementos')     renderComps();
@@ -6341,13 +6340,11 @@ var clientesFiltroIni   = null;
 var clientesFiltroFim   = null;
 
 function clientesAbrirFiltro() {
-    // Abre o picker global usando o período atual de clientes (ou relDataIni/relDataFim)
-    var iniRef = clientesFiltroAtivo ? clientesFiltroIni : relDataIni;
-    var fimRef = clientesFiltroAtivo ? clientesFiltroFim : relDataFim;
-    relCalAno  = iniRef.getFullYear();
-    relCalMes  = iniRef.getMonth();
-    relCalSel1 = new Date(iniRef);
-    relCalSel2 = new Date(fimRef);
+    // Abre o picker global pré-selecionado com o período atual (relDataIni/relDataFim)
+    relCalAno  = relDataIni.getFullYear();
+    relCalMes  = relDataIni.getMonth();
+    relCalSel1 = new Date(relDataIni);
+    relCalSel2 = new Date(relDataFim);
     relRenderCalendarioEm('rel-calendario-g','rel-mes-label-g','rel-range-label-g');
     var overlay = document.getElementById('picker-global-overlay');
     if (overlay) {
@@ -6387,24 +6384,25 @@ function clientesAplicarFiltro(ini, fim) {
 }
 
 function renderClientes(termoBusca) {
-    // ── FONTE ÚNICA: mesmos pedidos que o Histórico de Pedidos exibe ──
-    // Se filtro de período ativo → pedidos finalizados naquele período
-    // Se sem filtro → todos os finalizados do histórico completo
+    // ── FONTE ÚNICA: mesmos pedidos que os outros relatórios exibem ──
+    // Usa relDataIni/relDataFim diretamente (igual ao Resumo, Vendas, Histórico)
+    // clientesFiltroAtivo=false = mostra todos sem corte de data
     var pedidosDoPeriodo;
-    if (clientesFiltroAtivo && clientesFiltroIni && clientesFiltroFim) {
-        var ini = new Date(clientesFiltroIni); ini.setHours(0,0,0,0);
-        var fim = new Date(clientesFiltroFim); fim.setHours(23,59,59,999);
+    if (clientesFiltroAtivo) {
+        var ini = new Date(relDataIni); ini.setHours(0,0,0,0);
+        var fim = new Date(relDataFim);  fim.setHours(23,59,59,999);
         pedidosDoPeriodo = histGetTodos().filter(function(o) {
             if (o.status !== 'finalizado') return false;
-            // Usa finalizadoEm preferencialmente; cai para timestamp se não tiver
             var ts = o.finalizadoEm ? new Date(o.finalizadoEm)
                    : o.timestamp    ? new Date(o.timestamp)
                    : null;
             if (!ts || isNaN(ts)) return false;
             return ts >= ini && ts <= fim;
         });
+        console.log('[Clientes] Pedidos no período ' +
+            ini.toLocaleDateString('pt-BR') + '–' + fim.toLocaleDateString('pt-BR') +
+            ': ' + pedidosDoPeriodo.length + ' de ' + histGetTodos().length + ' total');
     } else {
-        // Sem filtro: todos os finalizados do histórico
         pedidosDoPeriodo = histGetTodos().filter(function(o){ return o.status === 'finalizado'; });
     }
 
@@ -7336,7 +7334,14 @@ async function histCarregarDoSupabase(forcar) {
         );
         if (rows && rows.length) {
             var doSupa = rows.map(function(r) {
-                var d = (typeof r.dados === 'string') ? JSON.parse(r.dados) : (r.dados || {});
+                var d;
+                if (typeof r.dados === 'string') {
+                    if (!r.dados || r.dados === 'undefined' || r.dados === 'null') return null;
+                    try { d = JSON.parse(r.dados); } catch(e) { return null; }
+                } else {
+                    d = r.dados || null;
+                }
+                if (!d) return null;
                 d.finalizadoEm = d.finalizadoEm || r.finalizado_em;
                 return d;
             }).filter(function(d){ return d && d.id; });
