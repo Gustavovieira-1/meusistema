@@ -6777,8 +6777,18 @@ async function supaSalvarPedido(pedido) {
 
 async function supaAtualizarStatus(pedido, novoStatus) {
     try {
-        if (!pedido._supa_id) return;
-        await supaUpdate('pedidos', pedido._supa_id, { status: novoStatus, atualizado_em: new Date().toISOString() });
+        var agora = new Date().toISOString();
+        var payload = { status: novoStatus, atualizado_em: agora };
+        if (novoStatus === 'finalizado') payload.finalizado_em = agora;
+        if (pedido._supa_id) {
+            await supaUpdate('pedidos', pedido._supa_id, payload);
+        } else if (pedido.id && REST_ID) {
+            // Fallback: busca pelo numero do pedido
+            await supaReq('PATCH',
+                'pedidos?numero=eq.' + encodeURIComponent(pedido.id) + '&restaurante_id=eq.' + REST_ID,
+                payload
+            );
+        }
     } catch(e) { console.warn('[Supabase] Status pedido:', e.message); }
 }
 
@@ -7346,10 +7356,25 @@ async function histCarregarDoSupabase(forcar) {
                 return d;
             }).filter(function(d){ return d && d.id; });
 
-            // Supabase é fonte de verdade absoluta — ignora localStorage completamente.
-            // Pedidos recém-finalizados ainda não sincronizados são pegos via histGetTodos()
-            // que faz merge automático com o array orders (kanban) em memória.
-            _histCache = doSupa;
+            // Supabase é fonte de verdade absoluta.
+            // Do localStorage só aproveitamos pedidos que ainda não chegaram ao Supabase
+            // (finalizados nesta sessão mas ainda não sincronizados = mais recentes que tudo no Supabase).
+            var mapa = {};
+            doSupa.forEach(function(o){ mapa[o.id] = o; });
+            var local = [];
+            try { local = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
+            // Só adiciona do localStorage IDs que o Supabase não retornou
+            // E que têm timestamp >= ao mais recente do Supabase (recém-finalizados)
+            var ultimoSupa = doSupa.reduce(function(max, o) {
+                var t = o.finalizadoEm || o.timestamp || '';
+                return t > max ? t : max;
+            }, '');
+            local.forEach(function(o) {
+                if (mapa[o.id]) return;
+                var t = o.finalizadoEm || o.timestamp || '';
+                if (!ultimoSupa || t >= ultimoSupa) mapa[o.id] = o;
+            });
+            _histCache = Object.values(mapa);
             _histCarregadoEm = agora;
             // Substitui localStorage com exatamente o que veio do Supabase (elimina lixo antigo)
             histSalvar(_histCache);
