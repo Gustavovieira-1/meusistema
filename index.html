@@ -533,13 +533,25 @@ async function cupomAplicar() {
     if (cup.tipo === 'produto' && cupomAtual.produtoNome) {
         brindeDiv.textContent = '🎁 Você ganhou: ' + cupomAtual.produtoNome + ' grátis!';
         brindeDiv.style.display = '';
+        // Remove brinde anterior se havia e adiciona o novo com preço 0
+        carrinho = carrinho.filter(function(it){ return !it._brinde; });
+        carrinho.push({
+            id:      cupomAtual.produtoId || 'brinde',
+            name:    cupomAtual.produtoNome,
+            price:   0,
+            qtd:     1,
+            comps:   [],
+            obs:     '',
+            _brinde: true
+        });
+        atualizaFab();
     } else {
         brindeDiv.style.display = 'none';
     }
     document.getElementById('cupom-tag').style.display = '';
     document.getElementById('cupom-input').style.display = 'none';
     document.querySelector('.cupom-btn').style.display = 'none';
-    atualizaResumo();
+    renderCarrinho();
 }
 
 function cupomRemover() {
@@ -550,7 +562,11 @@ function cupomRemover() {
     document.getElementById('cupom-tag').style.display = 'none';
     var brindeDiv = document.getElementById('cupom-brinde-info');
     if (brindeDiv) brindeDiv.style.display = 'none';
-    atualizaResumo();
+    // Remove item brinde do carrinho
+    carrinho = carrinho.filter(function(it){ return !it._brinde; });
+    atualizaFab();
+    renderCarrinho();
+    if (!carrinho.length) fecharCarrinho();
 }
 
 function cupomMensagem(msg, ok) {
@@ -823,11 +839,28 @@ function fecharCarrinho(e){if(!e||e.target===document.getElementById('cart-overl
 function renderCarrinho(){
     var el=document.getElementById('cart-itens');
     if(!carrinho.length){el.innerHTML='<div class="loader"><div style="font-size:40px">🛒</div><div class="loader-txt">Carrinho vazio</div></div>';return;}
-    el.innerHTML=carrinho.map(function(it,idx){var det=it.comps.map(function(c){return c.name;}).join(', ')+(it.obs?'\nObs: '+it.obs:'');return'<div class="cart-item"><div class="cart-item-info"><div class="cart-item-nome">'+it.name+'</div>'+(det?'<div class="cart-item-det">'+det+'</div>':'')+' </div><div class="cart-item-right"><div class="cart-item-price">R$ '+subTotal(it).toFixed(2).replace('.',',')+'</div><div class="cart-item-qtd"><button class="cart-q" onclick="ajustaCarrinho('+idx+',-1)">−</button><span style="font-weight:700;font-size:14px;">'+it.qtd+'</span><button class="cart-q" onclick="ajustaCarrinho('+idx+',1)">+</button></div></div></div>';}).join('');
+    el.innerHTML=carrinho.map(function(it,idx){
+        var det=it.comps.map(function(c){return c.name;}).join(', ')+(it.obs?'\nObs: '+it.obs:'');
+        var precoHtml = it._brinde
+            ? '<div class="cart-item-price" style="color:#16a34a;">🎁 Grátis</div>'
+            : '<div class="cart-item-price">R$ '+subTotal(it).toFixed(2).replace('.',',')+'</div>';
+        var ctrlHtml = it._brinde
+            ? '<div style="font-size:10px;color:#16a34a;font-weight:700;background:#f0fdf4;border-radius:6px;padding:3px 7px;">BRINDE</div>'
+            : '<div class="cart-item-qtd"><button class="cart-q" onclick="ajustaCarrinho('+idx+',-1)">−</button><span style="font-weight:700;font-size:14px;">'+it.qtd+'</span><button class="cart-q" onclick="ajustaCarrinho('+idx+',1)">+</button></div>';
+        return '<div class="cart-item">'
+            +'<div class="cart-item-info"><div class="cart-item-nome">'+it.name+'</div>'+(det?'<div class="cart-item-det">'+det+'</div>':'')+'</div>'
+            +'<div class="cart-item-right">'+precoHtml+ctrlHtml+'</div>'
+            +'</div>';
+    }).join('');
     atualizaResumo();
 }
 
-function ajustaCarrinho(idx,d){carrinho[idx].qtd=Math.max(0,carrinho[idx].qtd+d);if(!carrinho[idx].qtd)carrinho.splice(idx,1);atualizaFab();renderCarrinho();if(!carrinho.length)fecharCarrinho();}
+function ajustaCarrinho(idx,d){
+    if(carrinho[idx] && carrinho[idx]._brinde) return; // brinde não pode ser removido manualmente
+    carrinho[idx].qtd=Math.max(0,carrinho[idx].qtd+d);
+    if(!carrinho[idx].qtd)carrinho.splice(idx,1);
+    atualizaFab();renderCarrinho();if(!carrinho.length)fecharCarrinho();
+}
 function atualizaResumo(){
     var sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0);
     var taxa=tipoAtual==='Entrega'?parseFloat((db.txCfg||{}).taxaPadrao||(db.cfg||{}).taxaEntrega||0):0;
