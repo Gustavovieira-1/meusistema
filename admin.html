@@ -4274,7 +4274,7 @@ function updateOrderStatus(id, newStatus) {
         if (!order.timestamp) order.timestamp = new Date().toISOString();
         // Registra no histórico permanente ao finalizar
         if (newStatus === 'finalizado') {
-            order.finalizadoEm = order.finalizadoEm || new Date().toISOString();
+            order.finalizadoEm = order.finalizadoEm || nowLocalISO();
             histRegistrar(order);
         }
         localStorage.setItem('f_orders', JSON.stringify(orders));
@@ -4962,8 +4962,8 @@ function finFiltrarOrders() {
     var fim = new Date(finDataFim); fim.setHours(23,59,59,999);
     return histGetTodos().filter(function(o) {
         if (o.status === 'cancelado') return false;
-        var ts = o.finalizadoEm ? new Date(o.finalizadoEm)
-               : o.timestamp    ? new Date(o.timestamp) : null;
+        var ts = o.finalizadoEm ? parseDateUTC(o.finalizadoEm)
+               : o.timestamp    ? parseDateUTC(o.timestamp) : null;
         if (!ts || isNaN(ts)) return false;
         return ts >= ini && ts <= fim;
     });
@@ -6394,8 +6394,8 @@ function renderClientes(termoBusca) {
         var fim = new Date(relDataFim);  fim.setHours(23,59,59,999);
         pedidosDoPeriodo = histGetTodos().filter(function(o) {
             if (o.status !== 'finalizado') return false;
-            var ts = o.finalizadoEm ? new Date(o.finalizadoEm)
-                   : o.timestamp    ? new Date(o.timestamp)
+            var ts = o.finalizadoEm ? parseDateUTC(o.finalizadoEm)
+                   : o.timestamp    ? parseDateUTC(o.timestamp)
                    : null;
             if (!ts || isNaN(ts)) return false;
             return ts >= ini && ts <= fim;
@@ -6785,9 +6785,25 @@ function parseDateUTC(str) {
     return isNaN(d) ? null : d;
 }
 
+/** Retorna ISO string no horário LOCAL do navegador (com offset), ex: "2026-03-12T02:30:00-03:00"
+ *  Use no lugar de new Date().toISOString() para salvar timestamps com fuso correto. */
+function nowLocalISO() {
+    var now = new Date();
+    var off = -now.getTimezoneOffset(); // minutos, ex: 180 para UTC-3
+    var sign = off >= 0 ? '+' : '-';
+    var absOff = Math.abs(off);
+    var hh = String(Math.floor(absOff / 60)).padStart(2, '0');
+    var mm = String(absOff % 60).padStart(2, '0');
+    // Formata como ISO local com offset
+    var pad = function(n){ return String(n).padStart(2,'0'); };
+    return now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) +
+           'T' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds()) +
+           sign + hh + ':' + mm;
+}
+
 async function supaAtualizarStatus(pedido, novoStatus) {
     try {
-        var agora = new Date().toISOString();
+        var agora = nowLocalISO();
         var payload = { status: novoStatus, atualizado_em: agora };
         if (novoStatus === 'finalizado') payload.finalizado_em = agora;
         if (pedido._supa_id) {
@@ -7291,7 +7307,7 @@ function histGetTodos() {
             return o.status === 'finalizado' && !idsCache.has(o.id);
         }).map(function(o){
             var c = JSON.parse(JSON.stringify(o));
-            c.finalizadoEm = c.finalizadoEm || c.timestamp || new Date().toISOString();
+            c.finalizadoEm = c.finalizadoEm || c.timestamp || nowLocalISO();
             return c;
         });
         return _histCache.concat(fromOrders);
@@ -7304,7 +7320,7 @@ function histGetTodos() {
         return o.status === 'finalizado' && !idsHist.has(o.id);
     }).map(function(o){
         var c = JSON.parse(JSON.stringify(o));
-        c.finalizadoEm = c.finalizadoEm || c.timestamp || new Date().toISOString();
+        c.finalizadoEm = c.finalizadoEm || c.timestamp || nowLocalISO();
         return c;
     });
     return hist.concat(fromOrders);
@@ -7411,7 +7427,7 @@ async function histCarregarDoSupabase(forcar) {
 /** Grava/atualiza um pedido no histórico (cache + localStorage + Supabase) */
 function histRegistrar(pedido) {
     var copia = JSON.parse(JSON.stringify(pedido));
-    copia.finalizadoEm = copia.finalizadoEm || new Date().toISOString();
+    copia.finalizadoEm = copia.finalizadoEm || nowLocalISO();
     // Atualiza cache em memória
     if (_histCache !== null) {
         var idx = _histCache.findIndex(function(p){ return p.id === copia.id; });
@@ -7447,7 +7463,7 @@ async function supaHistUpsert(pedido) {
             restaurante_id: REST_ID,
             pedido_id:      pedido.id,
             dados:          dadosStr,
-            finalizado_em:  pedido.finalizadoEm || new Date().toISOString()
+            finalizado_em:  pedido.finalizadoEm || nowLocalISO()
         })
     });
 }
@@ -7467,8 +7483,8 @@ function histGetFiltrados() {
         var ini = new Date(relDataIni); ini.setHours(0,0,0,0);
         var fim = new Date(relDataFim); fim.setHours(23,59,59,999);
         todos = todos.filter(function(o) {
-            var ts = o.finalizadoEm ? new Date(o.finalizadoEm)
-                   : o.timestamp    ? new Date(o.timestamp) : null;
+            var ts = o.finalizadoEm ? parseDateUTC(o.finalizadoEm)
+                   : o.timestamp    ? parseDateUTC(o.timestamp) : null;
             if (!ts || isNaN(ts)) return false;
             return ts >= ini && ts <= fim;
         });
@@ -7534,8 +7550,8 @@ function histRender() {
     lista.sort(function(a, b) {
         var va, vb;
         if (histSortKey === 'ts') {
-            va = new Date(a.finalizadoEm || a.timestamp || 0).getTime();
-            vb = new Date(b.finalizadoEm || b.timestamp || 0).getTime();
+            va = (parseDateUTC(a.finalizadoEm || a.timestamp) || new Date(0)).getTime();
+            vb = (parseDateUTC(b.finalizadoEm || b.timestamp) || new Date(0)).getTime();
         } else if (histSortKey === 'val') {
             va = parseFloat(a.total || 0); vb = parseFloat(b.total || 0);
         } else {
@@ -7549,7 +7565,7 @@ function histRender() {
     var ticket   = lista.length ? totalVal / lista.length : 0;
     var ultimoTs = lista.length ? (function() {
         var max = new Date(Math.max.apply(null, lista.map(function(o){
-            return new Date(o.finalizadoEm || o.timestamp || 0).getTime();
+            return (parseDateUTC(o.finalizadoEm || o.timestamp) || new Date(0)).getTime();
         })));
         return max.toLocaleDateString('pt-BR') + ' '
              + max.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
@@ -7614,8 +7630,8 @@ function relFiltrarOrders() {
     var fim = new Date(relDataFim); fim.setHours(23,59,59,999);
     return histGetTodos().filter(function(o) {
         // Usa finalizadoEm como referência principal; fallback para timestamp em pedidos antigos
-        var ts = o.finalizadoEm ? new Date(o.finalizadoEm)
-               : o.timestamp    ? new Date(o.timestamp) : null;
+        var ts = o.finalizadoEm ? parseDateUTC(o.finalizadoEm)
+               : o.timestamp    ? parseDateUTC(o.timestamp) : null;
         if (!ts || isNaN(ts)) return false;
         return ts >= ini && ts <= fim;
     });
@@ -7802,7 +7818,7 @@ function relMapaClientes() {
     // Marca quem tem pedido finalizado ANTES do início do período (histórico completo)
     histGetTodos().forEach(function(o2) {
         if (o2.status !== 'finalizado') return;
-        var ts2 = o2.finalizadoEm ? new Date(o2.finalizadoEm) : null;
+        var ts2 = o2.finalizadoEm ? parseDateUTC(o2.finalizadoEm) : null;
         if (!ts2 || isNaN(ts2)) return;
         ts2.setHours(0,0,0,0);
         if (ts2 >= ini) return; // só conta os de ANTES
@@ -7969,7 +7985,7 @@ function relFiltrarTodos() {
     var fim = new Date(relDataFim); fim.setHours(23,59,59,999);
     var doHist = histGetTodos().filter(function(o) {
         // Finalizados: filtra por finalizadoEm; outros: por timestamp de criação
-        var ts = o.finalizadoEm ? new Date(o.finalizadoEm) : new Date(o.timestamp || 0);
+        var ts = o.finalizadoEm ? parseDateUTC(o.finalizadoEm) : parseDateUTC(o.timestamp) || new Date(0);
         return ts >= ini && ts <= fim;
     });
     var idsHist = new Set(doHist.map(function(p){ return p.id; }));
@@ -9076,7 +9092,7 @@ function cfgAplicarLimpeza() {
     // Separa apenas os finalizados que foram finalizados ANTES do horário de limpeza de hoje
     var paraRemover = orders.filter(function(o) {
         if (o.status !== 'finalizado') return false;
-        var finTs = new Date(o.finalizadoEm || o.timestamp || 0).getTime();
+        var finTs = (parseDateUTC(o.finalizadoEm || o.timestamp) || new Date(0)).getTime();
         return finTs < limparApartirDeMs; // finalizado antes da hora → pode sumir
     });
 
