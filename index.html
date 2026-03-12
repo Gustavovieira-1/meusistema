@@ -833,7 +833,16 @@ function adicionarCarrinho(){
 
 function subTotal(it){return(it.price+it.comps.reduce(function(s,c){return s+(c.price||0);},0))*it.qtd;}
 function atualizaFab(){var qtd=carrinho.reduce(function(s,it){return s+it.qtd;},0),tot=carrinho.reduce(function(s,it){return s+subTotal(it);},0);document.getElementById('fab-qtd').textContent=qtd;document.getElementById('fab-total').textContent='R$ '+tot.toFixed(2).replace('.',',');document.getElementById('fab').classList.toggle('show',qtd>0);}
-function abrirCarrinho(){_cuponsCache=null;renderCarrinho();fidelIniciarCarrinho();document.getElementById('cart-overlay').classList.add('open');document.body.style.overflow='hidden';}
+function abrirCarrinho(){
+    _cuponsCache=null;
+    renderCarrinho();
+    fidelIniciarCarrinho();
+    document.getElementById('cart-overlay').classList.add('open');
+    document.body.style.overflow='hidden';
+    // Se já tem telefone digitado, re-busca saldo (inclusive do Supabase)
+    var tel = (document.getElementById('ch-tel').value || '').replace(/\D/g,'');
+    if (tel.length >= 10) fidelAtualizaSaldo();
+}
 function fecharCarrinho(e){if(!e||e.target===document.getElementById('cart-overlay')){document.getElementById('cart-overlay').classList.remove('open');document.body.style.overflow='';}}
 
 function renderCarrinho(){
@@ -1239,6 +1248,7 @@ async function fidelAtualizaSaldo() {
 function fidelRenderCarrinho() {
     const wrap = document.getElementById('fidel-wrap');
     const opts = document.getElementById('fidel-opcoes-wrap');
+    if (!wrap) return; // carrinho ainda não está no DOM visível
     if (!fidelCfg.ativo || fidelSaldoPts <= 0) {
         wrap.style.display = 'none';
         return;
