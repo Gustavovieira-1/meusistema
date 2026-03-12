@@ -6689,7 +6689,7 @@ async function supaCarregarPedidos() {
                     status: r.status,
                     items: itens, 
                     timestamp: r.criado_em,
-                    finalizadoEm: r.finalizadoEm || (r.status === 'finalizado' ? r.criado_em : null)
+                    finalizadoEm: r.finalizado_em || r.finalizadoEm || (r.status === 'finalizado' ? r.criado_em : null)
                 };
             });
             const idsNuvem = new Set(mapped.map(o => o.id));
