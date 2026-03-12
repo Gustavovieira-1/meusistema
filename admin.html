@@ -3293,7 +3293,12 @@ function editarPedido(id) {
     if (!o) return;
     modoEdicaoPDV    = true;
     editandoPedidoId = id;
-    carrinhoPDV      = (o.items || []).map(i => Object.assign({}, i));
+    carrinhoPDV      = (o.items || []).map(i => {
+        const item = Object.assign({}, i);
+        // Restaura flag _brinde para itens com preço 0 que sejam brinde de cupom
+        if (item.price === 0 && o.produtoBrindeNome && item.name === o.produtoBrindeNome) item._brinde = true;
+        return item;
+    });
     totalCarrinhoPDV = carrinhoPDV.reduce((s,i) => s + i.price * i.qtd, 0);
     _preencherPDV(o);
     document.getElementById('pdv-titulo').textContent = '✏️ Editando ' + o.id;
@@ -3662,6 +3667,7 @@ function fecharModalCompProd() {
 // ── CARRINHO PDV ────────────────────────────────────────────
 function alterarQtd(idx, delta) {
     if (!carrinhoPDV[idx]) return;
+    if (carrinhoPDV[idx]._brinde) return; // brinde não pode ser removido manualmente
     carrinhoPDV[idx].qtd += delta;
     if (carrinhoPDV[idx].qtd <= 0) carrinhoPDV.splice(idx, 1);
     atualizarCarrinho();
@@ -3702,6 +3708,19 @@ function atualizarCarrinho() {
             if (textos.length) compResumo = '<div style="font-size:10px; color:#94a3b8; margin-top:2px;">' + textos.join(', ') + '</div>';
         }
         var obsLine = item.obs ? '<div style="font-size:10px; color:#f59e0b; margin-top:2px;"><i class="fas fa-pen" style="font-size:9px;"></i> ' + item.obs + '</div>' : '';
+
+        // Item brinde: sem botões de editar/qtd
+        if (item._brinde) {
+            return '<div style="display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #f1f5f9; background:#f0fdf4; margin:0 -4px; padding-left:8px; padding-right:8px; border-radius:6px;">' +
+                '<div style="flex:1; min-width:0;">' +
+                    '<div style="display:flex; align-items:center; gap:6px;">' +
+                        '<strong style="font-size:13px; color:#15803d;">🎁 ' + item.name + '</strong>' +
+                        '<span style="background:#16a34a;color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;">BRINDE</span>' +
+                    '</div>' +
+                    '<small style="color:#16a34a; font-weight:600;">Grátis</small>' +
+                '</div>' +
+            '</div>';
+        }
 
         return '<div style="display:flex; justify-content:space-between; align-items:flex-start; padding:10px 0; border-bottom:1px solid #f1f5f9;">' +
             '<div style="flex:1; min-width:0;">' +
@@ -3989,8 +4008,20 @@ async function pdvAplicarCupom() {
         var descCupom = 0;
         if (cup.tipo === 'produto') {
             descCupom = 0;
-            pdvCupomAtual = { codigo: cup.codigo, tipo: cup.tipo, valor: 0, desconto: 0, produtoBrindeNome: cup.produto_nome || '' };
-            msg.textContent = '✅ Brinde: ' + (cup.produto_nome || 'produto') + ' será adicionado ao pedido!';
+            pdvCupomAtual = { codigo: cup.codigo, tipo: cup.tipo, valor: 0, desconto: 0, produtoBrindeNome: cup.produto_nome || '', produtoBrindeId: cup.produto_id || '' };
+            msg.textContent = '✅ Brinde: ' + (cup.produto_nome || 'produto') + ' adicionado ao pedido!';
+            // Remove brinde anterior se existia e adiciona o novo com preço 0
+            carrinhoPDV = carrinhoPDV.filter(i => !i._brinde);
+            carrinhoPDV.push({
+                id:      cup.produto_id || 'brinde',
+                name:    cup.produto_nome || 'Brinde',
+                price:   0,
+                qtd:     1,
+                comps:   [],
+                obs:     'Brinde cupom ' + cup.codigo,
+                _brinde: true
+            });
+            atualizarCarrinho();
         } else {
             if (cup.tipo === 'percentual') descCupom = parseFloat((sub * cup.valor / 100).toFixed(2));
             else descCupom = Math.min(parseFloat(cup.valor), sub);
@@ -4012,6 +4043,9 @@ function pdvRemoverCupom() {
     const msg = document.getElementById('pdv-cupom-msg');
     msg.style.display = 'none';
     document.getElementById('pdv-btn-remover-cupom').style.display = 'none';
+    // Remove item brinde do carrinho
+    carrinhoPDV = carrinhoPDV.filter(i => !i._brinde);
+    atualizarCarrinho();
     pdvRecalcularTotal();
 }
 
@@ -5812,7 +5846,8 @@ function imprimirNavegador(o, cfg, cfgTx, totalPedidosLoja) {
         L.push(f('Itens do pedido', true));
         L.push(lr('Qtd  Item', 'Preço'));
         o.items.forEach(function(it) {
-            var preco = money((it.price || 0) * (it.qtd || 1));
+            var precoNum = (it.price || 0) * (it.qtd || 1);
+            var preco = precoNum === 0 ? 'GRATIS' : money(precoNum);
             L.push(lr((it.qtd || 1) + '    ' + it.name, preco));
             if (it.comps && it.comps.length) {
                 it.comps.forEach(function(c) {
