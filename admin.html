@@ -4256,6 +4256,12 @@ function renderOrders() {
                     '<span class="order-total">R$ ' + o.total.toFixed(2) + '</span>' +
                     pgtoTag +
                 '</div>' +
+                ((o.descontoCupom > 0 || o.descontoPontos > 0) ?
+                    '<div style="margin-top:5px; font-size:11px; color:#16a34a; font-weight:600;">' +
+                    (o.descontoCupom > 0 ? '🏷️ Cupom ' + (o.cupom ? o.cupom : '') + ': -R$ ' + parseFloat(o.descontoCupom).toFixed(2).replace('.',',') + '  ' : '') +
+                    (o.descontoPontos > 0 ? '🎁 Pontos: -R$ ' + parseFloat(o.descontoPontos).toFixed(2).replace('.',',') : '') +
+                    '</div>'
+                : '') +
                 avancarBtn;
 
             card.onclick       = () => openOrderDetails(o.id);
@@ -6711,9 +6717,16 @@ async function supaCarregarPedidos() {
                     phone: r.telefone,
                     address: r.endereco, 
                     bairro: r.bairro,
+                    complemento: r.complemento || '',
+                    cidade: r.cidade || '',
                     tipo: r.tipo, 
                     pagamento: r.pagamento, 
                     troco: r.troco,
+                    subtotal: r.subtotal || r.total,
+                    taxaEntrega: r.taxa_entrega || 0,
+                    descontoCupom: r.desconto_cupom || 0,
+                    descontoPontos: r.desconto_pontos || 0,
+                    cupom: r.cupom || '',
                     total: r.total, 
                     status: r.status,
                     items: itens, 
