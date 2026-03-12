@@ -2998,6 +2998,7 @@ return;
 }
 
 // ── VARIÁVEIS GLOBAIS ──────────────────────────────────────
+var silencioso = false; // flag para suprimir auto-impressão em movimentos automáticos
 var db = {
     categories: JSON.parse(localStorage.getItem('f_cats'))  || [],
     prods:      JSON.parse(localStorage.getItem('f_prods')) || [],
