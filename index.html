@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Cardápio</title>
+<script id="fb-pixel-base">
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+try{var _pc=localStorage.getItem('f_pixel_id');if(_pc){window.fbq('init',_pc);window.fbq('track','PageView');window._pixelPreInit=_pc;}}catch(e){}
+</script>
+<!-- Meta Pixel — inicializado com ID vazio, preenchido via JS após carregar config -->
+<script id="fb-pixel-script">
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+// ID preenchido dinamicamente — não chama init aqui
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -536,36 +553,6 @@ async function supaFetch(path) {
     return r.json();
 }
 
-// ── PRÉ-INICIALIZAÇÃO DO PIXEL ─────────────────────────────
-// Roda IMEDIATAMENTE ao carregar a página, antes de qualquer fetch ao Supabase
-// Usa o pixelId em cache no localStorage de visitas anteriores
-(function() {
-    try {
-        var cached = localStorage.getItem('f_pixel_id');
-        if (cached) {
-            // Inicializa fbq na memória para capturar eventos desde o primeiro ms
-            if (!window.fbq) {
-                var fbq = window.fbq = function() {
-                    if (fbq.callMethod) fbq.callMethod.apply(fbq, arguments);
-                    else fbq.queue.push(arguments);
-                };
-                if (!window._fbq) window._fbq = fbq;
-                fbq.push = fbq; fbq.loaded = true; fbq.version = '2.0'; fbq.queue = [];
-            }
-            window.fbq('init', cached);
-            window.fbq('track', 'PageView');
-            // Carrega fbevents.js imediatamente
-            if (!document.getElementById('fb-pixel-script')) {
-                var s = document.createElement('script');
-                s.id = 'fb-pixel-script'; s.async = true;
-                s.src = 'https://connect.facebook.net/en_US/fbevents.js';
-                document.head.appendChild(s);
-            }
-            window._pixelPreInit = cached; // marca que já fez pre-init
-        }
-    } catch(e) {}
-})();
-
 async function init(){
     console.log('[INIT] Iniciando carregamento de dados...');
     // Pegar slug da URL: /?r=fogueiro-burguer  OU  /fogueiro-burguer
@@ -961,48 +948,21 @@ function pixelInicializar(integracoes) {
     _pixelId    = cfg.valor.trim();
     _pixelToken = (cfg.valor2 || '').trim();
 
-    // Passo 1: Inicializa o objeto fbq ANTES de carregar o script
-    // Isso garante que fbq('init') e fbq('track') ficam na fila mesmo antes do JS baixar
-    if (!window.fbq) {
-        var fbq = window.fbq = function() {
-            if (fbq.callMethod) fbq.callMethod.apply(fbq, arguments);
-            else fbq.queue.push(arguments);
-        };
-        if (!window._fbq) window._fbq = fbq;
-        fbq.push = fbq;
-        fbq.loaded = true;
-        fbq.version = '2.0';
-        fbq.queue = [];
-    }
-
-    // Passo 2: Chama init e PageView ANTES do script carregar — ficam na fila
-    // Salva pixelId no localStorage para pre-init na próxima visita (velocidade)
+    // Salva no cache para pre-init instantâneo na próxima visita
     try { localStorage.setItem('f_pixel_id', _pixelId); } catch(e) {}
 
-    // Se já fez pre-init com o mesmo pixel, só marca como ready (evita double-init)
+    // fbevents.js já está no <head> — só chamar init se o pre-init não rodou ainda
     if (window._pixelPreInit === _pixelId) {
         _pixelReady = true;
-        console.log('[Pixel] ✅ Já inicializado via pre-init:', _pixelId);
+        console.log('[Pixel] ✅ Pre-init já disparou PageView:', _pixelId);
         return;
     }
 
-    // Primeira visita (sem cache): inicializa agora
+    // Primeira visita (sem cache ainda): init e PageView agora
     window.fbq('init', _pixelId);
     window.fbq('track', 'PageView');
     _pixelReady = true;
-    console.log('[Pixel] Inicializado:', _pixelId);
-
-    // Carrega fbevents.js
-    if (!document.getElementById('fb-pixel-script')) {
-        var s = document.createElement('script');
-        s.id  = 'fb-pixel-script';
-        s.async = true;
-        s.src = 'https://connect.facebook.net/en_US/fbevents.js';
-        document.head.appendChild(s);
-        var ns = document.createElement('noscript');
-        ns.innerHTML = '<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id='+_pixelId+'&ev=PageView&noscript=1"/>';
-        document.head.appendChild(ns);
-    }
+    console.log('[Pixel] Inicializado pela primeira vez:', _pixelId);
 }
 
 function pixelPurchase(pedido) {
