@@ -5,377 +5,591 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel Master</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0a0a0f;
-  --surface: #13131a;
-  --surface2: #1a1a24;
-  --surface3: #20202e;
-  --border: #2a2a3a;
-  --accent: #e30613;
-  --accent2: #ff6b35;
-  --text: #f0f0f8;
-  --muted: #6b6b8a;
-  --green: #22c55e;
-  --yellow: #f59e0b;
-  --red: #ef4444;
-  --blue: #3b82f6;
-  --purple: #8b5cf6;
+  --bg:        #080810;
+  --surface:   #0f0f1a;
+  --surface2:  #161625;
+  --surface3:  #1d1d30;
+  --border:    rgba(255,255,255,.06);
+  --border2:   rgba(255,255,255,.1);
+  --accent:    #e30613;
+  --gold:      #c9a84c;
+  --gold2:     #f0d080;
+  --text:      #eeeef5;
+  --muted:     #5a5a7a;
+  --muted2:    #8888aa;
+  --green:     #1db954;
+  --yellow:    #f0b429;
+  --red:       #e63946;
+  --blue:      #4895ef;
+  --purple:    #9b5de5;
+  --sidebar-w: 240px;
 }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Outfit', sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* ── LOGIN ── */
+/* ──────────────────────────────────────────────
+   LOGIN
+────────────────────────────────────────────── */
 #tela-login {
   position: fixed; inset: 0; z-index: 9999;
   display: flex; align-items: center; justify-content: center;
   background: var(--bg);
+  overflow: hidden;
 }
-.login-bg {
-  position: fixed; inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(227,6,19,.18) 0%, transparent 60%),
-              radial-gradient(ellipse 60% 40% at 80% 80%, rgba(255,107,53,.08) 0%, transparent 50%);
+
+.login-bg-art {
+  position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 50%, rgba(201,168,76,.07) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 85% 20%, rgba(227,6,19,.07) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 60% at 50% 110%, rgba(72,149,239,.05) 0%, transparent 50%);
+}
+
+.login-lines {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.login-wrap {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1fr;
+  max-width: 900px; width: 100%;
+  min-height: 540px;
+  border-radius: 28px; overflow: hidden;
+  box-shadow: 0 60px 120px rgba(0,0,0,.8), 0 0 0 1px var(--border2);
+}
+
+.login-left {
+  background: linear-gradient(145deg, #0f0f1a 0%, #161625 100%);
+  padding: 60px 52px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  border-right: 1px solid var(--border);
+  position: relative; overflow: hidden;
+}
+
+.login-left-deco {
+  position: absolute; bottom: -60px; right: -60px;
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,.08) 0%, transparent 70%);
   pointer-events: none;
 }
-.login-card {
-  position: relative; z-index: 1;
-  width: 100%; max-width: 400px; padding: 48px 40px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  box-shadow: 0 40px 80px rgba(0,0,0,.6);
-}
-.login-badge {
+
+.login-eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(227,6,19,.1); border: 1px solid rgba(227,6,19,.3);
-  color: var(--accent); padding: 6px 14px; border-radius: 20px;
-  font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
-  text-transform: uppercase; margin-bottom: 28px;
+  background: rgba(201,168,76,.08);
+  border: 1px solid rgba(201,168,76,.2);
+  color: var(--gold); padding: 5px 14px;
+  border-radius: 20px; font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  width: fit-content; margin-bottom: 36px;
 }
-.login-titulo {
-  font-family: 'Syne', sans-serif;
-  font-size: 32px; font-weight: 800;
-  line-height: 1.1; margin-bottom: 8px;
+
+.login-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 48px; font-weight: 800;
+  line-height: .95; color: var(--text);
+  margin-bottom: 20px;
 }
-.login-sub { font-size: 14px; color: var(--muted); margin-bottom: 36px; }
-.login-campo { margin-bottom: 16px; }
-.login-campo label {
-  display: block; font-size: 11px; font-weight: 600;
+.login-brand span { color: var(--gold); }
+
+.login-desc {
+  font-size: 14px; color: var(--muted2); line-height: 1.7; max-width: 260px;
+}
+
+.login-stat {
+  display: flex; gap: 32px; margin-top: 40px;
+}
+.login-stat-item { }
+.login-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700; color: var(--text);
+}
+.login-stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.login-right {
+  background: var(--surface);
+  padding: 60px 52px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+
+.login-form-title {
+  font-size: 22px; font-weight: 700; margin-bottom: 6px;
+}
+.login-form-sub { font-size: 13px; color: var(--muted2); margin-bottom: 36px; }
+
+.l-campo { margin-bottom: 18px; }
+.l-campo label {
+  display: block; font-size: 10px; font-weight: 700;
   color: var(--muted); text-transform: uppercase;
-  letter-spacing: .8px; margin-bottom: 8px;
+  letter-spacing: 1.2px; margin-bottom: 9px;
 }
-.login-campo input {
+.l-campo input {
   width: 100%; padding: 13px 16px;
-  background: var(--surface2); border: 1.5px solid var(--border);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
   border-radius: 12px; color: var(--text);
-  font-size: 15px; font-family: inherit; outline: none;
-  transition: border-color .2s;
+  font-size: 14px; font-family: 'Outfit', sans-serif; outline: none;
+  transition: border-color .2s, box-shadow .2s;
 }
-.login-campo input:focus { border-color: var(--accent); }
-.login-campo input::placeholder { color: var(--muted); }
+.l-campo input:focus {
+  border-color: rgba(201,168,76,.5);
+  box-shadow: 0 0 0 3px rgba(201,168,76,.08);
+}
+.l-campo input::placeholder { color: var(--muted); }
+
 .login-btn {
   width: 100%; padding: 14px;
-  background: var(--accent); color: white; border: none;
-  border-radius: 12px; font-size: 15px; font-weight: 700;
-  font-family: inherit; cursor: pointer; margin-top: 8px;
-  transition: background .15s, transform .1s;
+  background: linear-gradient(135deg, var(--gold) 0%, #a87c2c 100%);
+  color: #0f0a00; border: none; border-radius: 12px;
+  font-size: 14px; font-weight: 700; font-family: 'Outfit', sans-serif;
+  cursor: pointer; margin-top: 8px; letter-spacing: .3px;
+  transition: opacity .15s, transform .1s;
   display: flex; align-items: center; justify-content: center; gap: 8px;
 }
-.login-btn:hover { background: #c0000f; }
-.login-btn:active { transform: scale(.98); }
-.login-btn:disabled { background: var(--border); cursor: default; }
+.login-btn:hover { opacity: .9; }
+.login-btn:active { transform: scale(.99); }
+.login-btn:disabled { opacity: .4; cursor: default; }
+
 .login-erro {
-  display: none; background: rgba(239,68,68,.1);
-  border: 1px solid rgba(239,68,68,.3); border-radius: 10px;
-  padding: 10px 14px; font-size: 13px; color: #ef4444;
-  margin-top: 12px;
+  display: none;
+  background: rgba(230,57,70,.08); border: 1px solid rgba(230,57,70,.2);
+  border-radius: 10px; padding: 10px 14px;
+  font-size: 12px; color: var(--red); margin-top: 12px;
 }
 
-/* ── APP ── */
-#app { display: none; min-height: 100vh; }
+/* ──────────────────────────────────────────────
+   APP LAYOUT
+────────────────────────────────────────────── */
+#app { display: none; }
 
-/* ── TOPBAR ── */
-.topbar {
-  position: sticky; top: 0; z-index: 100;
-  height: 64px; padding: 0 32px;
-  background: rgba(10,10,15,.9);
-  backdrop-filter: blur(20px);
+.app-layout {
+  display: flex; min-height: 100vh;
+}
+
+/* ──────────────────────────────────────────────
+   SIDEBAR
+────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed; top: 0; left: 0; bottom: 0;
+  display: flex; flex-direction: column;
+  z-index: 200;
+  transition: transform .3s;
+}
+
+.sidebar-top {
+  padding: 28px 24px 20px;
   border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--text);
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 4px;
+}
+.sidebar-logo-gem {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--gold) 0%, #7a5518 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #0f0a00; flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(201,168,76,.3);
+}
+.sidebar-tagline {
+  font-size: 10px; color: var(--muted); letter-spacing: .8px; margin-left: 38px;
+}
+
+.sidebar-user {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-avatar {
+  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), #7a000a);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: white;
+}
+.sidebar-user-name {
+  font-size: 13px; font-weight: 600; flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.sidebar-user-role {
+  font-size: 9px; font-weight: 700; color: var(--gold);
+  text-transform: uppercase; letter-spacing: 1px; margin-top: 1px;
+}
+
+.sidebar-nav {
+  flex: 1; padding: 20px 16px; overflow-y: auto;
+}
+
+.sidebar-nav-label {
+  font-size: 9px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  padding: 0 10px; margin-bottom: 8px; margin-top: 8px;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 12px; border-radius: 10px;
+  font-size: 13px; font-weight: 500; color: var(--muted2);
+  cursor: pointer; transition: all .15s; position: relative;
+  margin-bottom: 2px; border: none; background: none; width: 100%;
+  font-family: 'Outfit', sans-serif; text-align: left;
+}
+.nav-item i { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
+.nav-item:hover { color: var(--text); background: var(--surface2); }
+.nav-item.active {
+  color: var(--text); background: var(--surface2);
+  border: 1px solid var(--border2);
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 3px; border-radius: 0 3px 3px 0;
+  background: var(--gold);
+}
+
+.sidebar-bottom {
+  padding: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-logout-sb {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  font-size: 12px; font-weight: 500; color: var(--muted);
+  background: none; border: none; cursor: pointer;
+  font-family: 'Outfit', sans-serif; width: 100%;
+  transition: all .15s;
+}
+.btn-logout-sb:hover { color: var(--red); background: rgba(230,57,70,.06); }
+.btn-logout-sb i { font-size: 12px; }
+
+/* ──────────────────────────────────────────────
+   MAIN CONTENT
+────────────────────────────────────────────── */
+.main-content {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.topbar {
+  height: 64px;
+  padding: 0 36px;
   display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: rgba(8,8,16,.8);
+  backdrop-filter: blur(20px);
+  position: sticky; top: 0; z-index: 100;
 }
-.topbar-logo {
-  font-family: 'Syne', sans-serif;
-  font-size: 18px; font-weight: 800;
-  display: flex; align-items: center; gap: 10px;
-}
-.topbar-logo-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 12px var(--accent);
-  animation: pulse-dot 2s infinite;
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: .6; transform: scale(1.4); }
-}
-.topbar-right { display: flex; align-items: center; gap: 16px; }
-.topbar-user {
-  display: flex; align-items: center; gap: 10px;
-  padding: 6px 14px; background: var(--surface2);
-  border: 1px solid var(--border); border-radius: 20px;
-  font-size: 13px; color: var(--muted);
-}
-.topbar-user strong { color: var(--text); font-size: 13px; }
-.btn-logout {
-  padding: 8px 16px; background: transparent;
-  border: 1px solid var(--border); border-radius: 10px;
-  color: var(--muted); font-size: 12px; font-family: inherit;
-  cursor: pointer; transition: all .15s; display: flex; align-items: center; gap: 6px;
-}
-.btn-logout:hover { border-color: var(--red); color: var(--red); }
 
-/* ── MAIN ── */
-.main { max-width: 1400px; margin: 0 auto; padding: 40px 32px; }
+.topbar-path {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--muted2);
+}
+.topbar-path i { font-size: 11px; }
+.topbar-path strong { color: var(--text); font-weight: 600; }
 
-/* ── MÉTRICAS ── */
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+
+.topbar-time {
+  font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums;
+}
+
+.page { padding: 36px; }
+
+/* ──────────────────────────────────────────────
+   MÉTRICAS
+────────────────────────────────────────────── */
 .metricas {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 16px; margin-bottom: 40px;
+  gap: 14px;
+  margin-bottom: 36px;
 }
+
 .metrica-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 16px; padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px 20px;
   position: relative; overflow: hidden;
-  transition: border-color .2s, transform .15s;
   cursor: default;
+  transition: border-color .2s, transform .2s;
+  animation: fadeUp .5s ease both;
 }
-.metrica-card:hover { border-color: rgba(227,6,19,.3); transform: translateY(-1px); }
-.metrica-card::before {
+.metrica-card:nth-child(1) { animation-delay: .05s; }
+.metrica-card:nth-child(2) { animation-delay: .10s; }
+.metrica-card:nth-child(3) { animation-delay: .15s; }
+.metrica-card:nth-child(4) { animation-delay: .20s; }
+.metrica-card:nth-child(5) { animation-delay: .25s; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.metrica-card:hover { border-color: rgba(201,168,76,.2); transform: translateY(-2px); }
+
+.metrica-card::after {
   content: ''; position: absolute;
-  top: 0; left: 0; right: 0; height: 2px;
+  bottom: 0; left: 0; right: 0; height: 1px;
 }
-.metrica-card.verde::before { background: var(--green); }
-.metrica-card.azul::before { background: var(--blue); }
-.metrica-card.amarelo::before { background: var(--yellow); }
-.metrica-card.vermelho::before { background: var(--accent); }
-.metrica-card.roxo::before { background: var(--purple); }
+.metrica-card.verde::after   { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+.metrica-card.azul::after    { background: linear-gradient(90deg, transparent, var(--blue), transparent); }
+.metrica-card.amarelo::after { background: linear-gradient(90deg, transparent, var(--yellow), transparent); }
+.metrica-card.roxo::after    { background: linear-gradient(90deg, transparent, var(--purple), transparent); }
+.metrica-card.ouro::after    { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+
+.metrica-icon-wrap {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; margin-bottom: 16px;
+}
+.verde .metrica-icon-wrap   { background: rgba(29,185,84,.1); color: var(--green); }
+.azul .metrica-icon-wrap    { background: rgba(72,149,239,.1); color: var(--blue); }
+.amarelo .metrica-icon-wrap { background: rgba(240,180,41,.1); color: var(--yellow); }
+.roxo .metrica-icon-wrap    { background: rgba(155,93,229,.1); color: var(--purple); }
+.ouro .metrica-icon-wrap    { background: rgba(201,168,76,.1); color: var(--gold); }
+
 .metrica-label {
-  font-size: 10px; font-weight: 600; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px;
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
 }
+
 .metrica-valor {
-  font-family: 'Syne', sans-serif;
-  font-size: 34px; font-weight: 800; line-height: 1;
-  margin-bottom: 4px;
+  font-family: 'Playfair Display', serif;
+  font-size: 30px; font-weight: 700; line-height: 1;
+  margin-bottom: 5px;
 }
+
 .metrica-sub { font-size: 11px; color: var(--muted); }
-.metrica-icon {
-  position: absolute; bottom: 16px; right: 16px;
-  font-size: 28px; opacity: .06;
-}
 
-/* ── ABAS ── */
-.abas {
-  display: flex; gap: 4px;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 4px; margin-bottom: 28px;
-  width: fit-content;
-}
-.aba {
-  padding: 9px 22px; border-radius: 9px;
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  color: var(--muted); background: none; border: none;
-  font-family: inherit; transition: all .15s;
-  display: flex; align-items: center; gap: 7px;
-}
-.aba.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,.3); }
-.aba i { font-size: 12px; }
-
-/* ── SEÇÕES ── */
+/* ──────────────────────────────────────────────
+   SEÇÕES
+────────────────────────────────────────────── */
 .secao { display: none; }
 .secao.active { display: block; }
 
-/* ── SEC HEADER ── */
 .sec-header {
   display: flex; align-items: flex-start; justify-content: space-between;
-  margin-bottom: 20px; gap: 16px; flex-wrap: wrap;
+  margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
 }
 .sec-titulo {
-  font-family: 'Syne', sans-serif;
-  font-size: 20px; font-weight: 700;
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 700; line-height: 1;
 }
-.sec-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.sec-sub { font-size: 13px; color: var(--muted2); margin-top: 6px; }
 
-/* ── BOTÕES ── */
+/* ──────────────────────────────────────────────
+   BOTÕES
+────────────────────────────────────────────── */
 .btn-primary {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 20px; background: var(--accent); color: white;
-  border: none; border-radius: 10px; font-size: 13px; font-weight: 700;
-  font-family: inherit; cursor: pointer; transition: background .15s, transform .1s;
-  white-space: nowrap;
+  padding: 10px 22px;
+  background: linear-gradient(135deg, var(--gold) 0%, #a07828 100%);
+  color: #0f0a00; border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 700; font-family: 'Outfit', sans-serif;
+  cursor: pointer; transition: opacity .15s, transform .1s; white-space: nowrap;
+  letter-spacing: .2px;
 }
-.btn-primary:hover { background: #c0000f; }
+.btn-primary:hover { opacity: .88; }
 .btn-primary:active { transform: scale(.98); }
-.btn-primary:disabled { background: var(--border); cursor: default; }
+.btn-primary:disabled { opacity: .35; cursor: default; }
+
 .btn-secondary {
   display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 20px; background: var(--surface2);
-  border: 1px solid var(--border); color: var(--text);
+  padding: 10px 18px; background: var(--surface2);
+  border: 1px solid var(--border2); color: var(--text);
   border-radius: 10px; font-size: 13px; font-weight: 600;
-  font-family: inherit; cursor: pointer; transition: all .15s;
-  white-space: nowrap;
+  font-family: 'Outfit', sans-serif; cursor: pointer; transition: all .15s; white-space: nowrap;
 }
-.btn-secondary:hover { border-color: var(--muted); }
+.btn-secondary:hover { border-color: var(--muted2); }
 .btn-ghost {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 8px 14px; background: transparent; border: none;
-  color: var(--muted); font-size: 13px; font-family: inherit;
+  color: var(--muted); font-size: 13px; font-family: 'Outfit', sans-serif;
   cursor: pointer; transition: color .15s; border-radius: 8px;
 }
 .btn-ghost:hover { color: var(--text); background: var(--surface2); }
 
-/* ── TABELA WRAP ── */
+/* ──────────────────────────────────────────────
+   TABELA
+────────────────────────────────────────────── */
 .tabela-wrap {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 16px; overflow: hidden; margin-bottom: 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px; overflow: hidden;
+  margin-bottom: 32px;
 }
+
 .tabela-filtros {
-  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
   display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
 }
+
 .filtro-input {
-  flex: 1; min-width: 160px; padding: 9px 14px;
-  background: var(--surface2); border: 1px solid var(--border);
+  flex: 1; min-width: 180px; padding: 9px 14px;
+  background: var(--surface2); border: 1px solid var(--border2);
   border-radius: 10px; color: var(--text); font-size: 13px;
-  font-family: inherit; outline: none;
+  font-family: 'Outfit', sans-serif; outline: none;
+  transition: border-color .2s;
 }
-.filtro-input:focus { border-color: var(--accent); }
+.filtro-input:focus { border-color: rgba(201,168,76,.4); }
 .filtro-input::placeholder { color: var(--muted); }
+
 .filtro-select {
   padding: 9px 14px; background: var(--surface2);
-  border: 1px solid var(--border); border-radius: 10px;
-  color: var(--text); font-size: 13px; font-family: inherit;
+  border: 1px solid var(--border2); border-radius: 10px;
+  color: var(--text); font-size: 13px; font-family: 'Outfit', sans-serif;
   outline: none; cursor: pointer;
 }
 .filtro-select option { background: var(--surface2); }
+
 table { width: 100%; border-collapse: collapse; }
 thead { background: var(--surface2); }
 th {
-  padding: 11px 20px; text-align: left;
-  font-size: 10px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: .6px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
+  padding: 12px 20px; text-align: left;
+  font-size: 9px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
 }
 td {
   padding: 14px 20px; font-size: 13px;
-  border-bottom: 1px solid rgba(42,42,58,.5);
+  border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(255,255,255,.015); }
+
 .rest-nome { font-weight: 600; font-size: 14px; }
 .rest-slug {
-  font-size: 11px; color: var(--muted); margin-top: 2px;
+  font-size: 11px; color: var(--muted); margin-top: 3px;
   display: flex; align-items: center; gap: 4px;
 }
 
-/* ── BADGES ── */
+/* ──────────────────────────────────────────────
+   BADGES
+────────────────────────────────────────────── */
 .badge {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 3px 10px; border-radius: 20px;
-  font-size: 11px; font-weight: 700;
+  font-size: 10px; font-weight: 700; letter-spacing: .3px;
 }
-.badge.ativo { background: rgba(34,197,94,.1); color: var(--green); border: 1px solid rgba(34,197,94,.2); }
-.badge.inativo { background: rgba(107,107,138,.1); color: var(--muted); border: 1px solid var(--border); }
-.badge.pago { background: rgba(59,130,246,.1); color: var(--blue); border: 1px solid rgba(59,130,246,.2); }
-.badge.pendente { background: rgba(245,158,11,.1); color: var(--yellow); border: 1px solid rgba(245,158,11,.2); }
-.badge.trial { background: rgba(255,107,53,.1); color: var(--accent2); border: 1px solid rgba(255,107,53,.2); }
-.badge.cancelado { background: rgba(239,68,68,.1); color: var(--red); border: 1px solid rgba(239,68,68,.2); }
-.badge.superadmin { background: rgba(139,92,246,.15); color: var(--purple); border: 1px solid rgba(139,92,246,.3); }
-.badge.admin { background: rgba(59,130,246,.1); color: var(--blue); border: 1px solid rgba(59,130,246,.2); }
+.badge.ativo     { background: rgba(29,185,84,.08); color: var(--green); border: 1px solid rgba(29,185,84,.2); }
+.badge.inativo   { background: rgba(90,90,122,.1); color: var(--muted2); border: 1px solid var(--border); }
+.badge.pago      { background: rgba(72,149,239,.08); color: var(--blue); border: 1px solid rgba(72,149,239,.2); }
+.badge.pendente  { background: rgba(240,180,41,.08); color: var(--yellow); border: 1px solid rgba(240,180,41,.2); }
+.badge.trial     { background: rgba(201,168,76,.08); color: var(--gold); border: 1px solid rgba(201,168,76,.2); }
+.badge.cancelado { background: rgba(230,57,70,.08); color: var(--red); border: 1px solid rgba(230,57,70,.2); }
+.badge.superadmin{ background: rgba(155,93,229,.1); color: var(--purple); border: 1px solid rgba(155,93,229,.3); }
+.badge.admin     { background: rgba(72,149,239,.08); color: var(--blue); border: 1px solid rgba(72,149,239,.2); }
 
-/* ── TOGGLE ── */
+/* ──────────────────────────────────────────────
+   TOGGLE
+────────────────────────────────────────────── */
 .toggle {
-  width: 42px; height: 24px; border-radius: 12px;
-  background: var(--border); cursor: pointer;
-  position: relative; transition: background .2s; border: none;
+  width: 40px; height: 22px; border-radius: 11px;
+  background: var(--surface3); cursor: pointer;
+  position: relative; transition: background .2s; border: 1px solid var(--border2);
   flex-shrink: 0;
 }
-.toggle.on { background: var(--green); }
+.toggle.on { background: var(--green); border-color: transparent; }
 .toggle::after {
   content: ''; position: absolute;
-  top: 4px; left: 4px;
-  width: 16px; height: 16px; border-radius: 50%;
+  top: 3px; left: 3px;
+  width: 14px; height: 14px; border-radius: 50%;
   background: white; transition: transform .2s;
   box-shadow: 0 1px 4px rgba(0,0,0,.3);
 }
 .toggle.on::after { transform: translateX(18px); }
 
-/* ── AÇÕES ── */
-.acoes { display: flex; gap: 6px; align-items: center; }
+/* ──────────────────────────────────────────────
+   AÇÕES
+────────────────────────────────────────────── */
+.acoes { display: flex; gap: 5px; align-items: center; }
 .btn-acao {
-  width: 32px; height: 32px; border-radius: 8px;
+  width: 30px; height: 30px; border-radius: 8px;
   border: 1px solid var(--border); background: transparent;
-  color: var(--muted); cursor: pointer; font-size: 12px;
+  color: var(--muted); cursor: pointer; font-size: 11px;
   display: flex; align-items: center; justify-content: center;
   transition: all .15s;
 }
-.btn-acao:hover { border-color: var(--text); color: var(--text); }
-.btn-acao.danger:hover { border-color: var(--red); color: var(--red); }
-.btn-acao.success:hover { border-color: var(--green); color: var(--green); }
-.btn-acao.info:hover { border-color: var(--blue); color: var(--blue); }
+.btn-acao:hover         { border-color: var(--muted2); color: var(--text); background: var(--surface2); }
+.btn-acao.danger:hover  { border-color: var(--red); color: var(--red); background: rgba(230,57,70,.06); }
+.btn-acao.success:hover { border-color: var(--green); color: var(--green); background: rgba(29,185,84,.06); }
+.btn-acao.info:hover    { border-color: var(--blue); color: var(--blue); background: rgba(72,149,239,.06); }
 
-/* ── MODAL ── */
+/* ──────────────────────────────────────────────
+   MODAL
+────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0,0,0,.75); backdrop-filter: blur(6px);
-  display: none; align-items: center; justify-content: center;
-  padding: 20px;
+  background: rgba(0,0,0,.8); backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center; padding: 20px;
 }
 .modal-overlay.open { display: flex; }
 .modal {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 20px; padding: 36px; width: 100%; max-width: 540px;
-  box-shadow: 0 40px 80px rgba(0,0,0,.6);
-  animation: slideUp .2s ease;
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 22px; padding: 36px; width: 100%; max-width: 540px;
+  box-shadow: 0 40px 80px rgba(0,0,0,.7);
+  animation: modalIn .2s cubic-bezier(.34,1.4,.64,1);
   max-height: 90vh; overflow-y: auto;
 }
 .modal.wide { max-width: 680px; }
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(.96) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 .modal-titulo {
-  font-family: 'Syne', sans-serif;
-  font-size: 20px; font-weight: 800; margin-bottom: 4px;
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700; margin-bottom: 4px;
 }
-.modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 28px; }
+.modal-sub { font-size: 13px; color: var(--muted2); margin-bottom: 28px; }
+
 .campo { margin-bottom: 16px; }
 .campo label {
-  display: block; font-size: 11px; font-weight: 600;
+  display: block; font-size: 10px; font-weight: 700;
   color: var(--muted); text-transform: uppercase;
-  letter-spacing: .6px; margin-bottom: 7px;
+  letter-spacing: 1px; margin-bottom: 8px;
 }
 .campo input, .campo select, .campo textarea {
   width: 100%; padding: 11px 14px;
-  background: var(--surface2); border: 1.5px solid var(--border);
+  background: var(--surface2); border: 1px solid var(--border2);
   border-radius: 10px; color: var(--text);
-  font-size: 14px; font-family: inherit; outline: none;
-  transition: border-color .15s;
+  font-size: 14px; font-family: 'Outfit', sans-serif; outline: none;
+  transition: border-color .15s, box-shadow .15s;
 }
-.campo input:focus, .campo select:focus, .campo textarea:focus { border-color: var(--accent); }
+.campo input:focus, .campo select:focus, .campo textarea:focus {
+  border-color: rgba(201,168,76,.4);
+  box-shadow: 0 0 0 3px rgba(201,168,76,.06);
+}
 .campo input::placeholder, .campo textarea::placeholder { color: var(--muted); }
 .campo select option { background: var(--surface2); }
 .campo textarea { resize: vertical; min-height: 80px; }
@@ -385,17 +599,19 @@ tr:hover td { background: rgba(255,255,255,.015); }
   padding-top: 20px; border-top: 1px solid var(--border);
 }
 .modal-erro {
-  display: none; background: rgba(239,68,68,.1);
-  border: 1px solid rgba(239,68,68,.2); border-radius: 8px;
-  padding: 10px 14px; font-size: 13px; color: #ef4444; margin-top: 12px;
+  display: none; background: rgba(230,57,70,.08);
+  border: 1px solid rgba(230,57,70,.2); border-radius: 8px;
+  padding: 10px 14px; font-size: 12px; color: var(--red); margin-top: 12px;
 }
 .modal-ok {
-  display: none; background: rgba(34,197,94,.08);
-  border: 1px solid rgba(34,197,94,.2); border-radius: 8px;
-  padding: 10px 14px; font-size: 13px; color: var(--green); margin-top: 12px;
+  display: none; background: rgba(29,185,84,.06);
+  border: 1px solid rgba(29,185,84,.2); border-radius: 8px;
+  padding: 10px 14px; font-size: 12px; color: var(--green); margin-top: 12px;
 }
 
-/* ── STEPS (progress no modal criar) ── */
+/* ──────────────────────────────────────────────
+   STEPS
+────────────────────────────────────────────── */
 .steps {
   display: flex; gap: 0; margin-bottom: 28px;
   background: var(--surface2); border-radius: 10px;
@@ -408,301 +624,366 @@ tr:hover td { background: rgba(255,255,255,.015); }
   border-right: 1px solid var(--border); transition: all .2s;
 }
 .step:last-child { border-right: none; }
-.step.done { color: var(--green); background: rgba(34,197,94,.06); }
-.step.active { color: var(--accent); background: rgba(227,6,19,.06); }
+.step.done   { color: var(--green); background: rgba(29,185,84,.05); }
+.step.active { color: var(--gold);  background: rgba(201,168,76,.05); }
 .step i { font-size: 12px; }
 
-/* ── CARD DE USUÁRIO ── */
+/* ──────────────────────────────────────────────
+   CARDS DE USUÁRIO
+────────────────────────────────────────────── */
 .usuario-card {
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: 12px; padding: 16px 20px;
   display: flex; align-items: center; gap: 14px;
   margin-bottom: 10px; transition: border-color .15s;
 }
-.usuario-card:hover { border-color: rgba(227,6,19,.2); }
+.usuario-card:hover { border-color: rgba(201,168,76,.2); }
 .usuario-avatar {
   width: 40px; height: 40px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  background: linear-gradient(135deg, var(--accent), #7a000a);
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 700; color: white; flex-shrink: 0;
 }
 .usuario-info { flex: 1; min-width: 0; }
-.usuario-nome { font-weight: 600; font-size: 14px; }
+.usuario-nome  { font-weight: 600; font-size: 14px; }
 .usuario-email { font-size: 12px; color: var(--muted); margin-top: 1px; }
-.usuario-rest { font-size: 11px; color: var(--accent2); margin-top: 2px; }
+.usuario-rest  { font-size: 11px; color: var(--gold); margin-top: 2px; }
 
-/* ── INFO BOX ── */
+/* ──────────────────────────────────────────────
+   INFO / WARN BOX
+────────────────────────────────────────────── */
 .info-box {
-  background: rgba(59,130,246,.06); border: 1px solid rgba(59,130,246,.15);
+  background: rgba(72,149,239,.05); border: 1px solid rgba(72,149,239,.15);
   border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
   font-size: 13px; color: #93c5fd; line-height: 1.6;
 }
 .info-box strong { color: var(--blue); }
 .warn-box {
-  background: rgba(245,158,11,.06); border: 1px solid rgba(245,158,11,.15);
+  background: rgba(240,180,41,.05); border: 1px solid rgba(240,180,41,.15);
   border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
   font-size: 13px; color: #fcd34d; line-height: 1.6;
 }
 .warn-box strong { color: var(--yellow); }
 
-/* ── LOADING / VAZIO ── */
+/* ──────────────────────────────────────────────
+   LOADING / VAZIO
+────────────────────────────────────────────── */
 .loading {
   display: flex; align-items: center; justify-content: center;
-  padding: 60px; color: var(--muted); gap: 12px;
-  flex-direction: column;
+  padding: 60px; color: var(--muted); gap: 12px; flex-direction: column;
 }
 .spin { animation: spin 1s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .vazio { text-align: center; padding: 60px; color: var(--muted); font-size: 14px; }
-.vazio-icon { font-size: 40px; margin-bottom: 12px; opacity: .3; }
+.vazio-icon { font-size: 36px; margin-bottom: 12px; opacity: .25; }
 
-/* ── TOAST ── */
+/* ──────────────────────────────────────────────
+   TOAST
+────────────────────────────────────────────── */
 #toast {
   position: fixed; bottom: 28px; right: 28px; z-index: 9999;
-  padding: 14px 20px; border-radius: 12px;
+  padding: 13px 20px; border-radius: 12px;
   font-size: 13px; font-weight: 600;
-  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  box-shadow: 0 8px 32px rgba(0,0,0,.5);
   transform: translateY(80px); opacity: 0;
   transition: all .3s cubic-bezier(.34,1.56,.64,1);
   pointer-events: none; max-width: 320px;
   display: flex; align-items: center; gap: 10px;
+  backdrop-filter: blur(16px);
 }
 #toast.show { transform: translateY(0); opacity: 1; }
 
-/* ── DIVIDER ── */
+/* ──────────────────────────────────────────────
+   MISC
+────────────────────────────────────────────── */
 .divider { height: 1px; background: var(--border); margin: 24px 0; }
 .section-label {
-  font-size: 10px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+  font-size: 9px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
 }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 1100px) { .metricas { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 800px)  { .metricas { grid-template-columns: repeat(2, 1fr); }; .main { padding: 24px 16px; } .topbar { padding: 0 16px; } }
-@media (max-width: 600px)  { .metricas { grid-template-columns: 1fr 1fr; } .topbar-user { display: none; } .campo-row { grid-template-columns: 1fr; } }
+/* ──────────────────────────────────────────────
+   RESPONSIVE
+────────────────────────────────────────────── */
+@media (max-width: 1200px) { .metricas { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px)  {
+  .metricas { grid-template-columns: repeat(2, 1fr); }
+  .main-content { margin-left: 0; }
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .page { padding: 20px 16px; }
+  .topbar { padding: 0 16px; }
+}
+@media (max-width: 600px) {
+  .metricas { grid-template-columns: 1fr 1fr; }
+  .campo-row { grid-template-columns: 1fr; }
+  .login-wrap { grid-template-columns: 1fr; }
+  .login-left { display: none; }
+}
 </style>
 </head>
 <body>
 
-<!-- ══ TELA DE LOGIN ══ -->
+<!-- ══ LOGIN ══ -->
 <div id="tela-login">
-  <div class="login-bg"></div>
-  <div class="login-card">
-    <div class="login-badge"><i class="fas fa-shield-halved"></i> Acesso Restrito</div>
-    <div class="login-titulo">Painel<br>Master</div>
-    <div class="login-sub">Área exclusiva de administração do sistema</div>
-    <div class="login-campo">
-      <label>E-mail</label>
-      <input id="login-email" type="email" placeholder="seu@email.com.br"
-             onkeydown="if(event.key==='Enter')document.getElementById('login-senha').focus()">
+  <div class="login-bg-art"></div>
+  <div class="login-lines"></div>
+  <div class="login-wrap">
+    <div class="login-left">
+      <div class="login-left-deco"></div>
+      <div>
+        <div class="login-eyebrow"><i class="fas fa-gem"></i> Acesso Exclusivo</div>
+        <div class="login-brand">Painel<br><span>Master</span></div>
+        <div class="login-desc">Central de controle completa do ecossistema Fogueiro Burguer.</div>
+      </div>
+      <div class="login-stat">
+        <div class="login-stat-item">
+          <div class="login-stat-num">Multi</div>
+          <div class="login-stat-lbl">Tenant SaaS</div>
+        </div>
+        <div class="login-stat-item">
+          <div class="login-stat-num">Real</div>
+          <div class="login-stat-lbl">Time Sync</div>
+        </div>
+      </div>
     </div>
-    <div class="login-campo">
-      <label>Senha</label>
-      <input id="login-senha" type="password" placeholder="••••••••"
-             onkeydown="if(event.key==='Enter')saLogin()">
+    <div class="login-right">
+      <div class="login-form-title">Bem-vindo de volta</div>
+      <div class="login-form-sub">Acesse com suas credenciais de superadmin</div>
+      <div class="l-campo">
+        <label>E-mail</label>
+        <input id="login-email" type="email" placeholder="seu@email.com.br"
+               onkeydown="if(event.key==='Enter')document.getElementById('login-senha').focus()">
+      </div>
+      <div class="l-campo">
+        <label>Senha</label>
+        <input id="login-senha" type="password" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')saLogin()">
+      </div>
+      <button class="login-btn" id="login-btn" onclick="saLogin()">
+        <i class="fas fa-arrow-right-to-bracket"></i> Entrar no Painel
+      </button>
+      <div class="login-erro" id="login-erro"></div>
     </div>
-    <button class="login-btn" id="login-btn" onclick="saLogin()">
-      <i class="fas fa-arrow-right-to-bracket"></i> Entrar
-    </button>
-    <div class="login-erro" id="login-erro"></div>
   </div>
 </div>
 
 <!-- ══ APP ══ -->
 <div id="app">
+  <div class="app-layout">
 
-  <!-- TOPBAR -->
-  <div class="topbar">
-    <div class="topbar-logo">
-      <div class="topbar-logo-dot"></div>
-      Painel Master
-    </div>
-    <div class="topbar-right">
-      <div class="topbar-user">
-        <i class="fas fa-user-shield" style="color:var(--accent);font-size:12px;"></i>
-        <strong id="sa-nome-usuario">—</strong>
-      </div>
-      <button class="btn-logout" onclick="saLogout()">
-        <i class="fas fa-right-from-bracket"></i> Sair
-      </button>
-    </div>
-  </div>
-
-  <!-- MAIN -->
-  <div class="main">
-
-    <!-- MÉTRICAS -->
-    <div class="metricas">
-      <div class="metrica-card verde">
-        <div class="metrica-label">Restaurantes ativos</div>
-        <div class="metrica-valor" id="m-ativos">—</div>
-        <div class="metrica-sub" id="m-total-sub">de — total</div>
-        <div class="metrica-icon"><i class="fas fa-store"></i></div>
-      </div>
-      <div class="metrica-card azul">
-        <div class="metrica-label">Usuários cadastrados</div>
-        <div class="metrica-valor" id="m-usuarios">—</div>
-        <div class="metrica-sub">admins + superadmins</div>
-        <div class="metrica-icon"><i class="fas fa-users"></i></div>
-      </div>
-      <div class="metrica-card amarelo">
-        <div class="metrica-label">Pagamentos pendentes</div>
-        <div class="metrica-valor" id="m-pendentes">—</div>
-        <div class="metrica-sub">aguardando confirmação</div>
-        <div class="metrica-icon"><i class="fas fa-clock"></i></div>
-      </div>
-      <div class="metrica-card roxo">
-        <div class="metrica-label">Pedidos hoje</div>
-        <div class="metrica-valor" id="m-pedidos">—</div>
-        <div class="metrica-sub">em todos os restaurantes</div>
-        <div class="metrica-icon"><i class="fas fa-receipt"></i></div>
-      </div>
-      <div class="metrica-card vermelho">
-        <div class="metrica-label">Receita total</div>
-        <div class="metrica-valor" id="m-receita" style="font-size:22px;padding-top:6px;">—</div>
-        <div class="metrica-sub">todos os pedidos</div>
-        <div class="metrica-icon"><i class="fas fa-dollar-sign"></i></div>
-      </div>
-    </div>
-
-    <!-- ABAS -->
-    <div class="abas">
-      <button class="aba active" id="aba-restaurantes" onclick="saAba('restaurantes',this)">
-        <i class="fas fa-store"></i> Restaurantes
-      </button>
-      <button class="aba" id="aba-usuarios" onclick="saAba('usuarios',this)">
-        <i class="fas fa-users"></i> Usuários
-      </button>
-      <button class="aba" id="aba-pedidos" onclick="saAba('pedidos',this)">
-        <i class="fas fa-receipt"></i> Pedidos
-      </button>
-      <button class="aba" id="aba-pagamentos" onclick="saAba('pagamentos',this)">
-        <i class="fas fa-credit-card"></i> Pagamentos
-      </button>
-    </div>
-
-    <!-- ══ ABA RESTAURANTES ══ -->
-    <div class="secao active" id="sec-restaurantes">
-      <div class="sec-header">
-        <div>
-          <div class="sec-titulo">Restaurantes</div>
-          <div class="sec-sub">Gerencie todos os restaurantes cadastrados no sistema</div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-logo">
+          <div class="sidebar-logo-gem"><i class="fas fa-gem"></i></div>
+          Painel Master
         </div>
-        <button class="btn-primary" onclick="saAbrirModalRest(null)">
-          <i class="fas fa-plus"></i> Novo Restaurante
+        <div class="sidebar-tagline">Sistema de Delivery</div>
+        <div class="sidebar-user">
+          <div class="sidebar-avatar" id="sa-avatar-letra">G</div>
+          <div>
+            <div class="sidebar-user-name" id="sa-nome-usuario">—</div>
+            <div class="sidebar-user-role">Superadmin</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-nav-label">Gestão</div>
+        <button class="nav-item active" id="nav-restaurantes" onclick="saAba('restaurantes',this)">
+          <i class="fas fa-store"></i> Restaurantes
+        </button>
+        <button class="nav-item" id="nav-usuarios" onclick="saAba('usuarios',this)">
+          <i class="fas fa-users"></i> Usuários
+        </button>
+        <button class="nav-item" id="nav-pedidos" onclick="saAba('pedidos',this)">
+          <i class="fas fa-receipt"></i> Pedidos
+        </button>
+        <button class="nav-item" id="nav-pagamentos" onclick="saAba('pagamentos',this)">
+          <i class="fas fa-credit-card"></i> Pagamentos
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <button class="btn-logout-sb" onclick="saLogout()">
+          <i class="fas fa-right-from-bracket"></i> Sair da conta
         </button>
       </div>
+    </aside>
 
-      <div class="tabela-wrap">
-        <div class="tabela-filtros">
-          <input class="filtro-input" id="filtro-rest" placeholder="🔍 Buscar por nome ou slug..." oninput="saFiltrarRest()">
-          <select class="filtro-select" id="filtro-status" onchange="saFiltrarRest()">
-            <option value="">Todos os status</option>
-            <option value="ativo">Ativos</option>
-            <option value="inativo">Inativos</option>
-          </select>
-          <select class="filtro-select" id="filtro-pgto" onchange="saFiltrarRest()">
-            <option value="">Todos os planos</option>
-            <option value="pago">Pago</option>
-            <option value="trial">Trial</option>
-            <option value="pendente">Pendente</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-        <div id="tabela-rest-body">
-          <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--accent);"></i><span>Carregando restaurantes...</span></div>
-        </div>
-      </div>
-    </div>
+    <!-- MAIN -->
+    <div class="main-content">
 
-    <!-- ══ ABA USUÁRIOS ══ -->
-    <div class="secao" id="sec-usuarios">
-      <div class="sec-header">
-        <div>
-          <div class="sec-titulo">Usuários</div>
-          <div class="sec-sub">Todos os usuários com acesso ao sistema admin</div>
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div class="topbar-path">
+          <i class="fas fa-gem" style="color:var(--gold);"></i>
+          <span style="color:var(--muted);">/</span>
+          <strong id="topbar-titulo">Restaurantes</strong>
         </div>
-        <button class="btn-primary" onclick="saAbrirModalUsuario(null)">
-          <i class="fas fa-user-plus"></i> Novo Usuário
-        </button>
+        <div class="topbar-right">
+          <span class="topbar-time" id="topbar-time"></span>
+        </div>
       </div>
 
-      <div class="tabela-wrap">
-        <div class="tabela-filtros">
-          <input class="filtro-input" id="filtro-usuario" placeholder="🔍 Buscar por nome ou e-mail..." oninput="saFiltrarUsuarios()">
-          <select class="filtro-select" id="filtro-role" onchange="saFiltrarUsuarios()">
-            <option value="">Todos os papéis</option>
-            <option value="superadmin">Superadmin</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <div id="tabela-usuarios-body">
-          <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--accent);"></i><span>Carregando usuários...</span></div>
-        </div>
-      </div>
-    </div>
+      <div class="page">
 
-    <!-- ══ ABA PEDIDOS ══ -->
-    <div class="secao" id="sec-pedidos">
-      <div class="sec-header">
-        <div>
-          <div class="sec-titulo">Pedidos</div>
-          <div class="sec-sub">Visão geral de todos os pedidos em tempo real</div>
+        <!-- MÉTRICAS -->
+        <div class="metricas">
+          <div class="metrica-card verde">
+            <div class="metrica-icon-wrap"><i class="fas fa-store"></i></div>
+            <div class="metrica-label">Restaurantes ativos</div>
+            <div class="metrica-valor" id="m-ativos">—</div>
+            <div class="metrica-sub" id="m-total-sub">de — total</div>
+          </div>
+          <div class="metrica-card azul">
+            <div class="metrica-icon-wrap"><i class="fas fa-users"></i></div>
+            <div class="metrica-label">Usuários cadastrados</div>
+            <div class="metrica-valor" id="m-usuarios">—</div>
+            <div class="metrica-sub">admins + superadmins</div>
+          </div>
+          <div class="metrica-card amarelo">
+            <div class="metrica-icon-wrap"><i class="fas fa-clock"></i></div>
+            <div class="metrica-label">Pagamentos pendentes</div>
+            <div class="metrica-valor" id="m-pendentes">—</div>
+            <div class="metrica-sub">aguardando confirmação</div>
+          </div>
+          <div class="metrica-card roxo">
+            <div class="metrica-icon-wrap"><i class="fas fa-receipt"></i></div>
+            <div class="metrica-label">Pedidos hoje</div>
+            <div class="metrica-valor" id="m-pedidos">—</div>
+            <div class="metrica-sub">em todos os restaurantes</div>
+          </div>
+          <div class="metrica-card ouro">
+            <div class="metrica-icon-wrap"><i class="fas fa-coins"></i></div>
+            <div class="metrica-label">Receita total</div>
+            <div class="metrica-valor" id="m-receita" style="font-size:22px;padding-top:4px;">—</div>
+            <div class="metrica-sub">todos os pedidos</div>
+          </div>
         </div>
-        <button class="btn-secondary" onclick="saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value)">
-          <i class="fas fa-rotate-right"></i> Atualizar
-        </button>
-      </div>
-      <div class="tabela-wrap">
-        <div class="tabela-filtros">
-          <select class="filtro-select" id="filtro-rest-pedidos" onchange="saCarregarPedidos(this.value)">
-            <option value="">Todos os restaurantes</option>
-          </select>
-          <select class="filtro-select" id="filtro-status-pedido" onchange="saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value)">
-            <option value="">Todos os status</option>
-            <option value="analise">Em análise</option>
-            <option value="preparo">Em preparo</option>
-            <option value="pronto">Pronto</option>
-            <option value="entrega">Em entrega</option>
-            <option value="finalizado">Finalizado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-        <div id="tabela-pedidos-body">
-          <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--accent);"></i><span>Carregando pedidos...</span></div>
-        </div>
-      </div>
-    </div>
 
-    <!-- ══ ABA PAGAMENTOS ══ -->
-    <div class="secao" id="sec-pagamentos">
-      <div class="sec-header">
-        <div>
-          <div class="sec-titulo">Pagamentos</div>
-          <div class="sec-sub">Controle de mensalidades e planos</div>
+        <!-- ══ ABA RESTAURANTES ══ -->
+        <div class="secao active" id="sec-restaurantes">
+          <div class="sec-header">
+            <div>
+              <div class="sec-titulo">Restaurantes</div>
+              <div class="sec-sub">Gerencie todos os restaurantes cadastrados no sistema</div>
+            </div>
+            <button class="btn-primary" onclick="saAbrirModalRest(null)">
+              <i class="fas fa-plus"></i> Novo Restaurante
+            </button>
+          </div>
+          <div class="tabela-wrap">
+            <div class="tabela-filtros">
+              <input class="filtro-input" id="filtro-rest" placeholder="🔍 Buscar por nome ou slug..." oninput="saFiltrarRest()">
+              <select class="filtro-select" id="filtro-status" onchange="saFiltrarRest()">
+                <option value="">Todos os status</option>
+                <option value="ativo">Ativos</option>
+                <option value="inativo">Inativos</option>
+              </select>
+              <select class="filtro-select" id="filtro-pgto" onchange="saFiltrarRest()">
+                <option value="">Todos os planos</option>
+                <option value="pago">Pago</option>
+                <option value="trial">Trial</option>
+                <option value="pendente">Pendente</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
+            <div id="tabela-rest-body">
+              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando restaurantes...</span></div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="tabela-wrap">
-        <div id="tabela-pgto-body">
-          <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--accent);"></i><span>Carregando...</span></div>
-        </div>
-      </div>
-    </div>
 
-  </div><!-- /main -->
+        <!-- ══ ABA USUÁRIOS ══ -->
+        <div class="secao" id="sec-usuarios">
+          <div class="sec-header">
+            <div>
+              <div class="sec-titulo">Usuários</div>
+              <div class="sec-sub">Todos os usuários com acesso ao sistema admin</div>
+            </div>
+            <button class="btn-primary" onclick="saAbrirModalUsuario(null)">
+              <i class="fas fa-user-plus"></i> Novo Usuário
+            </button>
+          </div>
+          <div class="tabela-wrap">
+            <div class="tabela-filtros">
+              <input class="filtro-input" id="filtro-usuario" placeholder="🔍 Buscar por nome ou e-mail..." oninput="saFiltrarUsuarios()">
+              <select class="filtro-select" id="filtro-role" onchange="saFiltrarUsuarios()">
+                <option value="">Todos os papéis</option>
+                <option value="superadmin">Superadmin</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div id="tabela-usuarios-body">
+              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando usuários...</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ ABA PEDIDOS ══ -->
+        <div class="secao" id="sec-pedidos">
+          <div class="sec-header">
+            <div>
+              <div class="sec-titulo">Pedidos</div>
+              <div class="sec-sub">Visão geral de todos os pedidos em tempo real</div>
+            </div>
+            <button class="btn-secondary" onclick="saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value)">
+              <i class="fas fa-rotate-right"></i> Atualizar
+            </button>
+          </div>
+          <div class="tabela-wrap">
+            <div class="tabela-filtros">
+              <select class="filtro-select" id="filtro-rest-pedidos" onchange="saCarregarPedidos(this.value)">
+                <option value="">Todos os restaurantes</option>
+              </select>
+              <select class="filtro-select" id="filtro-status-pedido" onchange="saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value)">
+                <option value="">Todos os status</option>
+                <option value="analise">Em análise</option>
+                <option value="preparo">Em preparo</option>
+                <option value="pronto">Pronto</option>
+                <option value="entrega">Em entrega</option>
+                <option value="finalizado">Finalizado</option>
+                <option value="cancelado">Cancelado</option>
+              </select>
+            </div>
+            <div id="tabela-pedidos-body">
+              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando pedidos...</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ ABA PAGAMENTOS ══ -->
+        <div class="secao" id="sec-pagamentos">
+          <div class="sec-header">
+            <div>
+              <div class="sec-titulo">Pagamentos</div>
+              <div class="sec-sub">Controle de mensalidades e planos</div>
+            </div>
+          </div>
+          <div class="tabela-wrap">
+            <div id="tabela-pgto-body">
+              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando...</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /page -->
+    </div><!-- /main-content -->
+  </div><!-- /app-layout -->
 </div><!-- /app -->
 
 <!-- ══ MODAL: NOVO/EDITAR RESTAURANTE ══ -->
 <div class="modal-overlay" id="modal-rest">
   <div class="modal">
     <div class="modal-titulo" id="modal-rest-titulo">Novo Restaurante</div>
-    <div class="modal-sub" id="modal-rest-sub">Preencha os dados do restaurante e do responsável</div>
+    <div class="modal-sub" id="modal-rest-sub">Crie o restaurante e o usuário de acesso ao admin</div>
 
-    <!-- Steps (só visíveis na criação) -->
     <div class="steps" id="steps-criar">
       <div class="step active" id="step-1"><i class="fas fa-store"></i> Restaurante</div>
-      <div class="step" id="step-2"><i class="fas fa-user"></i> Acesso</div>
-      <div class="step" id="step-3"><i class="fas fa-credit-card"></i> Plano</div>
+      <div class="step"        id="step-2"><i class="fas fa-user"></i> Usuário</div>
+      <div class="step"        id="step-3"><i class="fas fa-link"></i> Vínculo</div>
     </div>
 
     <div class="campo"><label>Nome do Restaurante *</label>
@@ -882,6 +1163,18 @@ let _editUserId   = null;
 let m_slug_manual = false;
 
 // ══════════════════════════════════════════════════════════════
+// RELÓGIO TOPBAR
+// ══════════════════════════════════════════════════════════════
+function _tickTime() {
+    const el = document.getElementById('topbar-time');
+    if (!el) return;
+    const now = new Date();
+    el.textContent = now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+}
+setInterval(_tickTime, 1000);
+_tickTime();
+
+// ══════════════════════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════════════════════
 async function saFetch(method, path, body, token) {
@@ -920,7 +1213,7 @@ async function saAuthFetch(method, path, body, useServiceKey) {
 function toast(msg, ok = true) {
     const el = document.getElementById('toast');
     el.innerHTML = (ok ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>') + ' ' + msg;
-    el.style.background = ok ? '#22c55e' : '#ef4444';
+    el.style.background = ok ? 'rgba(29,185,84,.95)' : 'rgba(230,57,70,.95)';
     el.style.color = 'white';
     el.classList.add('show');
     setTimeout(() => el.classList.remove('show'), 3500);
@@ -950,15 +1243,16 @@ async function saLogin() {
     try {
         const sess = await saAuthFetch('POST', 'token?grant_type=password', { email, password: senha });
         SA_TOKEN = sess.access_token;
-        // Buscar usuário pelo ID do token (auth.uid())
         const userId = sess.user?.id;
         const usuario = await saFetch('GET', `usuarios?select=role,nome&id=eq.${userId}&limit=1`, null, SA_TOKEN);
         if (!usuario || !usuario[0] || usuario[0].role !== SA_ROLE) {
             SA_TOKEN = null;
             throw new Error('Acesso negado. Você não tem permissão de superadmin.');
         }
-        document.getElementById('sa-nome-usuario').textContent = usuario[0].nome || email;
-        localStorage.setItem('sa_session', JSON.stringify({ token: SA_TOKEN, nome: usuario[0].nome || email, salvoEm: Date.now() }));
+        const nome = usuario[0].nome || email;
+        document.getElementById('sa-nome-usuario').textContent = nome;
+        document.getElementById('sa-avatar-letra').textContent = nome[0].toUpperCase();
+        localStorage.setItem('sa_session', JSON.stringify({ token: SA_TOKEN, nome, salvoEm: Date.now() }));
         mostrarApp();
     } catch(e) {
         let msg = e.message;
@@ -967,7 +1261,7 @@ async function saLogin() {
         erro.style.display = 'block';
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Entrar';
+        btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Entrar no Painel';
     }
 }
 
@@ -978,7 +1272,9 @@ async function saVerificarSessao() {
         const sess = JSON.parse(raw);
         if (Date.now() - sess.salvoEm > 7 * 86400000) { localStorage.removeItem('sa_session'); return false; }
         SA_TOKEN = sess.token;
-        document.getElementById('sa-nome-usuario').textContent = sess.nome || 'Admin';
+        const nome = sess.nome || 'Admin';
+        document.getElementById('sa-nome-usuario').textContent = nome;
+        document.getElementById('sa-avatar-letra').textContent = nome[0].toUpperCase();
         return true;
     } catch { return false; }
 }
@@ -1100,10 +1396,10 @@ function saRenderRestaurantes(lista) {
                 <div class="rest-nome">${r.nome}</div>
                 <div class="rest-slug"><i class="fas fa-link" style="font-size:9px;"></i>${r.slug||'—'}</div>
             </td>
-            <td><span style="font-size:12px;color:var(--muted);text-transform:capitalize;">${r.pgto?.plano||'trial'}</span></td>
+            <td><span style="font-size:12px;color:var(--muted2);text-transform:capitalize;">${r.pgto?.plano||'trial'}</span></td>
             <td>${badgePgto(r.pgto?.status_pgto||'pendente')}</td>
-            <td><span style="font-family:'Syne',sans-serif;font-weight:700;">${r.totalPedidos}</span></td>
-            <td><span style="font-family:'Syne',sans-serif;font-weight:600;font-size:13px;">${money(r.receitaTotal)}</span></td>
+            <td><span style="font-family:'Playfair Display',serif;font-weight:700;">${r.totalPedidos}</span></td>
+            <td><span style="font-family:'Playfair Display',serif;font-weight:600;font-size:13px;">${money(r.receitaTotal)}</span></td>
             <td>
                 <button class="toggle ${r.ativo?'on':''}" onclick="saToggleAtivo('${r.id}',this)"
                     title="${r.ativo?'Clique para desativar':'Clique para ativar'}"></button>
@@ -1155,7 +1451,6 @@ function saAbrirModalRest(id) {
         document.getElementById('m-plano').value = r.pgto?.plano || 'trial';
         document.getElementById('m-valor').value = r.pgto?.valor || '';
         document.getElementById('m-obs').value   = r.obs || '';
-        // Esconder campos de criação de usuário na edição
         document.getElementById('wrap-email').style.display  = 'none';
         document.getElementById('wrap-senhas').style.display = 'none';
         steps.style.display = 'none';
@@ -1212,7 +1507,6 @@ async function saSalvarRest() {
 
     try {
         if (_editRestId) {
-            // ── EDITAR ──
             btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Salvando...';
             await saFetch('PATCH', `restaurantes?id=eq.${_editRestId}`, { nome, slug, obs });
             await saFetch('PATCH', `pagamentos?restaurante_id=eq.${_editRestId}`, { plano, valor });
@@ -1224,7 +1518,6 @@ async function saSalvarRest() {
             toast('✓ Restaurante atualizado!');
             setTimeout(saFecharModalRest, 1200);
         } else {
-            // ── CRIAR ──
             const email  = document.getElementById('m-email').value.trim();
             const senha  = document.getElementById('m-senha').value;
             const senha2 = document.getElementById('m-senha2').value;
@@ -1232,17 +1525,14 @@ async function saSalvarRest() {
             if (!senha || senha.length < 6) { erro.textContent='A senha precisa ter pelo menos 6 caracteres.'; erro.style.display='block'; return; }
             if (senha !== senha2) { erro.textContent='As senhas não coincidem.'; erro.style.display='block'; return; }
 
-            // STEP 1 — Criar restaurante
             btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando restaurante...';
             const restRows = await saFetch('POST', 'restaurantes', { nome, slug, ativo: true, obs });
             const restId = restRows[0].id;
             _stepDone(1);
 
-            // STEP 2 — Criar usuário no Auth
             btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando usuário...';
             let userId;
             if (SA_SERVICE_KEY) {
-                // Admin API — sem confirmação de e-mail
                 const adminUser = await saAuthFetch('POST', 'admin/users', {
                     email, password: senha,
                     email_confirm: true,
@@ -1250,7 +1540,6 @@ async function saSalvarRest() {
                 }, true);
                 userId = adminUser.id;
             } else {
-                // Fallback: signup normal (requer confirmação de e-mail)
                 const signupR = await fetch(SA_URL + '/auth/v1/signup', {
                     method: 'POST',
                     headers: { 'apikey': SA_KEY, 'Content-Type': 'application/json' },
@@ -1263,7 +1552,6 @@ async function saSalvarRest() {
             }
             _stepDone(2);
 
-            // STEP 3 — Vincular + pagamento
             btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Finalizando...';
             await saFetch('POST', 'usuarios', { id: userId, restaurante_id: restId, nome, role: 'admin' });
             const venc = new Date(); venc.setDate(venc.getDate() + 7);
@@ -1310,7 +1598,6 @@ function saAbrirCardapio(slug) {
     window.open(window.location.origin + '?r=' + slug, '_blank');
 }
 
-// ── DETALHE RESTAURANTE ────────────────────────────────────────
 function saVerDetalhe(id) {
     const r = _restaurantes.find(x => x.id === id);
     if (!r) return;
@@ -1330,11 +1617,11 @@ function saVerDetalhe(id) {
             </div>
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;">
                 <div class="section-label">Total de Pedidos</div>
-                <span style="font-family:'Syne',sans-serif;font-size:24px;font-weight:800;">${r.totalPedidos}</span>
+                <span style="font-family:'Playfair Display',serif;font-size:24px;font-weight:800;">${r.totalPedidos}</span>
             </div>
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;">
                 <div class="section-label">Receita Total</div>
-                <span style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;">${money(r.receitaTotal)}</span>
+                <span style="font-family:'Playfair Display',serif;font-size:20px;font-weight:800;">${money(r.receitaTotal)}</span>
             </div>
         </div>
         <div class="section-label">Usuários vinculados</div>
@@ -1350,7 +1637,7 @@ function saVerDetalhe(id) {
                 </div>`).join('')
             : '<div style="color:var(--muted);font-size:13px;padding:12px 0;">Nenhum usuário vinculado a este restaurante.</div>'
         }
-        ${r.obs ? `<div class="divider"></div><div class="section-label">Observações</div><div style="font-size:13px;color:var(--muted);">${r.obs}</div>` : ''}
+        ${r.obs ? `<div class="divider"></div><div class="section-label">Observações</div><div style="font-size:13px;color:var(--muted2);">${r.obs}</div>` : ''}
     `;
     document.getElementById('modal-detalhe').classList.add('open');
 }
@@ -1367,7 +1654,6 @@ async function saCarregarUsuarios() {
         const usuarios = await saFetch('GET', 'usuarios?select=*&order=nome.asc');
         _usuarios = usuarios || [];
         saRenderUsuarios(_usuarios);
-        // Popular select de restaurante no modal de usuário
         const sel = document.getElementById('mu-restaurante');
         sel.innerHTML = '<option value="">— Nenhum (superadmin) —</option>' +
             _restaurantes.map(r => `<option value="${r.id}">${r.nome}</option>`).join('');
@@ -1405,11 +1691,11 @@ function saRenderUsuarios(lista) {
         ${lista.map(u => `<tr>
             <td>
                 <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="usuario-avatar" style="width:32px;height:32px;font-size:12px;">${(u.nome||'?')[0].toUpperCase()}</div>
+                    <div class="usuario-avatar" style="width:32px;height:32px;font-size:12px;border-radius:50%;">${(u.nome||'?')[0].toUpperCase()}</div>
                     <span style="font-weight:600;">${u.nome||'—'}</span>
                 </div>
             </td>
-            <td style="color:var(--muted);font-size:13px;">${u.email||'—'}</td>
+            <td style="color:var(--muted2);font-size:13px;">${u.email||'—'}</td>
             <td><span class="badge ${u.role}">${u.role}</span></td>
             <td>
                 ${u.restaurante_id
@@ -1568,7 +1854,7 @@ async function saDeletarUsuario(id, nome) {
 // ══════════════════════════════════════════════════════════════
 async function saCarregarPedidos(restId) {
     const el = document.getElementById('tabela-pedidos-body');
-    el.innerHTML = '<div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--accent);"></i><span>Carregando...</span></div>';
+    el.innerHTML = '<div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando...</span></div>';
     try {
         let path = 'pedidos?select=*&order=criado_em.desc&limit=200';
         if (restId) path += `&restaurante_id=eq.${restId}`;
@@ -1581,7 +1867,7 @@ async function saCarregarPedidos(restId) {
             el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-receipt"></i></div>Nenhum pedido encontrado.</div>';
             return;
         }
-        const statusColor = { analise:'#f59e0b',preparo:'#3b82f6',pronto:'#8b5cf6',entrega:'#e30613',finalizado:'#22c55e',cancelado:'#6b7280' };
+        const statusColor = { analise:'#f0b429',preparo:'#4895ef',pronto:'#9b5de5',entrega:'#e30613',finalizado:'#1db954',cancelado:'#6b7280' };
         el.innerHTML = `<table>
             <thead><tr>
                 <th>Pedido</th><th>Restaurante</th><th>Cliente</th>
@@ -1589,14 +1875,14 @@ async function saCarregarPedidos(restId) {
             </tr></thead>
             <tbody>
             ${pedidos.map(p => `<tr>
-                <td><strong style="font-family:'Syne',sans-serif;">${p.numero||p.id?.slice(0,8)||'—'}</strong></td>
+                <td><strong style="font-family:'Playfair Display',serif;">${p.numero||p.id?.slice(0,8)||'—'}</strong></td>
                 <td><span style="font-size:12px;">${nomeMap[p.restaurante_id]||'—'}</span></td>
                 <td>
                     <div style="font-weight:600;font-size:13px;">${p.cliente||'—'}</div>
                     <div style="font-size:11px;color:var(--muted);">${p.tipo||''}</div>
                 </td>
-                <td><strong style="font-family:'Syne',sans-serif;">${money(p.total)}</strong></td>
-                <td><span style="background:${statusColor[p.status]||'#6b7280'}22;color:${statusColor[p.status]||'#6b7280'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">${p.status||'—'}</span></td>
+                <td><strong style="font-family:'Playfair Display',serif;">${money(p.total)}</strong></td>
+                <td><span style="background:${statusColor[p.status]||'#6b7280'}18;color:${statusColor[p.status]||'#6b7280'};padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px;">${p.status||'—'}</span></td>
                 <td style="font-size:12px;color:var(--muted);">${(p.criado_em||p.created_at) ? new Date(p.criado_em||p.created_at).toLocaleString('pt-BR') : '—'}</td>
             </tr>`).join('')}
             </tbody>
@@ -1631,13 +1917,13 @@ async function saCarregarPagamentos() {
                 const vencido = venc && venc < hoje;
                 return `<tr>
                     <td><strong style="font-size:13px;">${nomeMap[p.restaurante_id]||'—'}</strong></td>
-                    <td><span style="font-size:12px;text-transform:capitalize;color:var(--muted);">${p.plano||'—'}</span></td>
+                    <td><span style="font-size:12px;text-transform:capitalize;color:var(--muted2);">${p.plano||'—'}</span></td>
                     <td><span class="badge ${p.status_pgto==='pago'?'pago':p.status_pgto==='trial'?'trial':p.status_pgto==='cancelado'?'cancelado':'pendente'}">${p.status_pgto||'pendente'}</span></td>
                     <td style="font-size:12px;${vencido?'color:var(--red);font-weight:700;':'color:var(--muted);'}">
                         ${venc ? venc.toLocaleDateString('pt-BR') : '—'}
                         ${vencido ? ' <span style="font-size:10px;">(vencido)</span>' : ''}
                     </td>
-                    <td><strong style="font-family:'Syne',sans-serif;">${money(p.valor)}</strong></td>
+                    <td><strong style="font-family:'Playfair Display',serif;">${money(p.valor)}</strong></td>
                     <td style="font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;">${p.obs||'—'}</td>
                     <td>
                         <button class="btn-acao success" onclick="saEditarPgto('${p.restaurante_id}')" title="Editar"><i class="fas fa-pen"></i></button>
@@ -1688,13 +1974,21 @@ async function saSalvarPgto() {
 }
 
 // ══════════════════════════════════════════════════════════════
-// ABAS
+// ABAS (sidebar nav)
 // ══════════════════════════════════════════════════════════════
+const tabTitles = {
+    restaurantes: 'Restaurantes',
+    usuarios: 'Usuários',
+    pedidos: 'Pedidos',
+    pagamentos: 'Pagamentos'
+};
+
 function saAba(id, btn) {
-    document.querySelectorAll('.aba').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.secao').forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('sec-' + id).classList.add('active');
+    document.getElementById('topbar-titulo').textContent = tabTitles[id] || id;
     if (id === 'pedidos')    saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value);
     if (id === 'pagamentos') saCarregarPagamentos();
     if (id === 'usuarios')   saCarregarUsuarios();
