@@ -7095,7 +7095,8 @@ async function supaCarregarConfigs() {
         if (cupRows && cupRows.length)
             localStorage.setItem('f_cupons', JSON.stringify(
                 cupRows.map(r => ({ codigo: r.codigo, tipo: r.tipo, valor: r.valor,
-                    minimo: r.minimo, limite: r.usos_max, usos: r.usos_atual, ativo: r.ativo, validade: r.validade || '' }))
+                    minimo: r.minimo, limite: r.usos_max, usos: r.usos_atual, ativo: r.ativo, validade: r.validade || '',
+                    produtoId: r.produto_id || '', produtoNome: r.produto_nome || '' }))
             ));
         if (txRows && txRows[0] && txRows[0].dados)
             localStorage.setItem('f_taxas_config', JSON.stringify(txRows[0].dados));
@@ -8454,7 +8455,9 @@ function cupSaveAll(arr) {
         .then(()=>Promise.all(arr.map(c=>supaInsert('cupons',{
             codigo:c.codigo,tipo:c.tipo||'percentual',valor:c.valor||0,
             minimo:c.minimo||0,usos_max:c.limite||null,usos_atual:c.usos||0,
-            ativo:c.ativo!==false,validade:c.validade||null
+            ativo:c.ativo!==false,validade:c.validade||null,
+            produto_id:   c.tipo==='produto' ? (c.produtoId   || null) : null,
+            produto_nome: c.tipo==='produto' ? (c.produtoNome || null) : null
         }))))
         .catch(e=>console.warn('Supa cupons:',e.message));
 }
