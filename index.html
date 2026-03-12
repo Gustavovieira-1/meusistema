@@ -510,9 +510,32 @@ async function cupomAplicar() {
     } else if (cup.tipo === 'frete') {
         desconto = 0;
         label = cup.codigo + ' (frete grátis)';
+    } else if (cup.tipo === 'produto') {
+        desconto = 0;
+        var nomeBreinde = cup.produto_nome || cup.produtoNome || 'produto brinde';
+        label = cup.codigo + ' (🎁 ' + nomeBreinde + ' grátis)';
     }
-    cupomAtual = { codigo: cup.codigo, tipo: cup.tipo, valor: cup.valor, minimo: cup.minimo, desconto: desconto, label: label };
+    cupomAtual = {
+        codigo: cup.codigo, tipo: cup.tipo, valor: cup.valor, minimo: cup.minimo,
+        desconto: desconto, label: label,
+        produtoNome: cup.produto_nome || cup.produtoNome || '',
+        produtoId:   cup.produto_id   || cup.produtoId   || ''
+    };
     document.getElementById('cupom-tag-txt').textContent = '✓ ' + label;
+    // Se for brinde, mostra banner especial abaixo do tag
+    var brindeDiv = document.getElementById('cupom-brinde-info');
+    if (!brindeDiv) {
+        brindeDiv = document.createElement('div');
+        brindeDiv.id = 'cupom-brinde-info';
+        brindeDiv.style.cssText = 'background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 13px;margin-top:8px;font-size:13px;color:#15803d;font-weight:600;display:none;';
+        document.getElementById('cupom-tag').parentNode.appendChild(brindeDiv);
+    }
+    if (cup.tipo === 'produto' && cupomAtual.produtoNome) {
+        brindeDiv.textContent = '🎁 Você ganhou: ' + cupomAtual.produtoNome + ' grátis!';
+        brindeDiv.style.display = '';
+    } else {
+        brindeDiv.style.display = 'none';
+    }
     document.getElementById('cupom-tag').style.display = '';
     document.getElementById('cupom-input').style.display = 'none';
     document.querySelector('.cupom-btn').style.display = 'none';
@@ -525,6 +548,8 @@ function cupomRemover() {
     document.getElementById('cupom-input').style.display = '';
     document.querySelector('.cupom-btn').style.display = '';
     document.getElementById('cupom-tag').style.display = 'none';
+    var brindeDiv = document.getElementById('cupom-brinde-info');
+    if (brindeDiv) brindeDiv.style.display = 'none';
     atualizaResumo();
 }
 
@@ -855,7 +880,7 @@ async function finalizarPedido(){
     var desc=fidelGetDesconto();
     var taxaFinal=tipoAtual==='Entrega'?(cupomAtual&&cupomAtual.tipo==='frete'?0:taxa):0;
     var descCupom=cupomGetDesconto(sub,taxa);
-    var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value:'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:cfg.cidade||'',subtotal:sub,taxaEntrega:taxaFinal,descontoPontos:desc,descontoCupom:descCupom,cupom:cupomAtual?cupomAtual.codigo:'',resgPontos:fidelResgSel,total:Math.max(0,sub+taxaFinal-desc-descCupom),items:carrinho.slice()};
+    var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value:'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:cfg.cidade||'',subtotal:sub,taxaEntrega:taxaFinal,descontoPontos:desc,descontoCupom:descCupom,cupom:cupomAtual?cupomAtual.codigo:'',produtoBrindeNome:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoNome:''),produtoBrindeId:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoId:''),resgPontos:fidelResgSel,total:Math.max(0,sub+taxaFinal-desc-descCupom),items:carrinho.slice()};
     var btn=document.getElementById('btn-fin');btn.disabled=true;btn.textContent='Enviando...';
     // Gerar número do pedido localmente
     const _numPed = 'B-' + Math.floor(100000 + Math.random() * 900000);
@@ -896,7 +921,9 @@ async function finalizarPedido(){
                 total: parseFloat(pedido.total), 
                 status: 'analise',
                 impresso: false,
-                resg_pontos: pedido.resgPontos ? JSON.stringify(pedido.resgPontos) : null
+                resg_pontos: pedido.resgPontos ? JSON.stringify(pedido.resgPontos) : null,
+                produto_brinde_nome: pedido.produtoBrindeNome || null,
+                produto_brinde_id:   pedido.produtoBrindeId   || null
             };
             
             // Garantir que desconto_pontos e desconto_cupom nunca sejam null
