@@ -3093,6 +3093,10 @@ function inicializarSistema() {
     setInterval(authRenovarToken, 50 * 60 * 1000);
     // Renova imediatamente ao carregar (caso já esteja próximo de expirar)
     setTimeout(authRenovarToken, 3000);
+    // 📚 Sincronizar histórico do Supabase (fonte permanente) após carregamento inicial
+    setTimeout(histSincronizarDoSupabase, 5000);
+    // Resincroniza a cada hora para garantir consistência
+    setInterval(histSincronizarDoSupabase, 3600000);
 }
 
 // Inicialização: verificar sessão salva primeiro
@@ -6796,11 +6800,8 @@ async function supaAtualizarStatus(pedido, novoStatus) {
 }
 
 async function supaHistRegistrar(pedido) {
-    try {
-        await supaInsert('historico_pedidos', {
-            pedido_id: pedido.id, dados: pedido, finalizado_em: new Date().toISOString()
-        });
-    } catch(e) { console.warn('[Supabase] Histórico:', e.message); }
+    // Usa upsert para evitar erros de chave duplicada
+    return supaHistRegistrarUpsert(pedido);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -7261,7 +7262,8 @@ document.addEventListener('click', function(e) {
 
 // ── CÁLCULOS ────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════
-//  HISTÓRICO PERMANENTE  ·  chave localStorage: f_hist_pedidos
+//  HISTÓRICO PERMANENTE  ·  fonte principal: Supabase (historico_pedidos)
+//                           cache local: localStorage f_hist_pedidos
 //
 //  Fluxo:
 //   1. Pedido vai para "finalizado" no kanban → histRegistrar() grava aqui
@@ -7270,9 +7272,13 @@ document.addEventListener('click', function(e) {
 //   4. histRender()        lê daqui (com filtro próprio) → aba Histórico de Pedidos
 // ═══════════════════════════════════════════════════════════════════
 var HIST_KEY = 'f_hist_pedidos';
+// Cache em memória para evitar múltiplas leituras do Supabase na mesma sessão
+var _histCache = null;
+var _histCacheTs = 0;
+var HIST_CACHE_TTL = 30000; // 30 segundos
 
 function histGetTodos() {
-    // Retorna a união de f_hist_pedidos + qualquer finalizado em f_orders que ainda não migrou
+    // Retorna a união de localStorage + finalizados do kanban que ainda não migraram
     var hist = [];
     try { hist = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
     var idsHist = new Set(hist.map(function(p){ return p.id; }));
@@ -7286,11 +7292,23 @@ function histGetTodos() {
     });
     return hist.concat(fromOrders);
 }
+
 function histSalvar(lista) {
-    localStorage.setItem(HIST_KEY, JSON.stringify(lista));
+    // Tenta salvar no localStorage; se exceder limite, remove os mais antigos até caber
+    var tentativa = lista;
+    while (tentativa.length > 0) {
+        try {
+            localStorage.setItem(HIST_KEY, JSON.stringify(tentativa));
+            break;
+        } catch(e) {
+            // localStorage cheio: remove os 20% mais antigos e tenta novamente
+            tentativa = tentativa.slice(Math.ceil(tentativa.length * 0.2));
+            console.warn('[Histórico] localStorage cheio, truncando para ' + tentativa.length + ' registros. Use Supabase como fonte principal.');
+        }
+    }
 }
 
-/** Grava/atualiza um pedido no histórico permanente */
+/** Grava/atualiza um pedido no histórico permanente (localStorage + Supabase) */
 function histRegistrar(pedido) {
     var lista = histGetTodos();
     var idx   = lista.findIndex(function(p){ return p.id === pedido.id; });
@@ -7299,9 +7317,57 @@ function histRegistrar(pedido) {
     if (idx >= 0) lista[idx] = copia;
     else          lista.push(copia);
     histSalvar(lista);
+    // Espelha no Supabase de forma assíncrona (fonte permanente)
+    supaHistRegistrarUpsert(copia).catch(function(e){ console.warn('[Histórico Supabase]', e.message); });
 }
 
-// histGetTodos() já faz merge automático com f_orders — migração explícita desnecessária
+/** Carrega histórico do Supabase e mescla com localStorage (sincronização) */
+async function histSincronizarDoSupabase() {
+    if (!REST_ID) return;
+    try {
+        var rows = await supaReq('GET', 'historico_pedidos?restaurante_id=eq.' + REST_ID + '&select=dados,finalizado_em&order=finalizado_em.desc&limit=5000', null);
+        if (!rows || !rows.length) return;
+        var doSupa = rows.map(function(r) {
+            var d = (typeof r.dados === 'string') ? JSON.parse(r.dados) : (r.dados || {});
+            d.finalizadoEm = d.finalizadoEm || r.finalizado_em;
+            return d;
+        }).filter(function(d){ return d && d.id; });
+        if (!doSupa.length) return;
+        // Mescla com o que está no localStorage (localStorage pode ter itens mais recentes ainda não sincronizados)
+        var local = [];
+        try { local = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
+        var mapa = {};
+        doSupa.forEach(function(o){ mapa[o.id] = o; });
+        local.forEach(function(o){ if (!mapa[o.id]) mapa[o.id] = o; }); // local tem prioridade para ids únicos
+        var merged = Object.values(mapa);
+        histSalvar(merged);
+        console.log('[Histórico] Sincronizado com Supabase: ' + doSupa.length + ' registros');
+    } catch(e) {
+        console.warn('[Histórico] Erro ao sincronizar do Supabase:', e.message);
+    }
+}
+
+/** Upsert no Supabase (insert ou update se pedido_id já existe) */
+async function supaHistRegistrarUpsert(pedido) {
+    if (!REST_ID) return;
+    try {
+        await fetch(SUPA_URL + '/rest/v1/historico_pedidos?on_conflict=pedido_id,restaurante_id', {
+            method: 'POST',
+            headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal,resolution=merge-duplicates'
+            },
+            body: JSON.stringify({
+                restaurante_id: REST_ID,
+                pedido_id: pedido.id,
+                dados: pedido,
+                finalizado_em: pedido.finalizadoEm || new Date().toISOString()
+            })
+        });
+    } catch(e) { console.warn('[Supabase Hist Upsert]', e.message); }
+}
 
 // ── Estado do filtro de data do histórico ──────────────────────────
 var histFiltroAtivo = false;   // false = sem filtro (mostra todos)
@@ -8924,9 +8990,19 @@ function cfgAplicarLimpeza() {
     
     // Aplicar a remoção conforme o modo
     if (modo === 'horario') {
-        // Remove TODOS os pedidos finalizados se passou da hora
-        orders = orders.filter(function(o) { return o.status !== 'finalizado'; });
-        console.log('[Limpeza] Removidos ' + pedidosFinalizados.length + ' pedidos finalizados (modo horário)');
+        // Remove pedidos finalizados ANTES do horário de limpeza de hoje
+        // (pedidos finalizados APÓS o horário de limpeza ficam até o próximo ciclo)
+        var horaConfiguracao2 = (cfg.limparHorario || '00:00').split(':');
+        var horaLimpezaMs = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(),
+            parseInt(horaConfiguracao2[0]), parseInt(horaConfiguracao2[1]), 0, 0).getTime();
+        var antes = orders.length;
+        orders = orders.filter(function(o) {
+            if (o.status !== 'finalizado') return true;
+            var finTs = o.finalizadoEm ? new Date(o.finalizadoEm).getTime() : 0;
+            return finTs >= horaLimpezaMs; // mantém se finalizado após o horário de limpeza
+        });
+        var removidos2 = antes - orders.length;
+        console.log('[Limpeza] Removidos ' + removidos2 + ' pedidos finalizados (modo horário)');
     } else if (modo === 'minutos') {
         var minutosParar = cfg.limparMinutos || 30;
         var agora_ms = agora.getTime();
@@ -8934,8 +9010,11 @@ function cfgAplicarLimpeza() {
         // Remove pedidos finalizados que ultrapassaram o tempo
         var antes = orders.length;
         orders = orders.filter(function(o) {
-            if (o.status === 'finalizado' && o.finalizadoEm) {
-                var finalizado_ms = new Date(o.finalizadoEm).getTime();
+            if (o.status === 'finalizado') {
+                // Usa finalizadoEm, ou timestamp como fallback
+                var refTs = o.finalizadoEm || o.timestamp;
+                if (!refTs) return false; // sem referência de tempo → remove
+                var finalizado_ms = new Date(refTs).getTime();
                 var minutosPassados = (agora_ms - finalizado_ms) / 60000;
                 return minutosPassados < minutosParar;  // Mantém se ainda não atingiu o tempo
             }
