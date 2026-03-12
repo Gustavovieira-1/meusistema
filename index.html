@@ -577,14 +577,15 @@ async function init(){
         console.log('[INIT] ✅ REST_ID carregado:', REST_ID);
 
         // Buscar cardápio, configs e taxas em paralelo
-        const [cats, prods, comps, cfgRows, txRows, horRows, intRows] = await Promise.all([
+        const [cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
             supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=*'),
             supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
-            supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1')
+            supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
+            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
         ]);
 
         db.categories = (cats||[]).map(c => ({id: c.id, name: c.nome, active: true}));
@@ -615,6 +616,16 @@ async function init(){
         db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados || []) : [];
         db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados || {}) : {};
         pixelInicializar(db.integracoes);
+
+        // Salvar fidelidade_config no localStorage para uso offline/carrinho
+        if (fidRows && fidRows[0]) {
+            const fr = fidRows[0];
+            localStorage.setItem(IDX_FIDEL_KEY, JSON.stringify({
+                ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
+                descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
+                produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
+            }));
+        }
 
         // Verificar se loja está aberta
         aberta = !cfg.pausada;
@@ -1123,13 +1134,33 @@ function fidelIniciarCarrinho() {
 }
 
 // Atualiza saldo quando o cliente digita o telefone
-function fidelAtualizaSaldo() {
+async function fidelAtualizaSaldo() {
     if (!fidelCfg.ativo) return;
     const tel = (document.getElementById('ch-tel').value || '').replace(/\D/g,'');
+    // Primeiro mostra saldo do localStorage (rápido)
     fidelSaldoPts = fidelGetSaldo(tel);
     fidelResgSel  = null;
     fidelRenderCarrinho();
     atualizaResumo();
+    // Depois busca saldo real do Supabase (atualizado)
+    if (tel.length >= 10 && REST_ID) {
+        try {
+            const rows = await supaFetch('fidelidade_clientes?restaurante_id=eq.' + REST_ID + '&telefone=eq.' + tel + '&select=pontos,nome&limit=1');
+            if (rows && rows[0]) {
+                const saldoReal = parseInt(rows[0].pontos || 0);
+                // Atualiza localStorage com valor real
+                const clientes = fidelGetClientes();
+                const idx = clientes.findIndex(c => c.phone === tel);
+                if (idx >= 0) { clientes[idx].pontos = saldoReal; }
+                else { clientes.push({ phone: tel, nome: rows[0].nome || '', pontos: saldoReal, ultimo: '' }); }
+                localStorage.setItem(IDX_FIDEL_CLI_KEY, JSON.stringify(clientes));
+                fidelSaldoPts = saldoReal;
+                fidelResgSel  = null;
+                fidelRenderCarrinho();
+                atualizaResumo();
+            }
+        } catch(e) { console.warn('[Fidelidade] Erro ao buscar saldo:', e.message); }
+    }
 }
 
 function fidelRenderCarrinho() {
