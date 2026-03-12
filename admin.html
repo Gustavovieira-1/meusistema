@@ -6694,12 +6694,12 @@ async function supaCarregarPedidos() {
             });
             const idsNuvem = new Set(mapped.map(o => o.id));
             const pedidosNovos = mapped.filter(o => !orders.find(ord => ord.id === o.id) && o.status === 'analise');
-            // Preserva finalizados e cancelados que já estão em memória
-            // (o Supabase não retorna esses status na query — eles só somem via cfgAplicarLimpeza)
+            // Preserva TODOS finalizados e cancelados em memória (Supabase não os retorna na query)
+            // Só são removidos pelo cfgAplicarLimpeza
             const preservados = orders.filter(function(o) {
-                return (o.status === 'finalizado' || o.status === 'cancelado') && !idsNuvem.has(o.id);
+                return o.status === 'finalizado' || o.status === 'cancelado';
             });
-            orders = preservados.concat(mapped);
+            orders = preservados.concat(mapped.filter(o => o.status !== 'finalizado' && o.status !== 'cancelado'));
             localStorage.setItem('f_orders', JSON.stringify(orders));
             renderOrders();
             // 🔊 Tocar som se chegou novo pedido em análise
