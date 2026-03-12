@@ -3005,6 +3005,7 @@ var db = {
 };
 
 let orders = JSON.parse(localStorage.getItem('f_orders')) || [];
+var silencioso = false; // flag global — true quando updateOrderStatus é chamado por automação (evita impressão dupla)
 
 // Migração: garante que todo pedido tenha timestamp real
 (function migrarTimestamps() {
@@ -6596,7 +6597,8 @@ async function supaReq(method, path, body) {
     const r = await fetch(SUPA_URL + '/rest/v1/' + path, opts);
     if (!r.ok) { const e = await r.text(); throw new Error(e); }
     const txt = await r.text();
-    return txt ? JSON.parse(txt) : null;
+    if (!txt || txt === 'undefined' || txt === 'null') return null;
+    try { return JSON.parse(txt); } catch(e) { return null; }
 }
 async function supaGet(table, query) {
     if (!REST_ID && SUPA_TOKEN) {
@@ -6637,7 +6639,8 @@ async function supaUpsert(table, obj, onConflict) {
     });
     if (!r.ok) { const e = await r.text(); throw new Error(e); }
     const txt = await r.text();
-    return txt ? JSON.parse(txt) : null;
+    if (!txt || txt === 'undefined' || txt === 'null') return null;
+    try { return JSON.parse(txt); } catch(e) { return null; }
 }
 
 async function supaCarregarCardapio() {
