@@ -950,7 +950,9 @@ async function saLogin() {
     try {
         const sess = await saAuthFetch('POST', 'token?grant_type=password', { email, password: senha });
         SA_TOKEN = sess.access_token;
-        const usuario = await saFetch('GET', `usuarios?select=role,nome&limit=1`, null, SA_TOKEN);
+        // Buscar usuário pelo ID do token (auth.uid())
+        const userId = sess.user?.id;
+        const usuario = await saFetch('GET', `usuarios?select=role,nome&id=eq.${userId}&limit=1`, null, SA_TOKEN);
         if (!usuario || !usuario[0] || usuario[0].role !== SA_ROLE) {
             SA_TOKEN = null;
             throw new Error('Acesso negado. Você não tem permissão de superadmin.');
