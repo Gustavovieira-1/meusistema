@@ -3251,7 +3251,8 @@ function showSec(id, btn) {
             txtC.textContent = sI === sF ? sI : sI + ' \u2013 ' + sF;
         }
         if (btnC) btnC.style.display = 'flex';
-        histCarregarDoSupabase().then(function(){ renderClientes(); });
+        // Força recarregamento do Supabase (forcar=true) para garantir dados atualizados
+        histCarregarDoSupabase(true).then(function(){ renderClientes(); });
     }
     if (id === 'complementos')     renderComps();
     if (id === 'rel-resumo')       setTimeout(function(){ if(typeof relInicializar==='function') relInicializar(); }, 80);
@@ -4961,7 +4962,8 @@ function finFiltrarOrders() {
     var fim = new Date(finDataFim); fim.setHours(23,59,59,999);
     return histGetTodos().filter(function(o) {
         if (o.status === 'cancelado') return false;
-        var ts = o.finalizadoEm ? new Date(o.finalizadoEm) : null;
+        var ts = o.finalizadoEm ? new Date(o.finalizadoEm)
+               : o.timestamp    ? new Date(o.timestamp) : null;
         if (!ts || isNaN(ts)) return false;
         return ts >= ini && ts <= fim;
     });
@@ -6313,8 +6315,8 @@ function consolidarClientes(pedidos) {
             };
         }
         const c  = mapa[chave];
-        // finalizadoEm = data real de finalização (timestamp = criação, não usar para datas)
-        const ts = o.finalizadoEm || null;
+        // finalizadoEm = data real de finalização; timestamp = criação (fallback)
+        const ts = o.finalizadoEm || o.timestamp || null;
         if (o.address && o.address !== 'Retirada' && o.address !== 'Balc\u00e3o' && o.address !== 'Endere\u00e7o pendente')
             c.endereco = o.address;
         c.totalPedidos++;
@@ -6394,7 +6396,10 @@ function renderClientes(termoBusca) {
         var fim = new Date(clientesFiltroFim); fim.setHours(23,59,59,999);
         pedidosDoPeriodo = histGetTodos().filter(function(o) {
             if (o.status !== 'finalizado') return false;
-            var ts = o.finalizadoEm ? new Date(o.finalizadoEm) : null;
+            // Usa finalizadoEm preferencialmente; cai para timestamp se não tiver
+            var ts = o.finalizadoEm ? new Date(o.finalizadoEm)
+                   : o.timestamp    ? new Date(o.timestamp)
+                   : null;
             if (!ts || isNaN(ts)) return false;
             return ts >= ini && ts <= fim;
         });
@@ -6589,7 +6594,8 @@ async function supaReq(method, path, body) {
     const r = await fetch(SUPA_URL + '/rest/v1/' + path, opts);
     if (!r.ok) { const e = await r.text(); throw new Error(e); }
     const txt = await r.text();
-    return txt ? JSON.parse(txt) : null;
+    if (!txt || txt === 'undefined' || txt === 'null') return null;
+    try { return JSON.parse(txt); } catch(e) { return null; }
 }
 async function supaGet(table, query) {
     if (!REST_ID && SUPA_TOKEN) {
@@ -6630,7 +6636,8 @@ async function supaUpsert(table, obj, onConflict) {
     });
     if (!r.ok) { const e = await r.text(); throw new Error(e); }
     const txt = await r.text();
-    return txt ? JSON.parse(txt) : null;
+    if (!txt || txt === 'undefined' || txt === 'null') return null;
+    try { return JSON.parse(txt); } catch(e) { return null; }
 }
 
 async function supaCarregarCardapio() {
@@ -7421,7 +7428,8 @@ function histGetFiltrados() {
         var ini = new Date(relDataIni); ini.setHours(0,0,0,0);
         var fim = new Date(relDataFim); fim.setHours(23,59,59,999);
         todos = todos.filter(function(o) {
-            var ts = o.finalizadoEm ? new Date(o.finalizadoEm) : null;
+            var ts = o.finalizadoEm ? new Date(o.finalizadoEm)
+                   : o.timestamp    ? new Date(o.timestamp) : null;
             if (!ts || isNaN(ts)) return false;
             return ts >= ini && ts <= fim;
         });
@@ -7566,8 +7574,9 @@ function relFiltrarOrders() {
     var ini = new Date(relDataIni); ini.setHours(0,0,0,0);
     var fim = new Date(relDataFim); fim.setHours(23,59,59,999);
     return histGetTodos().filter(function(o) {
-        // Usa SOMENTE finalizadoEm — timestamp é a data de criação, não de finalização
-        var ts = o.finalizadoEm ? new Date(o.finalizadoEm) : null;
+        // Usa finalizadoEm como referência principal; fallback para timestamp em pedidos antigos
+        var ts = o.finalizadoEm ? new Date(o.finalizadoEm)
+               : o.timestamp    ? new Date(o.timestamp) : null;
         if (!ts || isNaN(ts)) return false;
         return ts >= ini && ts <= fim;
     });
