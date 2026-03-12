@@ -3330,6 +3330,33 @@ function _preencherPDV(o) {
     const mapPgto = { 'Pix':'pgto-pix','Débito':'pgto-debito','Dinheiro':'pgto-dinheiro','Crédito':'pgto-credito' };
     const pgBtn = document.getElementById(mapPgto[pag]);
     if (pgBtn) pgBtn.classList.add('active');
+
+    // Restaurar cupom se existia no pedido
+    pdvCupomAtual = null;
+    var cpEl  = document.getElementById('pdv-cupom');
+    var cpMsg = document.getElementById('pdv-cupom-msg');
+    var cpBtn = document.getElementById('pdv-btn-remover-cupom');
+    var cpDes = document.getElementById('pdv-linha-desconto-cupom');
+    if (o.cupom) {
+        if (o.produtoBrindeNome) {
+            // Cupom de produto brinde
+            pdvCupomAtual = { codigo: o.cupom, tipo: 'produto', valor: 0, desconto: 0, produtoBrindeNome: o.produtoBrindeNome };
+            if (cpMsg) { cpMsg.textContent = '✅ Brinde: ' + o.produtoBrindeNome + ' (cupom ' + o.cupom + ')'; cpMsg.style.color = '#16a34a'; cpMsg.style.display = 'block'; }
+            if (cpBtn) cpBtn.style.display = 'inline-flex';
+            if (cpEl)  cpEl.value = o.cupom;
+        } else if (o.descontoCupom > 0) {
+            // Cupom de desconto
+            pdvCupomAtual = { codigo: o.cupom, tipo: 'fixo', valor: o.descontoCupom, desconto: o.descontoCupom };
+            if (cpMsg) { cpMsg.textContent = '✅ Cupom aplicado: -R$ ' + parseFloat(o.descontoCupom).toFixed(2).replace('.',','); cpMsg.style.color = '#16a34a'; cpMsg.style.display = 'block'; }
+            if (cpBtn) cpBtn.style.display = 'inline-flex';
+            if (cpEl)  cpEl.value = o.cupom;
+        }
+    } else {
+        if (cpEl)  cpEl.value = '';
+        if (cpMsg) cpMsg.style.display = 'none';
+        if (cpBtn) cpBtn.style.display = 'none';
+        if (cpDes) cpDes.style.display = 'none';
+    }
 }
 
 function closeModalNovoPedido() {
@@ -3960,11 +3987,16 @@ async function pdvAplicarCupom() {
         // Calcula desconto
         const sub = totalCarrinhoPDV;
         var descCupom = 0;
-        if (cup.tipo === 'percentual') descCupom = parseFloat((sub * cup.valor / 100).toFixed(2));
-        else descCupom = Math.min(parseFloat(cup.valor), sub);
-        pdvCupomAtual = { codigo: cup.codigo, tipo: cup.tipo, valor: cup.valor, desconto: descCupom };
-
-        msg.textContent = '✅ Cupom aplicado: -R$ ' + descCupom.toFixed(2).replace('.', ',');
+        if (cup.tipo === 'produto') {
+            descCupom = 0;
+            pdvCupomAtual = { codigo: cup.codigo, tipo: cup.tipo, valor: 0, desconto: 0, produtoBrindeNome: cup.produto_nome || '' };
+            msg.textContent = '✅ Brinde: ' + (cup.produto_nome || 'produto') + ' será adicionado ao pedido!';
+        } else {
+            if (cup.tipo === 'percentual') descCupom = parseFloat((sub * cup.valor / 100).toFixed(2));
+            else descCupom = Math.min(parseFloat(cup.valor), sub);
+            pdvCupomAtual = { codigo: cup.codigo, tipo: cup.tipo, valor: cup.valor, desconto: descCupom };
+            msg.textContent = '✅ Cupom aplicado: -R$ ' + descCupom.toFixed(2).replace('.', ',');
+        }
         msg.style.color = '#16a34a'; msg.style.display = 'block';
         document.getElementById('pdv-btn-remover-cupom').style.display = 'inline-flex';
         pdvRecalcularTotal();
@@ -4041,6 +4073,7 @@ function salvarPedidoPDV() {
     var subtotal    = totalCarrinhoPDV;
     var descCupom   = pdvCupomAtual ? pdvCupomAtual.desconto : 0;
     var codigoCupom = pdvCupomAtual ? pdvCupomAtual.codigo   : '';
+    var brindeNome  = (pdvCupomAtual && pdvCupomAtual.tipo === 'produto') ? (pdvCupomAtual.produtoBrindeNome || '') : '';
     var total       = Math.max(0, subtotal + taxaEntrega - descCupom);
     var cobrar      = total;
     var troco       = trocoVal > 0 ? trocoVal - cobrar : 0;
@@ -4051,7 +4084,7 @@ function salvarPedidoPDV() {
             orders[idx] = Object.assign(orders[idx], {
                 client: nome, phone: telefone || orders[idx].phone,
                 address: enderecoFinal, numero, bairro, complemento, cidade,
-                total: cobrar, subtotal, taxaEntrega, descontoCupom: descCupom, cupom: codigoCupom, troco,
+                total: cobrar, subtotal, taxaEntrega, descontoCupom: descCupom, cupom: codigoCupom, produtoBrindeNome: brindeNome, troco,
                 tipo: tipoPedidoSelecionado, pagamento, previsao: previsaoStr,
                 items: carrinhoPDV.map(i => Object.assign({}, i))
             });
@@ -4072,6 +4105,7 @@ function salvarPedidoPDV() {
                 taxa_entrega:   taxaEntrega,
                 desconto_cupom: descCupom || 0,
                 cupom:          codigoCupom || '',
+                produto_brinde_nome: brindeNome || null,
                 total:          cobrar,
                 atualizado_em:  nowLocalISO()
             };
@@ -4090,7 +4124,7 @@ function salvarPedidoPDV() {
             id: 'B-' + Date.now(),
             client: nome, phone: telefone || '(00) 00000-0000',
             address: enderecoFinal, numero, bairro, complemento, cidade,
-            total: cobrar, subtotal, taxaEntrega, descontoCupom: descCupom, cupom: codigoCupom, troco,
+            total: cobrar, subtotal, taxaEntrega, descontoCupom: descCupom, cupom: codigoCupom, produtoBrindeNome: brindeNome, troco,
             status: 'analise', tipo: tipoPedidoSelecionado,
             pagamento, previsao: previsaoStr,
             items: carrinhoPDV.map(i => Object.assign({}, i)),
@@ -4256,9 +4290,10 @@ function renderOrders() {
                     '<span class="order-total">R$ ' + o.total.toFixed(2) + '</span>' +
                     pgtoTag +
                 '</div>' +
-                ((o.descontoCupom > 0 || o.descontoPontos > 0) ?
+                ((o.descontoCupom > 0 || o.descontoPontos > 0 || o.produtoBrindeNome) ?
                     '<div style="margin-top:5px; font-size:11px; color:#16a34a; font-weight:600;">' +
-                    (o.descontoCupom > 0 ? '🏷️ Cupom ' + (o.cupom ? o.cupom : '') + ': -R$ ' + parseFloat(o.descontoCupom).toFixed(2).replace('.',',') + '  ' : '') +
+                    (o.produtoBrindeNome ? '🎁 Brinde: ' + o.produtoBrindeNome + ' (cupom ' + (o.cupom||'') + ')  ' :
+                        (o.descontoCupom > 0 ? '🏷️ Cupom ' + (o.cupom ? o.cupom : '') + ': -R$ ' + parseFloat(o.descontoCupom).toFixed(2).replace('.',',') + '  ' : '')) +
                     (o.descontoPontos > 0 ? '🎁 Pontos: -R$ ' + parseFloat(o.descontoPontos).toFixed(2).replace('.',',') : '') +
                     '</div>'
                 : '') +
@@ -6727,6 +6762,8 @@ async function supaCarregarPedidos() {
                     descontoCupom: r.desconto_cupom || 0,
                     descontoPontos: r.desconto_pontos || 0,
                     cupom: r.cupom || '',
+                    produtoBrindeNome: r.produto_brinde_nome || '',
+                    produtoBrindeId:   r.produto_brinde_id   || '',
                     total: r.total, 
                     status: r.status,
                     items: itens, 
@@ -6811,6 +6848,8 @@ async function supaSalvarPedido(pedido) {
             itens: pedido.items || [], subtotal: pedido.subtotal || pedido.total,
             taxa_entrega: pedido.taxaEntrega || 0, desconto_pontos: pedido.descontoPontos || 0,
             desconto_cupom: pedido.descontoCupom || 0, cupom: pedido.cupom || '',
+            produto_brinde_nome: pedido.produtoBrindeNome || null,
+            produto_brinde_id:   pedido.produtoBrindeId   || null,
             total: pedido.total, status: pedido.status || 'analise',
             impresso: false
         });
