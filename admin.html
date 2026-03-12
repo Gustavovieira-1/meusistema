@@ -6778,28 +6778,14 @@ async function supaSalvarPedido(pedido) {
 
 function parseDateUTC(str) {
     if (!str) return null;
-    // Supabase retorna "2026-03-12 05:30:38+00" ou "2026-03-12 05:30:38+00:00"
     var s = str.toString().replace(' ', 'T');
-    // Normaliza offset sem dois-pontos: "+00" → "+00:00", "-03" → "-03:00"
     s = s.replace(/([+-])(\d{2})$/, '$1$2:00');
-    // Se não tem nenhum offset nem Z, assume UTC
     if (!s.endsWith('Z') && !s.match(/[+-]\d{2}:\d{2}$/)) s += 'Z';
     var d = new Date(s);
     return isNaN(d) ? null : d;
 }
-
-/** Retorna ISO string no horário LOCAL do navegador com offset, ex: "2026-03-12T02:30:00-03:00"
- *  Use no lugar de new Date().toISOString() para salvar timestamps com fuso correto. */
 function nowLocalISO() {
     var now = new Date();
-    var off = -now.getTimezoneOffset(); // minutos positivos para UTC-3 = 180? Não: getTimezoneOffset retorna -(-180)=180 para UTC-3? Não: UTC-3 → getTimezoneOffset()=+180, off=-180? Vamos calcular correto:
-    // getTimezoneOffset() retorna minutos que devem ser SUBTRAÍDOS de local para obter UTC
-    // UTC-3: local = UTC - 3h → getTimezoneOffset() = +180 (positivo)
-    // off = -180 → sign = '-', absOff = 180 → offset string = "-03:00" ← ERRADO
-    // Correto: offset no ISO8601 representa local - UTC
-    // Se local está em UTC-3, offset ISO = "-03:00"
-    // getTimezoneOffset() = local_minutes_behind_UTC = +180 para UTC-3
-    // ISO offset = -getTimezoneOffset()
     var tzo = -now.getTimezoneOffset();
     var sign = tzo >= 0 ? '+' : '-';
     var absOff = Math.abs(tzo);
@@ -6810,7 +6796,6 @@ function nowLocalISO() {
            'T' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds()) +
            sign + hh + ':' + mm;
 }
-
 async function supaAtualizarStatus(pedido, novoStatus) {
     try {
         var agora = nowLocalISO();
