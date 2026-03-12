@@ -3093,10 +3093,10 @@ function inicializarSistema() {
     setInterval(authRenovarToken, 50 * 60 * 1000);
     // Renova imediatamente ao carregar (caso já esteja próximo de expirar)
     setTimeout(authRenovarToken, 3000);
-    // 📚 Sincronizar histórico do Supabase (fonte permanente) após carregamento inicial
-    setTimeout(histSincronizarDoSupabase, 5000);
-    // Resincroniza a cada hora para garantir consistência
-    setInterval(histSincronizarDoSupabase, 3600000);
+    // 📚 Pré-carregar histórico do Supabase em segundo plano (fonte permanente)
+    setTimeout(function() { histCarregarDoSupabase(); }, 8000);
+    // Re-sincroniza a cada hora (invalida o cache e busca dados novos)
+    setInterval(function() { histCarregarDoSupabase(true); }, 3600000);
 }
 
 // Inicialização: verificar sessão salva primeiro
@@ -3259,13 +3259,13 @@ function showSec(id, btn) {
 
     if (id === 'gestor')           renderOrders();
     if (id === 'produtos')         { renderCategories(); renderProds(); }
-    if (id === 'clientes')         renderClientes();
+    if (id === 'clientes')         histCarregarDoSupabase().then(function(){ renderClientes(); });
     if (id === 'complementos')     renderComps();
     if (id === 'rel-resumo')       setTimeout(function(){ if(typeof relInicializar==='function') relInicializar(); }, 80);
     if (id === 'rel-vendas')       setTimeout(function(){ relRenderVendas(); }, 80);
     if (id === 'rel-atendimento')  setTimeout(function(){ relRenderAtendimento(); }, 80);
     if (id === 'rel-cardapio')     setTimeout(function(){ relRenderCardapio(); }, 80);
-    if (id === 'rel-historico')    setTimeout(function(){ histRender(); }, 80);
+    if (id === 'rel-historico')    setTimeout(function(){ histCarregarDoSupabase().then(function(){ histRender(); }); }, 80);
     if (id === 'impressao')        setTimeout(function(){ impInicializar(); }, 80);
     if (id === 'financeiro')        setTimeout(function(){ finInicializar(); }, 80);
     if (id === 'integracoes')       setTimeout(function(){ intInicializar(); }, 80);
@@ -4974,6 +4974,7 @@ function finFiltrarOrders() {
 }
 
 function finCalcular() {
+    histCarregarDoSupabase().then(function() {
     var lista = finFiltrarOrders();
 
     var totais = { pix:0, credito:0, debito:0, dinheiro:0, outros:0 };
@@ -5008,6 +5009,7 @@ function finCalcular() {
     set('fin-total-geral',    money(total));
     set('fin-total-destaque', money(total));
     set('fin-total-pedidos',  lista.length);
+    }); // fim histCarregarDoSupabase
 }
 
 function finTogglePicker() {
@@ -6801,7 +6803,7 @@ async function supaAtualizarStatus(pedido, novoStatus) {
 
 async function supaHistRegistrar(pedido) {
     // Usa upsert para evitar erros de chave duplicada
-    return supaHistRegistrarUpsert(pedido);
+    return supaHistUpsert(pedido);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -7093,12 +7095,14 @@ function relInicializar() {
     relCalMes  = relDataIni.getMonth();
     relAtualizarLabel();
     relAtualizarTodosLabelesPeriodo();
-    relCalcular();
-    relRenderGrafico();
-    setTimeout(function(){
-        relRenderChartNovos();
-        relRenderChartFreq();
-    }, 60);
+    histCarregarDoSupabase().then(function() {
+        relCalcular();
+        relRenderGrafico();
+        setTimeout(function(){
+            relRenderChartNovos();
+            relRenderChartFreq();
+        }, 60);
+    });
 }
 
 // Atualiza o label de período em TODAS as seções de relatório
@@ -7262,27 +7266,39 @@ document.addEventListener('click', function(e) {
 
 // ── CÁLCULOS ────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════
-//  HISTÓRICO PERMANENTE  ·  fonte principal: Supabase (historico_pedidos)
-//                           cache local: localStorage f_hist_pedidos
+//  HISTÓRICO PERMANENTE
+//  Fonte principal : Supabase (tabela historico_pedidos) — ilimitado, permanente
+//  Cache de sessão : _histCache (memória) + localStorage f_hist_pedidos (fallback offline)
 //
 //  Fluxo:
-//   1. Pedido vai para "finalizado" no kanban → histRegistrar() grava aqui
-//   2. relFiltrarOrders()  lê daqui (finalizados do período) → Resumo / Vendas / Cardápio
-//   3. relFiltrarTodos()   lê daqui + kanban ativo → Atendimento (funil)
-//   4. histRender()        lê daqui (com filtro próprio) → aba Histórico de Pedidos
+//   1. Pedido vai para "finalizado" → histRegistrar() grava no cache E no Supabase
+//   2. Ao abrir relatórios/histórico → histCarregarDoSupabase() popula o cache
+//   3. histGetTodos() lê do cache em memória (rápido, sempre atualizado)
 // ═══════════════════════════════════════════════════════════════════
-var HIST_KEY = 'f_hist_pedidos';
-// Cache em memória para evitar múltiplas leituras do Supabase na mesma sessão
-var _histCache = null;
-var _histCacheTs = 0;
-var HIST_CACHE_TTL = 30000; // 30 segundos
+var HIST_KEY          = 'f_hist_pedidos';
+var _histCache        = null;   // cache em memória (null = não carregado ainda)
+var _histCarregando   = false;  // lock para evitar chamadas paralelas
+var _histCarregadoEm  = 0;      // timestamp da última carga do Supabase
 
+/** Retorna o cache atual (localStorage como fallback se Supabase ainda não carregou) */
 function histGetTodos() {
-    // Retorna a união de localStorage + finalizados do kanban que ainda não migraram
+    // Se o cache em memória já foi populado, usa ele (fonte mais completa)
+    if (_histCache !== null) {
+        // Mescla com finalizados do kanban que ainda não entraram no cache
+        var idsCache = new Set(_histCache.map(function(p){ return p.id; }));
+        var fromOrders = (orders || []).filter(function(o){
+            return o.status === 'finalizado' && !idsCache.has(o.id);
+        }).map(function(o){
+            var c = JSON.parse(JSON.stringify(o));
+            c.finalizadoEm = c.finalizadoEm || c.timestamp || new Date().toISOString();
+            return c;
+        });
+        return _histCache.concat(fromOrders);
+    }
+    // Fallback: localStorage (pode estar incompleto, mas melhor do que nada)
     var hist = [];
     try { hist = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
     var idsHist = new Set(hist.map(function(p){ return p.id; }));
-    // Inclui finalizados do kanban que ainda não estão no histórico
     var fromOrders = (orders || []).filter(function(o){
         return o.status === 'finalizado' && !idsHist.has(o.id);
     }).map(function(o){
@@ -7293,81 +7309,128 @@ function histGetTodos() {
     return hist.concat(fromOrders);
 }
 
+/** Salva lista no localStorage (com proteção contra quota cheia) */
 function histSalvar(lista) {
-    // Tenta salvar no localStorage; se exceder limite, remove os mais antigos até caber
     var tentativa = lista;
     while (tentativa.length > 0) {
         try {
             localStorage.setItem(HIST_KEY, JSON.stringify(tentativa));
             break;
         } catch(e) {
-            // localStorage cheio: remove os 20% mais antigos e tenta novamente
+            // localStorage cheio: descarta os 20% mais antigos
             tentativa = tentativa.slice(Math.ceil(tentativa.length * 0.2));
-            console.warn('[Histórico] localStorage cheio, truncando para ' + tentativa.length + ' registros. Use Supabase como fonte principal.');
         }
     }
 }
 
-/** Grava/atualiza um pedido no histórico permanente (localStorage + Supabase) */
+/** Carrega histórico completo do Supabase e popula o cache em memória.
+ *  Chamado automaticamente ao abrir qualquer aba de relatório.
+ *  Retorna Promise<Array> com todos os pedidos do histórico. */
+async function histCarregarDoSupabase(forcar) {
+    if (!REST_ID) return histGetTodos();
+    // Evita recargas desnecessárias (TTL de 5 minutos, a menos que forçado)
+    var agora = Date.now();
+    if (!forcar && _histCache !== null && (agora - _histCarregadoEm) < 300000) {
+        return histGetTodos();
+    }
+    if (_histCarregando) {
+        // Aguarda o carregamento em curso (poll a cada 200ms, máx 10s)
+        return new Promise(function(resolve) {
+            var t = 0;
+            var iv = setInterval(function() {
+                t += 200;
+                if (_histCache !== null || t > 10000) { clearInterval(iv); resolve(histGetTodos()); }
+            }, 200);
+        });
+    }
+    _histCarregando = true;
+    try {
+        // Busca todos os registros do Supabase (sem limite de data)
+        var rows = await supaReq('GET',
+            'historico_pedidos?restaurante_id=eq.' + REST_ID +
+            '&select=dados,finalizado_em&order=finalizado_em.desc&limit=10000',
+            null
+        );
+        if (rows && rows.length) {
+            var doSupa = rows.map(function(r) {
+                var d = (typeof r.dados === 'string') ? JSON.parse(r.dados) : (r.dados || {});
+                d.finalizadoEm = d.finalizadoEm || r.finalizado_em;
+                return d;
+            }).filter(function(d){ return d && d.id; });
+
+            // Mescla com localStorage (pode ter registros novos ainda não sincronizados)
+            var local = [];
+            try { local = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
+            var mapa = {};
+            doSupa.forEach(function(o){ mapa[o.id] = o; });
+            // Local tem prioridade apenas para ids que não vieram do Supabase
+            local.forEach(function(o){ if (!mapa[o.id]) mapa[o.id] = o; });
+            _histCache = Object.values(mapa);
+            _histCarregadoEm = agora;
+            // Atualiza localStorage com dados completos do Supabase
+            histSalvar(_histCache);
+            console.log('[Histórico] Carregado do Supabase: ' + _histCache.length + ' registros');
+        } else {
+            // Supabase vazio ou sem resposta: usa localStorage como cache
+            var local2 = [];
+            try { local2 = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
+            _histCache = local2;
+            _histCarregadoEm = agora;
+        }
+    } catch(e) {
+        console.warn('[Histórico] Erro ao carregar do Supabase:', e.message);
+        // Em caso de erro, mantém localStorage como cache
+        if (_histCache === null) {
+            try { _histCache = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e2) { _histCache = []; }
+        }
+    } finally {
+        _histCarregando = false;
+    }
+    return histGetTodos();
+}
+
+/** Grava/atualiza um pedido no histórico (cache + localStorage + Supabase) */
 function histRegistrar(pedido) {
-    var lista = histGetTodos();
-    var idx   = lista.findIndex(function(p){ return p.id === pedido.id; });
     var copia = JSON.parse(JSON.stringify(pedido));
     copia.finalizadoEm = copia.finalizadoEm || new Date().toISOString();
-    if (idx >= 0) lista[idx] = copia;
-    else          lista.push(copia);
-    histSalvar(lista);
-    // Espelha no Supabase de forma assíncrona (fonte permanente)
-    supaHistRegistrarUpsert(copia).catch(function(e){ console.warn('[Histórico Supabase]', e.message); });
-}
-
-/** Carrega histórico do Supabase e mescla com localStorage (sincronização) */
-async function histSincronizarDoSupabase() {
-    if (!REST_ID) return;
-    try {
-        var rows = await supaReq('GET', 'historico_pedidos?restaurante_id=eq.' + REST_ID + '&select=dados,finalizado_em&order=finalizado_em.desc&limit=5000', null);
-        if (!rows || !rows.length) return;
-        var doSupa = rows.map(function(r) {
-            var d = (typeof r.dados === 'string') ? JSON.parse(r.dados) : (r.dados || {});
-            d.finalizadoEm = d.finalizadoEm || r.finalizado_em;
-            return d;
-        }).filter(function(d){ return d && d.id; });
-        if (!doSupa.length) return;
-        // Mescla com o que está no localStorage (localStorage pode ter itens mais recentes ainda não sincronizados)
-        var local = [];
-        try { local = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
-        var mapa = {};
-        doSupa.forEach(function(o){ mapa[o.id] = o; });
-        local.forEach(function(o){ if (!mapa[o.id]) mapa[o.id] = o; }); // local tem prioridade para ids únicos
-        var merged = Object.values(mapa);
-        histSalvar(merged);
-        console.log('[Histórico] Sincronizado com Supabase: ' + doSupa.length + ' registros');
-    } catch(e) {
-        console.warn('[Histórico] Erro ao sincronizar do Supabase:', e.message);
+    // Atualiza cache em memória
+    if (_histCache !== null) {
+        var idx = _histCache.findIndex(function(p){ return p.id === copia.id; });
+        if (idx >= 0) _histCache[idx] = copia;
+        else _histCache.push(copia);
     }
+    // Atualiza localStorage
+    var lista = [];
+    try { lista = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
+    var idx2 = lista.findIndex(function(p){ return p.id === copia.id; });
+    if (idx2 >= 0) lista[idx2] = copia;
+    else lista.push(copia);
+    histSalvar(lista);
+    // Salva no Supabase (upsert — sem erro de duplicata)
+    supaHistUpsert(copia).catch(function(e){ console.warn('[Histórico Supabase]', e.message); });
 }
 
-/** Upsert no Supabase (insert ou update se pedido_id já existe) */
-async function supaHistRegistrarUpsert(pedido) {
+/** Upsert no Supabase — insert ou update se já existir */
+async function supaHistUpsert(pedido) {
     if (!REST_ID) return;
-    try {
-        await fetch(SUPA_URL + '/rest/v1/historico_pedidos?on_conflict=pedido_id,restaurante_id', {
-            method: 'POST',
-            headers: {
-                'apikey': SUPA_KEY,
-                'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal,resolution=merge-duplicates'
-            },
-            body: JSON.stringify({
-                restaurante_id: REST_ID,
-                pedido_id: pedido.id,
-                dados: pedido,
-                finalizado_em: pedido.finalizadoEm || new Date().toISOString()
-            })
-        });
-    } catch(e) { console.warn('[Supabase Hist Upsert]', e.message); }
+    await fetch(SUPA_URL + '/rest/v1/historico_pedidos?on_conflict=pedido_id,restaurante_id', {
+        method: 'POST',
+        headers: {
+            'apikey':        SUPA_KEY,
+            'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
+            'Content-Type':  'application/json',
+            'Prefer':        'return=minimal,resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+            restaurante_id: REST_ID,
+            pedido_id:      pedido.id,
+            dados:          pedido,
+            finalizado_em:  pedido.finalizadoEm || new Date().toISOString()
+        })
+    });
 }
+
+// histGetTodos() já faz merge automático com kanban — migração explícita desnecessária
 
 // ── Estado do filtro de data do histórico ──────────────────────────
 var histFiltroAtivo = false;   // false = sem filtro (mostra todos)
@@ -7864,10 +7927,12 @@ function relRenderChartFreq() {
 // ── Atualiza tudo junto ──────────────────────────
 function relAtualizarTudo() {
     relAtualizarTodosLabelesPeriodo();
-    relCalcular();
-    relRenderGrafico();
-    relRenderChartNovos();
-    relRenderChartFreq();
+    histCarregarDoSupabase().then(function() {
+        relCalcular();
+        relRenderGrafico();
+        relRenderChartNovos();
+        relRenderChartFreq();
+    });
 }
 
 // Filtra TODOS os pedidos do período (qualquer status)
@@ -7918,8 +7983,10 @@ function rvFiltrar(tipo, btn) {
 
 function relRenderVendas() {
     relAtualizarTodosLabelesPeriodo();
-    rvRenderCards();
-    rvRenderTabela();
+    histCarregarDoSupabase().then(function() {
+        rvRenderCards();
+        rvRenderTabela();
+    });
 }
 
 function rvRenderCards() {
@@ -8059,6 +8126,7 @@ function rvRenderTabela() {
 // ── ATENDIMENTO ──────────────────────────────────
 function relRenderAtendimento() {
     relAtualizarTodosLabelesPeriodo();
+    histCarregarDoSupabase().then(function() {
     var todos = relFiltrarTodos();
     var statusList = ['analise','preparo','pronto','entrega','finalizado','cancelado'];
     statusList.forEach(function(s) {
@@ -8094,11 +8162,13 @@ function relRenderAtendimento() {
             '<span style="font-size:11px;color:#86efac;margin-left:8px;">(' + finalizados + ' de ' + criados + ' pedidos finalizados)</span>' +
         '</div>';
     }
+    }); // fim histCarregarDoSupabase
 }
 
 // ── CARDÁPIO ─────────────────────────────────────
 function relRenderCardapio() {
     relAtualizarTodosLabelesPeriodo();
+    histCarregarDoSupabase().then(function() {
     var fin = relFiltrarOrders();
 
     // Conta quantidade de cada produto nos itens dos pedidos finalizados
@@ -8143,11 +8213,14 @@ function relRenderCardapio() {
             '</div>' +
         '</div>';
     }).join('');
+    }); // fim histCarregarDoSupabase
 }
 
 // ── HISTÓRICO ────────────────────────────────────
 function relRenderHistorico() {
-    histRender();
+    histCarregarDoSupabase().then(function() {
+        histRender();
+    });
 }
 
 // ── PICKER GLOBAL (seções fora do resumo) ────────
@@ -8990,19 +9063,9 @@ function cfgAplicarLimpeza() {
     
     // Aplicar a remoção conforme o modo
     if (modo === 'horario') {
-        // Remove pedidos finalizados ANTES do horário de limpeza de hoje
-        // (pedidos finalizados APÓS o horário de limpeza ficam até o próximo ciclo)
-        var horaConfiguracao2 = (cfg.limparHorario || '00:00').split(':');
-        var horaLimpezaMs = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(),
-            parseInt(horaConfiguracao2[0]), parseInt(horaConfiguracao2[1]), 0, 0).getTime();
-        var antes = orders.length;
-        orders = orders.filter(function(o) {
-            if (o.status !== 'finalizado') return true;
-            var finTs = o.finalizadoEm ? new Date(o.finalizadoEm).getTime() : 0;
-            return finTs >= horaLimpezaMs; // mantém se finalizado após o horário de limpeza
-        });
-        var removidos2 = antes - orders.length;
-        console.log('[Limpeza] Removidos ' + removidos2 + ' pedidos finalizados (modo horário)');
+        // Remove TODOS os pedidos finalizados se passou da hora
+        orders = orders.filter(function(o) { return o.status !== 'finalizado'; });
+        console.log('[Limpeza] Removidos ' + pedidosFinalizados.length + ' pedidos finalizados (modo horário)');
     } else if (modo === 'minutos') {
         var minutosParar = cfg.limparMinutos || 30;
         var agora_ms = agora.getTime();
@@ -9010,11 +9073,8 @@ function cfgAplicarLimpeza() {
         // Remove pedidos finalizados que ultrapassaram o tempo
         var antes = orders.length;
         orders = orders.filter(function(o) {
-            if (o.status === 'finalizado') {
-                // Usa finalizadoEm, ou timestamp como fallback
-                var refTs = o.finalizadoEm || o.timestamp;
-                if (!refTs) return false; // sem referência de tempo → remove
-                var finalizado_ms = new Date(refTs).getTime();
+            if (o.status === 'finalizado' && o.finalizadoEm) {
+                var finalizado_ms = new Date(o.finalizadoEm).getTime();
                 var minutosPassados = (agora_ms - finalizado_ms) / 60000;
                 return minutosPassados < minutosParar;  // Mantém se ainda não atingiu o tempo
             }
