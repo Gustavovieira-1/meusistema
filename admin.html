@@ -4055,6 +4055,35 @@ function salvarPedidoPDV() {
                 tipo: tipoPedidoSelecionado, pagamento, previsao: previsaoStr,
                 items: carrinhoPDV.map(i => Object.assign({}, i))
             });
+            // Persiste alterações no Supabase
+            const pedidoEditado = orders[idx];
+            const payloadEdicao = {
+                cliente:        nome,
+                telefone:       telefone || pedidoEditado.phone,
+                tipo:           tipoPedidoSelecionado,
+                endereco:       enderecoFinal,
+                bairro:         bairro || '',
+                complemento:    complemento || '',
+                cidade:         cidade || '',
+                pagamento:      pagamento,
+                troco:          trocoVal || 0,
+                itens:          carrinhoPDV.map(i => Object.assign({}, i)),
+                subtotal:       subtotal,
+                taxa_entrega:   taxaEntrega,
+                desconto_cupom: descCupom || 0,
+                cupom:          codigoCupom || '',
+                total:          cobrar,
+                atualizado_em:  nowLocalISO()
+            };
+            if (pedidoEditado._supa_id) {
+                supaUpdate('pedidos', pedidoEditado._supa_id, payloadEdicao)
+                    .catch(e => console.warn('[Supabase] Editar pedido:', e.message));
+            } else {
+                supaReq('PATCH',
+                    'pedidos?numero=eq.' + encodeURIComponent(pedidoEditado.id) + '&restaurante_id=eq.' + REST_ID,
+                    payloadEdicao
+                ).catch(e => console.warn('[Supabase] Editar pedido (fallback):', e.message));
+            }
         }
     } else {
         const novoPedido = {
