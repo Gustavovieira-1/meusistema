@@ -3238,7 +3238,21 @@ function showSec(id, btn) {
 
     if (id === 'gestor')           renderOrders();
     if (id === 'produtos')         { renderCategories(); renderProds(); }
-    if (id === 'clientes')         histCarregarDoSupabase().then(function(){ renderClientes(); });
+    if (id === 'clientes') {
+        // Sincroniza o filtro de clientes com o período global automaticamente
+        clientesFiltroAtivo = true;
+        clientesFiltroIni   = relDataIni;
+        clientesFiltroFim   = relDataFim;
+        var txtC = document.getElementById('clientes-periodo-txt');
+        var btnC = document.getElementById('clientes-limpar-btn');
+        if (txtC) {
+            var sI = relDataIni.toLocaleDateString('pt-BR');
+            var sF = relDataFim.toLocaleDateString('pt-BR');
+            txtC.textContent = sI === sF ? sI : sI + ' – ' + sF;
+        }
+        if (btnC) btnC.style.display = 'flex';
+        histCarregarDoSupabase().then(function(){ renderClientes(); });
+    }
     if (id === 'complementos')     renderComps();
     if (id === 'rel-resumo')       setTimeout(function(){ if(typeof relInicializar==='function') relInicializar(); }, 80);
     if (id === 'rel-vendas')       setTimeout(function(){ relRenderVendas(); }, 80);
@@ -6299,7 +6313,8 @@ function consolidarClientes() {
             };
         }
         const c  = mapa[chave];
-        const ts = o.finalizadoEm || o.timestamp || null;
+        // Usa finalizadoEm como referência de data (timestamp é data de criação, não finalização)
+        const ts = o.finalizadoEm || null;
         if (o.address && o.address !== 'Retirada' && o.address !== 'Balc\u00e3o' && o.address !== 'Endere\u00e7o pendente')
             c.endereco = o.address;
         c.totalPedidos++;
@@ -6353,18 +6368,19 @@ function consolidarClientes() {
 
 // Renderiza a tela de clientes
 // ── Estado do filtro de clientes ──────────────────────────────────
+// Clientes usa o mesmo período global dos outros relatórios (relDataIni/relDataFim)
+// clientesFiltroAtivo=true = filtra pelo período; false = mostra todos os clientes
 var clientesFiltroAtivo = false;
 var clientesFiltroIni   = null;
 var clientesFiltroFim   = null;
 
 function clientesAbrirFiltro() {
-    // Usa o mesmo picker global dos outros relatórios
-    relCalAno  = (clientesFiltroIni || _hoje()).getFullYear();
-    relCalMes  = (clientesFiltroIni || _hoje()).getMonth();
-    relCalSel1 = clientesFiltroIni ? new Date(clientesFiltroIni) : new Date(_hoje());
-    relCalSel2 = clientesFiltroFim ? new Date(clientesFiltroFim) : new Date(_hoje());
+    // Abre o picker global pré-selecionado com o período atual (relDataIni/relDataFim)
+    relCalAno  = relDataIni.getFullYear();
+    relCalMes  = relDataIni.getMonth();
+    relCalSel1 = new Date(relDataIni);
+    relCalSel2 = new Date(relDataFim);
     relRenderCalendarioEm('rel-calendario-g','rel-mes-label-g','rel-range-label-g');
-    // Substitui o botão de confirmar para aplicar ao filtro de clientes
     var overlay = document.getElementById('picker-global-overlay');
     if (overlay) {
         overlay._modoClientes = true;
@@ -6380,7 +6396,9 @@ function clientesLimparFiltro() {
     if (btn) btn.style.display = 'none';
     var txt = document.getElementById('clientes-periodo-txt');
     if (txt) txt.textContent = 'Todos os períodos';
-    renderClientes(document.getElementById('clientes-search') ? document.getElementById('clientes-search').value : '');
+    histCarregarDoSupabase().then(function(){
+        renderClientes(document.getElementById('clientes-search') ? document.getElementById('clientes-search').value : '');
+    });
 }
 
 function clientesAplicarFiltro(ini, fim) {
@@ -6395,7 +6413,9 @@ function clientesAplicarFiltro(ini, fim) {
         var sFim = fim.toLocaleDateString('pt-BR');
         txt.textContent = sIni === sFim ? sIni : sIni + ' – ' + sFim;
     }
-    renderClientes(document.getElementById('clientes-search') ? document.getElementById('clientes-search').value : '');
+    histCarregarDoSupabase().then(function(){
+        renderClientes(document.getElementById('clientes-search') ? document.getElementById('clientes-search').value : '');
+    });
 }
 
 function renderClientes(termoBusca) {
@@ -8236,16 +8256,26 @@ function relPickerGlobalSelecionar() {
     }
     var overlay = document.getElementById('picker-global-overlay');
     if (overlay) overlay.style.display = 'none';
-    // Modo clientes: aplica filtro de data ao menu clientes
+    // Modo clientes: usa o mesmo relDataIni/relDataFim e atualiza aba clientes
     if (overlay && overlay._modoClientes) {
         overlay._modoClientes = false;
-        if (relCalSel1) {
-            var ini = new Date(relCalSel1); ini.setHours(0,0,0,0);
-            var fim = relCalSel2 ? new Date(relCalSel2) : new Date(relCalSel1);
-            if (ini > fim) { var tmp = ini; ini = fim; fim = tmp; }
-            fim.setHours(23,59,59,999);
-            clientesAplicarFiltro(ini, fim);
+        relAtualizarLabel();
+        relAtualizarTodosLabelesPeriodo();
+        // Sincroniza o label do picker de clientes com o período global
+        var txtC = document.getElementById('clientes-periodo-txt');
+        var btnC = document.getElementById('clientes-limpar-btn');
+        if (txtC) {
+            var sIni = relDataIni.toLocaleDateString('pt-BR');
+            var sFim = relDataFim.toLocaleDateString('pt-BR');
+            txtC.textContent = sIni === sFim ? sIni : sIni + ' – ' + sFim;
         }
+        if (btnC) btnC.style.display = 'flex';
+        clientesFiltroAtivo = true;
+        clientesFiltroIni   = relDataIni;
+        clientesFiltroFim   = relDataFim;
+        histCarregarDoSupabase().then(function(){
+            renderClientes(document.getElementById('clientes-search') ? document.getElementById('clientes-search').value : '');
+        });
         return;
     }
     relAtualizarLabel();
