@@ -4947,7 +4947,8 @@ function finFiltrarOrders() {
     var fim = new Date(finDataFim); fim.setHours(23,59,59,999);
     return histGetTodos().filter(function(o) {
         if (o.status === 'cancelado') return false;
-        var ts = new Date(o.finalizadoEm || o.timestamp || 0);
+        var ts = o.finalizadoEm ? new Date(o.finalizadoEm) : null;
+        if (!ts || isNaN(ts)) return false;
         return ts >= ini && ts <= fim;
     });
 }
@@ -6309,12 +6310,10 @@ function consolidarClientes() {
         }
     }
 
-    // ── Fonte 1: histórico permanente (todos os finalizados de todos os dias) ──
-    histGetTodos().forEach(o => absorver(o));
-
-    // ── Fonte 2: finalizados no kanban ainda não gravados no histórico ──
-    const idsHist = new Set(histGetTodos().map(p => p.id));
-    orders.forEach(o => { if (!idsHist.has(o.id)) absorver(o); });
+    // ── Fonte única: histórico permanente (cache já populado pelo histCarregarDoSupabase) ──
+    // Inclui também finalizados ainda no kanban que ainda não migraram
+    var todosHist = histGetTodos();
+    todosHist.forEach(o => absorver(o));
 
     // ── Fonte 2: clientes externos (futuro índice/cardápio online) ──
     try {
@@ -7428,7 +7427,8 @@ function histGetFiltrados() {
         var ini = new Date(relDataIni); ini.setHours(0,0,0,0);
         var fim = new Date(relDataFim); fim.setHours(23,59,59,999);
         todos = todos.filter(function(o) {
-            var ts = new Date(o.finalizadoEm || o.timestamp || 0);
+            var ts = o.finalizadoEm ? new Date(o.finalizadoEm) : null;
+            if (!ts || isNaN(ts)) return false;
             return ts >= ini && ts <= fim;
         });
     }
@@ -7568,11 +7568,13 @@ function histRender() {
 }
 
 function relFiltrarOrders() {
-    // Lê do histórico PERMANENTE (não mais do kanban)
+    // Lê do histórico PERMANENTE — filtra por finalizadoEm (data em que foi finalizado)
     var ini = new Date(relDataIni); ini.setHours(0,0,0,0);
     var fim = new Date(relDataFim); fim.setHours(23,59,59,999);
     return histGetTodos().filter(function(o) {
-        var ts = new Date(o.finalizadoEm || o.timestamp || 0);
+        // Usa SOMENTE finalizadoEm — timestamp é a data de criação, não de finalização
+        var ts = o.finalizadoEm ? new Date(o.finalizadoEm) : null;
+        if (!ts || isNaN(ts)) return false;
         return ts >= ini && ts <= fim;
     });
 }
@@ -7755,11 +7757,11 @@ function relMapaClientes() {
         mapa[k].qtd++;
     });
 
-    // Marca quem tem pedido finalizado ANTES do início do período
-    orders.forEach(function(o2) {
+    // Marca quem tem pedido finalizado ANTES do início do período (histórico completo)
+    histGetTodos().forEach(function(o2) {
         if (o2.status !== 'finalizado') return;
-        var ts2 = o2.timestamp ? new Date(o2.timestamp) : null;
-        if (!ts2) return; // sem timestamp não dá pra saber se é anterior, ignora
+        var ts2 = o2.finalizadoEm ? new Date(o2.finalizadoEm) : null;
+        if (!ts2 || isNaN(ts2)) return;
         ts2.setHours(0,0,0,0);
         if (ts2 >= ini) return; // só conta os de ANTES
         var k = chave(o2);
@@ -7924,7 +7926,8 @@ function relFiltrarTodos() {
     var ini = new Date(relDataIni); ini.setHours(0,0,0,0);
     var fim = new Date(relDataFim); fim.setHours(23,59,59,999);
     var doHist = histGetTodos().filter(function(o) {
-        var ts = new Date(o.finalizadoEm || o.timestamp || 0);
+        // Finalizados: filtra por finalizadoEm; outros: por timestamp de criação
+        var ts = o.finalizadoEm ? new Date(o.finalizadoEm) : new Date(o.timestamp || 0);
         return ts >= ini && ts <= fim;
     });
     var idsHist = new Set(doHist.map(function(p){ return p.id; }));
