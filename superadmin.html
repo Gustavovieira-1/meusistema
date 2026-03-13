@@ -956,7 +956,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
               <select class="filtro-select" id="filtro-pgto" onchange="saFiltrarRest()">
                 <option value="">Todos os planos</option>
                 <option value="pago">Pago</option>
-                <option value="trial">Trial</option>
+                <option value="trial">Teste Grátis</option>
                 <option value="pendente">Pendente</option>
                 <option value="cancelado">Cancelado</option>
               </select>
@@ -1077,10 +1077,11 @@ tr:hover td { background: rgba(255,255,255,.015); }
     <div class="campo-row">
       <div class="campo" style="margin-bottom:0"><label>Plano</label>
         <select id="m-plano">
-          <option value="trial">Trial (7 dias)</option>
-          <option value="basico">Básico</option>
-          <option value="pro">Pro</option>
-          <option value="enterprise">Enterprise</option>
+          <option value="trial">15 dias (Teste Grátis)</option>
+          <option value="mensal">Mensal</option>
+          <option value="trimestral">Trimestral</option>
+          <option value="semestral">Semestral</option>
+          <option value="anual">Anual</option>
         </select>
       </div>
       <div class="campo" style="margin-bottom:0"><label>Valor Mensal (R$)</label>
@@ -1166,10 +1167,11 @@ tr:hover td { background: rgba(255,255,255,.015); }
       </div>
       <div class="campo" style="margin-bottom:0"><label>Plano</label>
         <select id="mpgto-plano">
-          <option value="trial">Trial</option>
-          <option value="basico">Básico</option>
-          <option value="pro">Pro</option>
-          <option value="enterprise">Enterprise</option>
+          <option value="trial">15 dias (Teste Grátis)</option>
+          <option value="mensal">Mensal</option>
+          <option value="trimestral">Trimestral</option>
+          <option value="semestral">Semestral</option>
+          <option value="anual">Anual</option>
         </select>
       </div>
     </div>
@@ -1291,6 +1293,15 @@ function toast(msg, ok = true) {
 }
 
 function money(v) { return 'R$ ' + parseFloat(v || 0).toFixed(2).replace('.', ','); }
+
+const _PLANO_LABELS = {
+    trial:       '15 dias (Teste Grátis)',
+    mensal:      'Mensal',
+    trimestral:  'Trimestral',
+    semestral:   'Semestral',
+    anual:       'Anual'
+};
+function _planoLabel(v) { return _PLANO_LABELS[v] || (v ? v.charAt(0).toUpperCase() + v.slice(1) : '—'); }
 
 function saAutoSlug() {
     if (m_slug_manual) return;
@@ -1467,7 +1478,7 @@ function saRenderRestaurantes(lista) {
                 <div class="rest-nome">${r.nome}</div>
                 <div class="rest-slug"><i class="fas fa-link" style="font-size:9px;"></i>${r.slug||'—'}</div>
             </td>
-            <td><span style="font-size:12px;color:var(--muted2);text-transform:capitalize;">${r.pgto?.plano||'trial'}</span></td>
+            <td><span style="font-size:12px;color:var(--muted2);">${_planoLabel(r.pgto?.plano||'trial')}</span></td>
             <td>${badgePgto(r.pgto?.status_pgto||'pendente')}</td>
             <td><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;">${r.totalPedidos}</span></td>
             <td><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;">${money(r.receitaTotal)}</span></td>
@@ -1625,7 +1636,7 @@ async function saSalvarRest() {
 
             btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Finalizando...';
             await saFetch('POST', 'usuarios', { id: userId, restaurante_id: restId, nome, role: 'admin' });
-            const venc = new Date(); venc.setDate(venc.getDate() + 7);
+            const venc = new Date(); venc.setDate(venc.getDate() + 15);
             await saFetch('POST', 'pagamentos', {
                 restaurante_id: restId, plano, status_pgto: 'trial',
                 vencimento: venc.toISOString().split('T')[0], valor
@@ -1683,7 +1694,7 @@ function saVerDetalhe(id) {
             </div>
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;">
                 <div class="section-label">Plano</div>
-                <span style="font-weight:700;text-transform:capitalize;">${r.pgto?.plano||'trial'}</span>
+                <span style="font-weight:700;">${_planoLabel(r.pgto?.plano||'trial')}</span>
                 <span class="badge ${r.pgto?.status_pgto||'pendente'}" style="margin-left:8px;">${r.pgto?.status_pgto||'pendente'}</span>
             </div>
             <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;">
@@ -1988,7 +1999,7 @@ async function saCarregarPagamentos() {
                 const vencido = venc && venc < hoje;
                 return `<tr>
                     <td><strong style="font-size:13px;">${nomeMap[p.restaurante_id]||'—'}</strong></td>
-                    <td><span style="font-size:12px;text-transform:capitalize;color:var(--muted2);">${p.plano||'—'}</span></td>
+                    <td><span style="font-size:12px;color:var(--muted2);">${_planoLabel(p.plano||'—')}</span></td>
                     <td><span class="badge ${p.status_pgto==='pago'?'pago':p.status_pgto==='trial'?'trial':p.status_pgto==='cancelado'?'cancelado':'pendente'}">${p.status_pgto||'pendente'}</span></td>
                     <td style="font-size:12px;${vencido?'color:var(--red);font-weight:700;':'color:var(--muted);'}">
                         ${venc ? venc.toLocaleDateString('pt-BR') : '—'}
