@@ -42,15 +42,21 @@ body {
   display: flex; align-items: center; justify-content: space-between;
 }
 .header-logo {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 17px; font-weight: 800; color: var(--text); text-decoration: none;
+  display: flex; align-items: center; gap: 11px;
+  text-decoration: none; flex-shrink: 0;
 }
-.header-logo-dot {
-  width: 30px; height: 30px; border-radius: 8px;
-  background: var(--brand);
+.header-logo-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, #e30613 0%, #ff4757 100%);
   display: flex; align-items: center; justify-content: center;
-  color: white; font-size: 13px;
+  box-shadow: 0 2px 8px rgba(227,6,19,.35);
+  flex-shrink: 0;
 }
+.header-logo-icon svg { width: 20px; height: 20px; }
+.header-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+.header-logo-name { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -.3px; }
+.header-logo-sub  { font-size: 9.5px; font-weight: 600; color: var(--muted2); letter-spacing: .3px; text-transform: uppercase; }
+.header-logo-dot { display: none; }
 .header-badge {
   display: flex; align-items: center; gap: 6px;
   background: #f0fdf4; border: 1px solid #bbf7d0;
@@ -273,8 +279,16 @@ body {
 <!-- HEADER -->
 <header class="header">
   <a href="#" class="header-logo">
-    <div class="header-logo-dot"><i class="fas fa-fire"></i></div>
-    Zira
+    <div class="header-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(255,255,255,0.25)" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M8.5 12l2.5 2.5 4.5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="header-logo-text">
+      <span class="header-logo-name">Zira</span>
+      <span class="header-logo-sub">Cardápio &amp; Gestão de Delivery</span>
+    </div>
   </a>
   <div class="header-badge">
     <span class="pulse"></span> 15 dias grátis, sem cartão
