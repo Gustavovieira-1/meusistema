@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teste Grátis por 15 dias — Sistema de Delivery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --brand:    #e30613;
+  --brand-dk: #b8000e;
+  --text:     #111118;
+  --muted:    #6b7280;
+  --muted2:   #9ca3af;
+  --border:   #e5e7eb;
+  --border2:  #d1d5db;
+  --surface:  #f9fafb;
+  --white:    #ffffff;
+  --green:    #16a34a;
+  --shadow-lg: 0 16px 48px rgba(0,0,0,.1);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #f4f4f8;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* HEADER */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.header-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 17px; font-weight: 800; color: var(--text); text-decoration: none;
+}
+.header-logo-dot {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--brand);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 13px;
+}
+.header-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  color: var(--green); padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+}
+.pulse { width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 2s infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* HERO */
+.hero {
+  padding: 72px 20px 48px;
+  text-align: center;
+  max-width: 640px; margin: 0 auto;
+  animation: fadeUp .5s ease both;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #fff7ed; border: 1px solid #fed7aa;
+  color: #c2410c; padding: 6px 16px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; letter-spacing: .4px; margin-bottom: 22px;
+}
+.hero-title {
+  font-size: clamp(30px, 5vw, 50px); font-weight: 800;
+  line-height: 1.1; letter-spacing: -.5px; margin-bottom: 18px;
+}
+.hero-title span { color: var(--brand); }
+.hero-sub {
+  font-size: 17px; color: var(--muted); line-height: 1.65;
+  margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto;
+}
+.beneficios {
+  display: flex; justify-content: center; gap: 24px;
+  flex-wrap: wrap; margin-bottom: 48px;
+}
+.beneficio { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.beneficio i { color: var(--green); font-size: 12px; }
+
+/* FORM CARD */
+.form-container { max-width: 540px; margin: 0 auto; padding: 0 16px 72px; animation: fadeUp .5s .1s ease both; }
+.form-card {
+  background: var(--white);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+/* STEPS BAR */
+.steps-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+.step-tab {
+  flex: 1; padding: 15px 16px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 700; color: var(--muted2);
+  border-bottom: 2px solid transparent; transition: all .2s; user-select: none;
+}
+.step-tab.active { color: var(--brand); border-bottom-color: var(--brand); background: var(--white); }
+.step-tab.done   { color: var(--green); }
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--border); color: var(--muted2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; flex-shrink: 0; transition: all .2s;
+}
+.step-tab.active .step-num { background: var(--brand); color: white; }
+.step-tab.done   .step-num { background: var(--green); color: white; }
+
+/* FORM BODY */
+.form-body { padding: 32px; }
+.etapa { display: none; }
+.etapa.active { display: block; }
+.etapa-titulo { font-size: 19px; font-weight: 800; margin-bottom: 4px; }
+.etapa-sub { font-size: 13px; color: var(--muted); margin-bottom: 26px; line-height: 1.5; }
+
+/* CAMPOS */
+.campo { margin-bottom: 16px; }
+.campo label {
+  display: block; font-size: 10px; font-weight: 800;
+  color: var(--muted); text-transform: uppercase;
+  letter-spacing: 1px; margin-bottom: 7px;
+}
+.campo input, .campo select {
+  width: 100%; padding: 12px 15px;
+  background: var(--white); border: 1.5px solid var(--border2);
+  border-radius: 11px; color: var(--text);
+  font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
+  outline: none; transition: border-color .15s, box-shadow .15s;
+  appearance: none; -webkit-appearance: none;
+}
+.campo input:focus, .campo select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(227,6,19,.07);
+}
+.campo input::placeholder { color: var(--muted2); }
+.campo select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; cursor: pointer;
+}
+.campo-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.campo-icon { position: relative; }
+.campo-icon input { padding-left: 42px; }
+.campo-icon i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted2); font-size: 13px; pointer-events: none; }
+
+/* FATURAMENTO */
+.fat-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.fat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 16px; }
+.fat-card {
+  border: 1.5px solid var(--border2); border-radius: 11px;
+  padding: 13px 14px; cursor: pointer; transition: all .15s; position: relative;
+}
+.fat-card:hover { border-color: var(--brand); background: #fff5f5; }
+.fat-card.selected { border-color: var(--brand); background: #fff5f5; }
+.fat-card.selected::after {
+  content: '✓'; position: absolute; top: 9px; right: 10px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--brand); color: white; font-size: 9px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+}
+.fat-valor { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+.fat-desc  { font-size: 11px; color: var(--muted); }
+
+/* BOTÕES */
+.btn-primary {
+  width: 100%; padding: 14px;
+  background: var(--brand); color: white; border: none; border-radius: 11px;
+  font-size: 15px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer; transition: background .15s, transform .1s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 6px;
+}
+.btn-primary:hover { background: var(--brand-dk); }
+.btn-primary:active { transform: scale(.99); }
+.btn-primary:disabled { background: var(--muted2); cursor: default; }
+.btn-back {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: none; border: none; color: var(--muted);
+  font-size: 13px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer; padding: 0; margin-bottom: 18px; transition: color .15s;
+}
+.btn-back:hover { color: var(--text); }
+
+/* ERRO */
+.erro-box {
+  display: none; background: #fef2f2;
+  border: 1px solid #fecaca; border-radius: 10px;
+  padding: 11px 14px; font-size: 13px; color: #dc2626;
+  margin-top: 10px; align-items: flex-start; gap: 8px;
+}
+.erro-box.show { display: flex; }
+.erro-box i { margin-top: 1px; flex-shrink: 0; }
+
+/* RESUMO */
+.resumo { background: var(--surface); border-radius: 13px; padding: 18px; margin-bottom: 20px; }
+.resumo-titulo { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+.resumo-item {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; gap: 12px;
+}
+.resumo-item:last-child { border-bottom: none; }
+.resumo-key { color: var(--muted); flex-shrink: 0; }
+.resumo-val { font-weight: 600; text-align: right; word-break: break-all; }
+
+.trial-box {
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  border-radius: 13px; padding: 16px 18px;
+  display: flex; gap: 12px; align-items: flex-start; margin-bottom: 20px;
+}
+.trial-box i { color: var(--green); font-size: 17px; margin-top: 1px; flex-shrink: 0; }
+.trial-box-titulo { font-size: 13px; font-weight: 800; color: #15803d; margin-bottom: 3px; }
+.trial-box-sub { font-size: 12px; color: #16a34a; line-height: 1.5; }
+
+/* SUCESSO */
+#tela-sucesso { display: none; padding: 52px 32px; text-align: center; }
+.sucesso-icon {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: #f0fdf4; border: 2px solid #bbf7d0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; color: var(--green);
+  margin: 0 auto 22px; animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+.sucesso-titulo { font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+.sucesso-sub { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 360px; margin: 0 auto 24px; }
+.sucesso-email-box {
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 11px;
+  padding: 13px 18px; margin-bottom: 20px; font-size: 13px; color: var(--muted);
+}
+.sucesso-email-box strong { color: var(--text); }
+
+/* SPIN */
+.spin { animation: spin 1s linear infinite; display: inline-block; }
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* SOCIAL PROOF */
+.social { background: white; border-top: 1px solid var(--border); padding: 36px 20px; text-align: center; }
+.social-titulo { font-size: 12px; color: var(--muted); margin-bottom: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
+.social-nums { display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; }
+.social-num-val { font-size: 26px; font-weight: 800; color: var(--text); }
+.social-num-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* RODAPÉ */
+.rodape { text-align: center; padding: 24px 20px; font-size: 12px; color: var(--muted2); border-top: 1px solid var(--border); background: white; }
+.rodape a { color: var(--muted); text-decoration: none; }
+
+@media(max-width:600px){
+  .header { padding: 0 16px; }
+  .hero   { padding: 48px 16px 32px; }
+  .form-body { padding: 24px 18px; }
+  .campo-row { grid-template-columns: 1fr; gap: 0; }
+  .beneficios { gap: 12px; }
+  .step-tab span { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <a href="#" class="header-logo">
+    <div class="header-logo-dot"><i class="fas fa-fire"></i></div>
+    Sistema Delivery
+  </a>
+  <div class="header-badge">
+    <span class="pulse"></span> 15 dias grátis, sem cartão
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow"><i class="fas fa-rocket"></i> Comece agora — sem burocracia</div>
+  <h1 class="hero-title">Seu cardápio digital<br>funcionando em <span>minutos</span></h1>
+  <p class="hero-sub">Receba pedidos online, gerencie seu delivery e fidelize clientes. Teste grátis por 15 dias, sem precisar de cartão de crédito.</p>
+  <div class="beneficios">
+    <div class="beneficio"><i class="fas fa-check-circle"></i> 15 dias grátis</div>
+    <div class="beneficio"><i class="fas fa-check-circle"></i> Sem cartão de crédito</div>
+    <div class="beneficio"><i class="fas fa-check-circle"></i> Cardápio pronto em minutos</div>
+    <div class="beneficio"><i class="fas fa-check-circle"></i> Suporte incluído</div>
+  </div>
+</section>
+
+<!-- FORMULÁRIO -->
+<div class="form-container">
+  <div class="form-card">
+
+    <!-- STEPS -->
+    <div class="steps-bar" id="steps-bar">
+      <div class="step-tab active" id="tab-1">
+        <div class="step-num" id="num-1">1</div>
+        <span>Seu negócio</span>
+      </div>
+      <div class="step-tab" id="tab-2">
+        <div class="step-num" id="num-2">2</div>
+        <span>Seus dados</span>
+      </div>
+      <div class="step-tab" id="tab-3">
+        <div class="step-num" id="num-3">3</div>
+        <span>Confirmar</span>
+      </div>
+    </div>
+
+    <div class="form-body" id="form-body">
+
+      <!-- ETAPA 1 -->
+      <div class="etapa active" id="etapa-1">
+        <div class="etapa-titulo">Sobre seu restaurante</div>
+        <div class="etapa-sub">Vamos configurar seu cardápio digital agora mesmo</div>
+
+        <div class="campo">
+          <label>Nome do restaurante *</label>
+          <div class="campo-icon">
+            <i class="fas fa-store"></i>
+            <input id="f-nome-rest" type="text" placeholder="Ex: Burguer do João">
+          </div>
+        </div>
+
+        <div class="campo-row">
+          <div class="campo">
+            <label>Cidade *</label>
+            <div class="campo-icon">
+              <i class="fas fa-map-marker-alt"></i>
+              <input id="f-cidade" type="text" placeholder="São Paulo">
+            </div>
+          </div>
+          <div class="campo">
+            <label>Estado *</label>
+            <select id="f-estado">
+              <option value="">UF</option>
+              <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+              <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+              <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+              <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+              <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+              <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+              <option selected>SP</option><option>SE</option><option>TO</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="campo">
+          <div class="fat-label">Faturamento mensal aproximado *</div>
+          <div class="fat-grid">
+            <div class="fat-card" onclick="selecionarFat(this,'ate10k')">
+              <div class="fat-valor">Até R$ 10k</div>
+              <div class="fat-desc">Negócio em crescimento</div>
+            </div>
+            <div class="fat-card" onclick="selecionarFat(this,'10k_50k')">
+              <div class="fat-valor">R$ 10k – 50k</div>
+              <div class="fat-desc">Negócio consolidado</div>
+            </div>
+            <div class="fat-card" onclick="selecionarFat(this,'50k_100k')">
+              <div class="fat-valor">R$ 50k – 100k</div>
+              <div class="fat-desc">Operação robusta</div>
+            </div>
+            <div class="fat-card" onclick="selecionarFat(this,'acima_100k')">
+              <div class="fat-valor">Acima de R$ 100k</div>
+              <div class="fat-desc">Grande operação</div>
+            </div>
+          </div>
+          <input type="hidden" id="f-faturamento">
+        </div>
+
+        <div class="erro-box" id="erro-1"><i class="fas fa-exclamation-circle"></i><span id="erro-1-txt"></span></div>
+        <button class="btn-primary" onclick="irEtapa2()">Continuar <i class="fas fa-arrow-right"></i></button>
+      </div>
+
+      <!-- ETAPA 2 -->
+      <div class="etapa" id="etapa-2">
+        <button class="btn-back" onclick="irEtapa(1)"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <div class="etapa-titulo">Seus dados de acesso</div>
+        <div class="etapa-sub">Enviaremos suas credenciais para o e-mail informado</div>
+
+        <div class="campo">
+          <label>Nome completo *</label>
+          <div class="campo-icon">
+            <i class="fas fa-user"></i>
+            <input id="f-nome" type="text" placeholder="Seu nome completo">
+          </div>
+        </div>
+        <div class="campo">
+          <label>E-mail *</label>
+          <div class="campo-icon">
+            <i class="fas fa-envelope"></i>
+            <input id="f-email" type="email" placeholder="seu@email.com.br">
+          </div>
+        </div>
+        <div class="campo">
+          <label>WhatsApp *</label>
+          <div class="campo-icon">
+            <i class="fab fa-whatsapp"></i>
+            <input id="f-telefone" type="tel" placeholder="(11) 99999-9999" oninput="mascaraTel(this)">
+          </div>
+        </div>
+
+        <div class="erro-box" id="erro-2"><i class="fas fa-exclamation-circle"></i><span id="erro-2-txt"></span></div>
+        <button class="btn-primary" onclick="irEtapa3()">Revisar cadastro <i class="fas fa-arrow-right"></i></button>
+      </div>
+
+      <!-- ETAPA 3 -->
+      <div class="etapa" id="etapa-3">
+        <button class="btn-back" onclick="irEtapa(2)"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <div class="etapa-titulo">Confirme seus dados</div>
+        <div class="etapa-sub">Tudo certo? Clique em criar para receber seus acessos por e-mail</div>
+
+        <div class="trial-box">
+          <i class="fas fa-gift"></i>
+          <div>
+            <div class="trial-box-titulo">15 dias grátis — sem cartão de crédito</div>
+            <div class="trial-box-sub">Acesso completo ao sistema por 15 dias. Após isso, escolha um plano para continuar.</div>
+          </div>
+        </div>
+
+        <div class="resumo">
+          <div class="resumo-titulo">Resumo do cadastro</div>
+          <div class="resumo-item"><span class="resumo-key">Restaurante</span><span class="resumo-val" id="r-nome-rest">—</span></div>
+          <div class="resumo-item"><span class="resumo-key">Localização</span><span class="resumo-val" id="r-local">—</span></div>
+          <div class="resumo-item"><span class="resumo-key">Faturamento</span><span class="resumo-val" id="r-fat">—</span></div>
+          <div class="resumo-item"><span class="resumo-key">Responsável</span><span class="resumo-val" id="r-nome">—</span></div>
+          <div class="resumo-item"><span class="resumo-key">E-mail</span><span class="resumo-val" id="r-email">—</span></div>
+          <div class="resumo-item"><span class="resumo-key">WhatsApp</span><span class="resumo-val" id="r-tel">—</span></div>
+        </div>
+
+        <div class="erro-box" id="erro-3"><i class="fas fa-exclamation-circle"></i><span id="erro-3-txt"></span></div>
+        <button class="btn-primary" id="btn-criar" onclick="criarConta()">
+          <i class="fas fa-rocket"></i> Criar minha conta grátis
+        </button>
+        <p style="text-align:center;font-size:11px;color:var(--muted2);margin-top:12px;line-height:1.5;">
+          Ao criar sua conta você concorda com os <a href="#" style="color:var(--muted);">Termos de Uso</a>.
+        </p>
+      </div>
+
+      <!-- SUCESSO (hidden, cloned on success) -->
+      <div id="tela-sucesso">
+        <div class="sucesso-icon"><i class="fas fa-check"></i></div>
+        <div class="sucesso-titulo">Conta criada com sucesso! 🎉</div>
+        <p class="sucesso-sub">Seus acessos foram enviados para o e-mail abaixo. Verifique também a caixa de spam.</p>
+        <div class="sucesso-email-box">📧 Acessos enviados para <strong id="sucesso-email">—</strong></div>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:13px;padding:18px;text-align:left;font-size:13px;color:#6b7280;">
+          <div style="font-weight:800;color:#111;margin-bottom:10px;">O que você recebeu no e-mail:</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div><i class="fas fa-link" style="color:var(--brand);width:18px;"></i> Link do <strong style="color:#111;">cardápio digital</strong></div>
+            <div><i class="fas fa-cog" style="color:var(--brand);width:18px;"></i> Link do <strong style="color:#111;">painel admin</strong></div>
+            <div><i class="fas fa-key" style="color:var(--brand);width:18px;"></i> Seu <strong style="color:#111;">e-mail e senha</strong> de acesso</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /form-body -->
+  </div><!-- /form-card -->
+</div>
+
+<!-- SOCIAL PROOF -->
+<div class="social">
+  <div class="social-titulo">Restaurantes que já usam o sistema</div>
+  <div class="social-nums">
+    <div><div class="social-num-val">+200</div><div class="social-num-lbl">Restaurantes ativos</div></div>
+    <div><div class="social-num-val">+15k</div><div class="social-num-lbl">Pedidos processados</div></div>
+    <div><div class="social-num-val">4.9★</div><div class="social-num-lbl">Avaliação média</div></div>
+  </div>
+</div>
+
+<footer class="rodape">
+  © 2026 Sistema Delivery · <a href="#">Termos de uso</a> · <a href="#">Privacidade</a>
+</footer>
+
+<script>
+// ══════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════
+const SB_URL         = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
+const SB_KEY         = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE0NzcsImV4cCI6MjA4ODMxNzQ3N30.URV7NROQ0wAGG_GzrS2yn2Kksxaefy4v4JJ49yRW51A';
+const SB_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc0MTQ3NywiZXhwIjoyMDg4MzE3NDc3fQ.hmY5Z4nIPefMUq-Q0AlBgRWzqhnEm18CVHqXwpOdO-E';
+const RESEND_KEY     = 're_TETXg5yb_QEKaZ8i5U515QwmJDgYxb6WY';
+const BASE_URL       = 'https://meusistema-eta.vercel.app';
+
+const FAT_LABELS = {
+  ate10k:     'Até R$ 10.000/mês',
+  '10k_50k':  'R$ 10k – R$ 50k/mês',
+  '50k_100k': 'R$ 50k – R$ 100k/mês',
+  acima_100k: 'Acima de R$ 100k/mês'
+};
+
+let _fat = '';
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+function mascaraTel(el) {
+  let v = el.value.replace(/\D/g,'');
+  if (v.length > 11) v = v.slice(0,11);
+  if      (v.length > 6) v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+  else if (v.length > 2) v = '(' + v.slice(0,2) + ') ' + v.slice(2);
+  else if (v.length > 0) v = '(' + v;
+  el.value = v;
+}
+
+function gerarSlug(nome) {
+  return nome.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim();
+}
+
+function gerarSenha() {
+  const c = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
+  let s = '';
+  for (let i = 0; i < 10; i++) s += c[Math.floor(Math.random() * c.length)];
+  return s;
+}
+
+function selecionarFat(el, val) {
+  document.querySelectorAll('.fat-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  _fat = val;
+  document.getElementById('f-faturamento').value = val;
+}
+
+function mostrarErro(n, msg) {
+  const box = document.getElementById('erro-' + n);
+  document.getElementById('erro-' + n + '-txt').textContent = msg;
+  box.classList.add('show');
+}
+function limparErro(n) { document.getElementById('erro-' + n).classList.remove('show'); }
+
+// ══════════════════════════════════════
+// NAVEGAÇÃO
+// ══════════════════════════════════════
+function irEtapa(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('etapa-' + i).classList.toggle('active', i === n);
+    const tab = document.getElementById('tab-' + i);
+    const num = document.getElementById('num-' + i);
+    tab.classList.remove('active','done');
+    if      (i < n)  { tab.classList.add('done');   num.innerHTML = '<i class="fas fa-check" style="font-size:8px;"></i>'; }
+    else if (i === n) { tab.classList.add('active'); num.textContent = i; }
+    else              { num.textContent = i; }
+  });
+  window.scrollTo({ top: document.querySelector('.form-container').offsetTop - 80, behavior: 'smooth' });
+}
+
+function irEtapa2() {
+  limparErro(1);
+  const nome   = document.getElementById('f-nome-rest').value.trim();
+  const cidade = document.getElementById('f-cidade').value.trim();
+  const estado = document.getElementById('f-estado').value;
+  const fat    = document.getElementById('f-faturamento').value;
+  if (!nome)   return mostrarErro(1, 'Informe o nome do restaurante.');
+  if (!cidade) return mostrarErro(1, 'Informe a cidade.');
+  if (!estado) return mostrarErro(1, 'Selecione o estado.');
+  if (!fat)    return mostrarErro(1, 'Selecione a faixa de faturamento.');
+  irEtapa(2);
+}
+
+function irEtapa3() {
+  limparErro(2);
+  const nome  = document.getElementById('f-nome').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const tel   = document.getElementById('f-telefone').value.trim();
+  if (!nome)                       return mostrarErro(2, 'Informe seu nome completo.');
+  if (!email || !email.includes('@')) return mostrarErro(2, 'Informe um e-mail válido.');
+  if (!tel || tel.length < 14)     return mostrarErro(2, 'Informe um WhatsApp válido com DDD.');
+
+  document.getElementById('r-nome-rest').textContent = document.getElementById('f-nome-rest').value.trim();
+  document.getElementById('r-local').textContent     = document.getElementById('f-cidade').value.trim() + ' — ' + document.getElementById('f-estado').value;
+  document.getElementById('r-fat').textContent       = FAT_LABELS[_fat] || _fat;
+  document.getElementById('r-nome').textContent      = nome;
+  document.getElementById('r-email').textContent     = email;
+  document.getElementById('r-tel').textContent       = tel;
+  irEtapa(3);
+}
+
+// ══════════════════════════════════════
+// CRIAR CONTA
+// ══════════════════════════════════════
+async function criarConta() {
+  limparErro(3);
+  const btn = document.getElementById('btn-criar');
+
+  const nomeRest = document.getElementById('f-nome-rest').value.trim();
+  const cidade   = document.getElementById('f-cidade').value.trim();
+  const estado   = document.getElementById('f-estado').value;
+  const nome     = document.getElementById('f-nome').value.trim();
+  const email    = document.getElementById('f-email').value.trim().toLowerCase();
+  const tel      = document.getElementById('f-telefone').value.trim();
+  const slug     = gerarSlug(nomeRest);
+  const senha    = gerarSenha();
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando restaurante...';
+
+  try {
+    // 1 — Criar restaurante
+    const restR = await fetch(SB_URL + '/rest/v1/restaurantes', {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ nome: nomeRest, slug, ativo: true, obs: `${cidade}/${estado} | ${FAT_LABELS[_fat]||_fat} | ${tel}` })
+    });
+    if (!restR.ok) {
+      const e = await restR.json();
+      if (e.code === '23505') throw new Error('Já existe um restaurante com esse nome. Tente um nome diferente ou adicione algo único.');
+      throw new Error(e.message || 'Erro ao criar restaurante.');
+    }
+    const restId = (await restR.json())[0].id;
+
+    // 2 — Criar usuário no Auth
+    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando usuário...';
+    const authR = await fetch(SB_URL + '/auth/v1/admin/users', {
+      method: 'POST',
+      headers: { 'apikey': SB_SERVICE_KEY, 'Authorization': 'Bearer ' + SB_SERVICE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: senha, email_confirm: true, user_metadata: { nome, restaurante_id: restId } })
+    });
+    if (!authR.ok) {
+      const e = await authR.json();
+      if ((e.message||'').toLowerCase().includes('already')) throw new Error('Este e-mail já está cadastrado. Use outro e-mail ou acesse sua conta.');
+      throw new Error(e.message || 'Erro ao criar usuário.');
+    }
+    const userId = (await authR.json()).id;
+
+    // 3 — Vincular usuário
+    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Configurando acesso...';
+    await fetch(SB_URL + '/rest/v1/usuarios', {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: userId, restaurante_id: restId, nome, email, role: 'admin', ativo: true })
+    });
+
+    // 4 — Registrar trial 15 dias
+    const venc = new Date();
+    venc.setDate(venc.getDate() + 15);
+    const vencStr = venc.toISOString().split('T')[0];
+    await fetch(SB_URL + '/rest/v1/pagamentos', {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ restaurante_id: restId, plano: 'trial', status_pgto: 'trial', vencimento: vencStr, valor: 0, obs: 'Trial via cadastro self-service' })
+    });
+
+    // 5 — Enviar e-mail via Resend
+    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Enviando e-mail...';
+    const urlCardapio = BASE_URL + '?r=' + slug;
+    const urlAdmin    = BASE_URL + '/admin.html';
+
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Sistema Delivery <onboarding@resend.dev>',
+        to: [email],
+        subject: `🎉 Seus acessos estão prontos, ${nome.split(' ')[0]}!`,
+        html: `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f8;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f8;padding:32px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.09);max-width:560px;width:100%;">
+
+<tr><td style="background:#e30613;padding:28px 36px;text-align:center;">
+  <div style="font-size:26px;font-weight:800;color:#fff;">🔥 Sistema Delivery</div>
+  <div style="color:rgba(255,255,255,.8);font-size:13px;margin-top:4px;">Seu cardápio digital está pronto!</div>
+</td></tr>
+
+<tr><td style="padding:36px;">
+  <p style="font-size:17px;font-weight:800;color:#111;margin:0 0 6px;">Olá, ${nome.split(' ')[0]}! 👋</p>
+  <p style="font-size:14px;color:#6b7280;margin:0 0 24px;line-height:1.6;">Sua conta foi criada com sucesso. Aqui estão todos os seus dados de acesso:</p>
+
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px 18px;margin-bottom:24px;">
+    <div style="font-size:13px;font-weight:800;color:#15803d;margin-bottom:3px;">✅ 15 dias grátis ativados!</div>
+    <div style="font-size:12px;color:#16a34a;">Trial válido até <strong>${venc.toLocaleDateString('pt-BR')}</strong>. Sem cartão de crédito.</div>
+  </div>
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+    <tr>
+      <td width="48%" style="padding-right:8px;">
+        <a href="${urlCardapio}" style="display:block;background:#fff5f5;border:1.5px solid #fecaca;border-radius:12px;padding:16px;text-decoration:none;text-align:center;">
+          <div style="font-size:22px;margin-bottom:6px;">🍔</div>
+          <div style="font-size:13px;font-weight:700;color:#e30613;">Cardápio Digital</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:4px;word-break:break-all;">${urlCardapio}</div>
+        </a>
+      </td>
+      <td width="48%" style="padding-left:8px;">
+        <a href="${urlAdmin}" style="display:block;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px;text-decoration:none;text-align:center;">
+          <div style="font-size:22px;margin-bottom:6px;">⚙️</div>
+          <div style="font-size:13px;font-weight:700;color:#111;">Painel Admin</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:4px;">${urlAdmin}</div>
+        </a>
+      </td>
+    </tr>
+  </table>
+
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:18px;margin-bottom:24px;">
+    <p style="font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin:0 0 12px;">🔑 Credenciais de acesso</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:7px 0;border-bottom:1px solid #e5e7eb;font-size:12px;color:#9ca3af;">Restaurante<span style="float:right;color:#111;font-weight:700;">${nomeRest}</span></td></tr>
+      <tr><td style="padding:7px 0;border-bottom:1px solid #e5e7eb;font-size:12px;color:#9ca3af;">E-mail<span style="float:right;color:#111;font-weight:700;">${email}</span></td></tr>
+      <tr><td style="padding:7px 0;font-size:12px;color:#9ca3af;">Senha<span style="float:right;color:#e30613;font-weight:800;font-family:monospace;letter-spacing:1.5px;font-size:14px;">${senha}</span></td></tr>
+    </table>
+  </div>
+
+  <div style="text-align:center;">
+    <a href="${urlAdmin}" style="display:inline-block;background:#e30613;color:#fff;text-decoration:none;padding:13px 32px;border-radius:11px;font-size:14px;font-weight:700;">
+      Acessar meu painel agora →
+    </a>
+  </div>
+
+  <p style="font-size:11px;color:#9ca3af;text-align:center;margin-top:20px;line-height:1.5;">
+    Guarde esta senha em local seguro.<br>Dúvidas? Entre em contato com nosso suporte.
+  </p>
+</td></tr>
+
+<tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 36px;text-align:center;">
+  <p style="font-size:11px;color:#9ca3af;margin:0;">© 2026 Sistema Delivery · Todos os direitos reservados</p>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`
+      })
+    });
+
+    // SUCESSO — mostrar tela
+    const telaS = document.getElementById('tela-sucesso');
+    document.getElementById('sucesso-email').textContent = email;
+    document.getElementById('steps-bar').style.display = 'none';
+    document.getElementById('form-body').innerHTML = '';
+    const clone = telaS.cloneNode(true);
+    clone.style.display = 'block';
+    document.getElementById('form-body').appendChild(clone);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } catch(e) {
+    mostrarErro(3, e.message || 'Erro inesperado. Tente novamente.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-rocket"></i> Criar minha conta grátis';
+  }
+}
+</script>
+</body>
+</html>
