@@ -2037,6 +2037,7 @@ function saFecharModalPgto() { document.getElementById('modal-pgto').classList.r
 async function saSalvarPgto() {
     const restId = document.getElementById('mpgto-rest-id').value;
     const dados  = {
+        restaurante_id: restId,
         status_pgto: document.getElementById('mpgto-status').value,
         plano:       document.getElementById('mpgto-plano').value,
         vencimento:  document.getElementById('mpgto-venc').value || null,
@@ -2044,15 +2045,31 @@ async function saSalvarPgto() {
         obs:         document.getElementById('mpgto-obs').value.trim()
     };
     try {
-        // Verificar se já existe registro de pagamento para esse restaurante
-        const existente = await saFetch('GET', `pagamentos?restaurante_id=eq.${restId}&select=id&limit=1`);
-        if (existente && existente.length > 0) {
-            // Já existe → PATCH
-            await saFetch('PATCH', `pagamentos?restaurante_id=eq.${restId}`, dados);
-        } else {
-            // Não existe → POST (insert)
-            await saFetch('POST', 'pagamentos', { ...dados, restaurante_id: restId });
+        // Tenta PATCH primeiro (atualizar registro existente)
+        const patchR = await fetch(SA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + restId, {
+            method: 'PATCH',
+            headers: {
+                'apikey':        SA_KEY,
+                'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY),
+                'Content-Type':  'application/json',
+                'Prefer':        'return=representation'
+            },
+            body: JSON.stringify({
+                status_pgto: dados.status_pgto,
+                plano:       dados.plano,
+                vencimento:  dados.vencimento,
+                valor:       dados.valor,
+                obs:         dados.obs
+            })
+        });
+        const patchTxt = await patchR.text();
+        const patchData = patchTxt ? JSON.parse(patchTxt) : [];
+
+        // Se PATCH não atualizou nada (array vazio = registro não existe), faz POST
+        if (!patchData || patchData.length === 0) {
+            await saFetch('POST', 'pagamentos', dados);
         }
+
         const r = _restaurantes.find(x => x.id === restId);
         if (r) r.pgto = { ...r.pgto, ...dados };
         saFecharModalPgto();
@@ -2060,7 +2077,11 @@ async function saSalvarPgto() {
         saRenderRestaurantes(_restaurantes);
         saCalcularMetricas();
         toast('✓ Pagamento atualizado!');
-    } catch(e) { toast('Erro: ' + e.message, false); }
+    } catch(e) {
+        let msg = e.message;
+        try { const p = JSON.parse(msg); msg = p.message || p.details || msg; } catch {}
+        toast('Erro: ' + msg, false);
+    }
 }
 
 // ══════════════════════════════════════════════════════════════
