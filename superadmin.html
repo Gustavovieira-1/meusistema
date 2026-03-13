@@ -2044,7 +2044,15 @@ async function saSalvarPgto() {
         obs:         document.getElementById('mpgto-obs').value.trim()
     };
     try {
-        await saFetch('POST', 'pagamentos?on_conflict=restaurante_id', { ...dados, restaurante_id: restId });
+        // Verificar se já existe registro de pagamento para esse restaurante
+        const existente = await saFetch('GET', `pagamentos?restaurante_id=eq.${restId}&select=id&limit=1`);
+        if (existente && existente.length > 0) {
+            // Já existe → PATCH
+            await saFetch('PATCH', `pagamentos?restaurante_id=eq.${restId}`, dados);
+        } else {
+            // Não existe → POST (insert)
+            await saFetch('POST', 'pagamentos', { ...dados, restaurante_id: restId });
+        }
         const r = _restaurantes.find(x => x.id === restId);
         if (r) r.pgto = { ...r.pgto, ...dados };
         saFecharModalPgto();
