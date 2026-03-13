@@ -3,2153 +3,747 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel Master</title>
+<title>Teste Grátis por 15 dias — Sistema de Delivery</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ── DARK THEME (default) ── */
 :root {
-  --bg:        #09090f;
-  --surface:   #0f0f18;
-  --surface2:  #15151f;
-  --surface3:  #1c1c28;
-  --border:    rgba(255,255,255,.06);
-  --border2:   rgba(255,255,255,.1);
-  --accent:    #e30613;
-  --gold:      #d4a843;
-  --gold2:     #f0d080;
-  --text:      #f0f0f8;
-  --muted:     #525270;
-  --muted2:    #8080a0;
-  --green:     #16a34a;
-  --yellow:    #d97706;
-  --red:       #dc2626;
-  --blue:      #2563eb;
-  --purple:    #7c3aed;
-  --sidebar-w: 248px;
-  --shadow:    0 1px 3px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,.5);
+  --brand:    #e30613;
+  --brand-dk: #b8000e;
+  --text:     #111118;
+  --muted:    #6b7280;
+  --muted2:   #9ca3af;
+  --border:   #e5e7eb;
+  --border2:  #d1d5db;
+  --surface:  #f9fafb;
+  --white:    #ffffff;
+  --green:    #16a34a;
+  --shadow-lg: 0 16px 48px rgba(0,0,0,.1);
 }
 
-/* ── LIGHT THEME ── */
-[data-theme="light"] {
-  --bg:        #f4f4f8;
-  --surface:   #ffffff;
-  --surface2:  #f0f0f6;
-  --surface3:  #e8e8f0;
-  --border:    rgba(0,0,0,.07);
-  --border2:   rgba(0,0,0,.12);
-  --text:      #111118;
-  --muted:     #9090b0;
-  --muted2:    #6060808;
-  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.06);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,.12);
-}
-
+html { scroll-behavior: smooth; }
 body {
-  background: var(--bg);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #f4f4f8;
   color: var(--text);
-  font-family: 'Plus Jakarta Sans', sans-serif;
   min-height: 100vh;
-  overflow-x: hidden;
-  transition: background .2s, color .2s;
 }
 
-/* ──────────────────────────────────────────────
-   LOGIN
-────────────────────────────────────────────── */
-#tela-login {
-  position: fixed; inset: 0; z-index: 9999;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--bg);
-  overflow: hidden;
-}
-
-.login-bg-art {
-  position: absolute; inset: 0; pointer-events: none;
-  background:
-    radial-gradient(ellipse 70% 50% at 15% 50%, rgba(201,168,76,.07) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 85% 20%, rgba(227,6,19,.07) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 60% at 50% 110%, rgba(72,149,239,.05) 0%, transparent 50%);
-}
-
-.login-lines {
-  position: absolute; inset: 0; pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
-  background-size: 60px 60px;
-}
-
-.login-wrap {
-  position: relative; z-index: 1;
-  display: grid; grid-template-columns: 1fr 1fr;
-  max-width: 900px; width: 100%;
-  min-height: 540px;
-  border-radius: 28px; overflow: hidden;
-  box-shadow: 0 60px 120px rgba(0,0,0,.8), 0 0 0 1px var(--border2);
-}
-
-.login-left {
-  background: linear-gradient(145deg, #0f0f1a 0%, #161625 100%);
-  padding: 60px 52px;
-  display: flex; flex-direction: column; justify-content: space-between;
-  border-right: 1px solid var(--border);
-  position: relative; overflow: hidden;
-}
-
-.login-left-deco {
-  position: absolute; bottom: -60px; right: -60px;
-  width: 280px; height: 280px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,168,76,.08) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.login-eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(201,168,76,.08);
-  border: 1px solid rgba(201,168,76,.2);
-  color: var(--gold); padding: 5px 14px;
-  border-radius: 20px; font-size: 10px; font-weight: 700;
-  letter-spacing: 2px; text-transform: uppercase;
-  width: fit-content; margin-bottom: 36px;
-}
-
-.login-brand {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 48px; font-weight: 800;
-  line-height: .95; color: var(--text);
-  margin-bottom: 20px;
-}
-.login-brand span { color: var(--gold); }
-
-.login-desc {
-  font-size: 14px; color: var(--muted2); line-height: 1.7; max-width: 260px;
-}
-
-.login-stat {
-  display: flex; gap: 32px; margin-top: 40px;
-}
-.login-stat-item { }
-.login-stat-num {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 28px; font-weight: 700; color: var(--text);
-}
-.login-stat-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-.login-right {
-  background: var(--surface);
-  padding: 60px 52px;
-  display: flex; flex-direction: column; justify-content: center;
-}
-
-.login-form-title {
-  font-size: 22px; font-weight: 700; margin-bottom: 6px;
-}
-.login-form-sub { font-size: 13px; color: var(--muted2); margin-bottom: 36px; }
-
-.l-campo { margin-bottom: 18px; }
-.l-campo label {
-  display: block; font-size: 10px; font-weight: 700;
-  color: var(--muted); text-transform: uppercase;
-  letter-spacing: 1.2px; margin-bottom: 9px;
-}
-.l-campo input {
-  width: 100%; padding: 13px 16px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 12px; color: var(--text);
-  font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; outline: none;
-  transition: border-color .2s, box-shadow .2s;
-}
-.l-campo input:focus {
-  border-color: rgba(201,168,76,.5);
-  box-shadow: 0 0 0 3px rgba(201,168,76,.08);
-}
-.l-campo input::placeholder { color: var(--muted); }
-
-.login-btn {
-  width: 100%; padding: 14px;
-  background: linear-gradient(135deg, var(--gold) 0%, #a87c2c 100%);
-  color: #0f0a00; border: none; border-radius: 12px;
-  font-size: 14px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
-  cursor: pointer; margin-top: 8px; letter-spacing: .3px;
-  transition: opacity .15s, transform .1s;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.login-btn:hover { opacity: .9; }
-.login-btn:active { transform: scale(.99); }
-.login-btn:disabled { opacity: .4; cursor: default; }
-
-.login-erro {
-  display: none;
-  background: rgba(230,57,70,.08); border: 1px solid rgba(230,57,70,.2);
-  border-radius: 10px; padding: 10px 14px;
-  font-size: 12px; color: var(--red); margin-top: 12px;
-}
-
-/* ──────────────────────────────────────────────
-   APP LAYOUT
-────────────────────────────────────────────── */
-#app { display: none; }
-
-.app-layout {
-  display: flex; min-height: 100vh;
-}
-
-/* ──────────────────────────────────────────────
-   SIDEBAR
-────────────────────────────────────────────── */
-.sidebar {
-  width: var(--sidebar-w);
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  position: fixed; top: 0; left: 0; bottom: 0;
-  display: flex; flex-direction: column;
-  z-index: 200;
-  transition: transform .3s;
-}
-
-.sidebar-top {
-  padding: 28px 24px 20px;
-  border-bottom: 1px solid var(--border);
-}
-
-.sidebar-logo {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 20px; font-weight: 700;
-  color: var(--text);
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 4px;
-}
-.sidebar-logo-gem {
-  width: 28px; height: 28px; border-radius: 8px;
-  background: linear-gradient(135deg, var(--gold) 0%, #7a5518 100%);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; color: #0f0a00; flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(201,168,76,.3);
-}
-.sidebar-tagline {
-  font-size: 10px; color: var(--muted); letter-spacing: .8px; margin-left: 38px;
-}
-
-.sidebar-user {
-  margin: 16px 0 0;
-  padding: 12px 14px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  display: flex; align-items: center; gap: 10px;
-}
-.sidebar-avatar {
-  width: 32px; height: 32px; border-radius: 10px; flex-shrink: 0;
-  background: linear-gradient(135deg, var(--accent), #7a000a);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: white;
-}
-.sidebar-user-name {
-  font-size: 13px; font-weight: 600; flex: 1; min-width: 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.sidebar-user-role {
-  font-size: 9px; font-weight: 700; color: var(--gold);
-  text-transform: uppercase; letter-spacing: 1px; margin-top: 1px;
-}
-
-.sidebar-nav {
-  flex: 1; padding: 20px 16px; overflow-y: auto;
-}
-
-.sidebar-nav-label {
-  font-size: 9px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 1.5px;
-  padding: 0 10px; margin-bottom: 8px; margin-top: 8px;
-}
-
-.nav-item {
-  display: flex; align-items: center; gap: 11px;
-  padding: 10px 12px; border-radius: 10px;
-  font-size: 13px; font-weight: 500; color: var(--muted2);
-  cursor: pointer; transition: all .15s; position: relative;
-  margin-bottom: 2px; border: none; background: none; width: 100%;
-  font-family: 'Plus Jakarta Sans', sans-serif; text-align: left;
-}
-.nav-item i { width: 16px; text-align: center; font-size: 13px; flex-shrink: 0; }
-.nav-item:hover { color: var(--text); background: var(--surface2); }
-.nav-item.active {
-  color: var(--text); background: var(--surface2);
-  border: 1px solid var(--border2);
-}
-.nav-item.active::before {
-  content: '';
-  position: absolute; left: 0; top: 20%; bottom: 20%;
-  width: 3px; border-radius: 0 3px 3px 0;
-  background: var(--gold);
-}
-
-.sidebar-bottom {
-  padding: 16px;
-  border-top: 1px solid var(--border);
-}
-
-.btn-logout-sb {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px; border-radius: 10px;
-  font-size: 12px; font-weight: 500; color: var(--muted);
-  background: none; border: none; cursor: pointer;
-  font-family: 'Plus Jakarta Sans', sans-serif; width: 100%;
-  transition: all .15s;
-}
-.btn-logout-sb:hover { color: var(--red); background: rgba(230,57,70,.06); }
-.btn-logout-sb i { font-size: 12px; }
-
-/* ──────────────────────────────────────────────
-   MAIN CONTENT
-────────────────────────────────────────────── */
-.main-content {
-  margin-left: var(--sidebar-w);
-  flex: 1;
-  min-height: 100vh;
-  background: var(--bg);
-}
-
-.topbar {
-  height: 64px;
-  padding: 0 36px;
-  display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  background: rgba(8,8,16,.8);
-  backdrop-filter: blur(20px);
+/* HEADER */
+.header {
   position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px; height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
 }
-
-.topbar-path {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; color: var(--muted2);
+.header-logo {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 17px; font-weight: 800; color: var(--text); text-decoration: none;
 }
-.topbar-path i { font-size: 11px; }
-.topbar-path strong { color: var(--text); font-weight: 600; }
-
-.topbar-right { display: flex; align-items: center; gap: 12px; }
-
-.topbar-time {
-  font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums;
+.header-logo-dot {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--brand);
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 13px;
 }
-
-.page { padding: 36px; }
-
-/* ──────────────────────────────────────────────
-   MÉTRICAS
-────────────────────────────────────────────── */
-.metricas {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 14px;
-  margin-bottom: 36px;
+.header-badge {
+  display: flex; align-items: center; gap: 6px;
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  color: var(--green); padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
 }
+.pulse { width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:blink 2s infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-.metrica-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 22px 20px;
-  position: relative; overflow: hidden;
-  cursor: default;
-  transition: border-color .2s, transform .2s;
+/* HERO */
+.hero {
+  padding: 44px 20px 20px;
+  text-align: center;
+  max-width: 700px; margin: 0 auto;
   animation: fadeUp .5s ease both;
 }
-.metrica-card:nth-child(1) { animation-delay: .05s; }
-.metrica-card:nth-child(2) { animation-delay: .10s; }
-.metrica-card:nth-child(3) { animation-delay: .15s; }
-.metrica-card:nth-child(4) { animation-delay: .20s; }
-.metrica-card:nth-child(5) { animation-delay: .25s; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.metrica-card:hover { border-color: rgba(201,168,76,.2); transform: translateY(-2px); }
-
-.metrica-card::after {
-  content: ''; position: absolute;
-  bottom: 0; left: 0; right: 0; height: 1px;
-}
-.metrica-card.verde::after   { background: linear-gradient(90deg, transparent, var(--green), transparent); }
-.metrica-card.azul::after    { background: linear-gradient(90deg, transparent, var(--blue), transparent); }
-.metrica-card.amarelo::after { background: linear-gradient(90deg, transparent, var(--yellow), transparent); }
-.metrica-card.roxo::after    { background: linear-gradient(90deg, transparent, var(--purple), transparent); }
-.metrica-card.ouro::after    { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
-
-.metrica-icon-wrap {
-  width: 36px; height: 36px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; margin-bottom: 16px;
-}
-.verde .metrica-icon-wrap   { background: rgba(29,185,84,.1); color: var(--green); }
-.azul .metrica-icon-wrap    { background: rgba(72,149,239,.1); color: var(--blue); }
-.amarelo .metrica-icon-wrap { background: rgba(240,180,41,.1); color: var(--yellow); }
-.roxo .metrica-icon-wrap    { background: rgba(155,93,229,.1); color: var(--purple); }
-.ouro .metrica-icon-wrap    { background: rgba(201,168,76,.1); color: var(--gold); }
-
-.metrica-label {
-  font-size: 10px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
-}
-
-.metrica-valor {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 30px; font-weight: 700; line-height: 1;
-  margin-bottom: 5px;
-}
-
-.metrica-sub { font-size: 11px; color: var(--muted); }
-
-/* ──────────────────────────────────────────────
-   SEÇÕES
-────────────────────────────────────────────── */
-.secao { display: none; }
-.secao.active { display: block; }
-
-.sec-header {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  margin-bottom: 24px; gap: 16px; flex-wrap: wrap;
-}
-.sec-titulo {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 26px; font-weight: 700; line-height: 1;
-}
-.sec-sub { font-size: 13px; color: var(--muted2); margin-top: 6px; }
-
-/* ──────────────────────────────────────────────
-   BOTÕES
-────────────────────────────────────────────── */
-.btn-primary {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 22px;
-  background: linear-gradient(135deg, var(--gold) 0%, #a07828 100%);
-  color: #0f0a00; border: none; border-radius: 10px;
-  font-size: 13px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
-  cursor: pointer; transition: opacity .15s, transform .1s; white-space: nowrap;
-  letter-spacing: .2px;
-}
-.btn-primary:hover { opacity: .88; }
-.btn-primary:active { transform: scale(.98); }
-.btn-primary:disabled { opacity: .35; cursor: default; }
-
-.btn-secondary {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 10px 18px; background: var(--surface2);
-  border: 1px solid var(--border2); color: var(--text);
-  border-radius: 10px; font-size: 13px; font-weight: 600;
-  font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer; transition: all .15s; white-space: nowrap;
-}
-.btn-secondary:hover { border-color: var(--muted2); }
-.btn-ghost {
+.hero-eyebrow {
   display: inline-flex; align-items: center; gap: 7px;
-  padding: 8px 14px; background: transparent; border: none;
-  color: var(--muted); font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif;
-  cursor: pointer; transition: color .15s; border-radius: 8px;
+  background: #fff7ed; border: 1px solid #fed7aa;
+  color: #c2410c; padding: 6px 16px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; letter-spacing: .4px; margin-bottom: 22px;
 }
-.btn-ghost:hover { color: var(--text); background: var(--surface2); }
+.hero-title {
+  font-size: clamp(30px, 5vw, 50px); font-weight: 800;
+  line-height: 1.1; letter-spacing: -.5px; margin-bottom: 18px;
+}
+.hero-title span { color: var(--brand); }
+.hero-sub {
+  font-size: 17px; color: var(--muted); line-height: 1.65;
+  margin-bottom: 36px; max-width: 480px; margin-left: auto; margin-right: auto;
+}
+.beneficios {
+  display: flex; justify-content: center; gap: 28px;
+  flex-wrap: nowrap; margin-bottom: 24px;
+}
+.beneficio { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.beneficio i { color: var(--green); font-size: 12px; }
 
-/* ──────────────────────────────────────────────
-   TABELA
-────────────────────────────────────────────── */
-.tabela-wrap {
-  background: var(--surface);
+/* FORM CARD */
+.form-container { max-width: 780px; margin: 0 auto; padding: 0 16px 72px; animation: fadeUp .5s .1s ease both; }
+.form-card {
+  background: var(--white);
+  border-radius: 24px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: 20px; overflow: hidden;
-  margin-bottom: 32px;
 }
 
-.tabela-filtros {
-  padding: 16px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+/* STEPS BAR */
+.steps-bar { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+.step-tab {
+  flex: 1; padding: 15px 16px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 700; color: var(--muted2);
+  border-bottom: 2px solid transparent; transition: all .2s; user-select: none;
 }
-
-.filtro-input {
-  flex: 1; min-width: 180px; padding: 9px 14px;
-  background: var(--surface2); border: 1px solid var(--border2);
-  border-radius: 10px; color: var(--text); font-size: 13px;
-  font-family: 'Plus Jakarta Sans', sans-serif; outline: none;
-  transition: border-color .2s;
-}
-.filtro-input:focus { border-color: rgba(201,168,76,.4); }
-.filtro-input::placeholder { color: var(--muted); }
-
-.filtro-select {
-  padding: 9px 14px; background: var(--surface2);
-  border: 1px solid var(--border2); border-radius: 10px;
-  color: var(--text); font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif;
-  outline: none; cursor: pointer;
-}
-.filtro-select option { background: var(--surface2); }
-
-table { width: 100%; border-collapse: collapse; }
-thead { background: var(--surface2); }
-th {
-  padding: 12px 20px; text-align: left;
-  font-size: 9px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 1px;
-  border-bottom: 1px solid var(--border); white-space: nowrap;
-}
-td {
-  padding: 14px 20px; font-size: 13px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(255,255,255,.015); }
-
-.rest-nome { font-weight: 600; font-size: 14px; }
-.rest-slug {
-  font-size: 11px; color: var(--muted); margin-top: 3px;
-  display: flex; align-items: center; gap: 4px;
-}
-
-/* ──────────────────────────────────────────────
-   BADGES
-────────────────────────────────────────────── */
-.badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 10px; border-radius: 20px;
-  font-size: 10px; font-weight: 700; letter-spacing: .3px;
-}
-.badge.ativo     { background: rgba(29,185,84,.08); color: var(--green); border: 1px solid rgba(29,185,84,.2); }
-.badge.inativo   { background: rgba(90,90,122,.1); color: var(--muted2); border: 1px solid var(--border); }
-.badge.pago      { background: rgba(72,149,239,.08); color: var(--blue); border: 1px solid rgba(72,149,239,.2); }
-.badge.pendente  { background: rgba(240,180,41,.08); color: var(--yellow); border: 1px solid rgba(240,180,41,.2); }
-.badge.trial     { background: rgba(201,168,76,.08); color: var(--gold); border: 1px solid rgba(201,168,76,.2); }
-.badge.cancelado { background: rgba(230,57,70,.08); color: var(--red); border: 1px solid rgba(230,57,70,.2); }
-.badge.superadmin{ background: rgba(155,93,229,.1); color: var(--purple); border: 1px solid rgba(155,93,229,.3); }
-.badge.admin     { background: rgba(72,149,239,.08); color: var(--blue); border: 1px solid rgba(72,149,239,.2); }
-
-/* ──────────────────────────────────────────────
-   TOGGLE
-────────────────────────────────────────────── */
-.toggle {
-  width: 40px; height: 22px; border-radius: 11px;
-  background: var(--surface3); cursor: pointer;
-  position: relative; transition: background .2s; border: 1px solid var(--border2);
-  flex-shrink: 0;
-}
-.toggle.on { background: var(--green); border-color: transparent; }
-.toggle::after {
-  content: ''; position: absolute;
-  top: 3px; left: 3px;
-  width: 14px; height: 14px; border-radius: 50%;
-  background: white; transition: transform .2s;
-  box-shadow: 0 1px 4px rgba(0,0,0,.3);
-}
-.toggle.on::after { transform: translateX(18px); }
-
-/* ──────────────────────────────────────────────
-   AÇÕES
-────────────────────────────────────────────── */
-.acoes { display: flex; gap: 5px; align-items: center; }
-.btn-acao {
-  width: 30px; height: 30px; border-radius: 8px;
-  border: 1px solid var(--border); background: transparent;
-  color: var(--muted); cursor: pointer; font-size: 11px;
+.step-tab.active { color: var(--brand); border-bottom-color: var(--brand); background: var(--white); }
+.step-tab.done   { color: var(--green); }
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--border); color: var(--muted2);
   display: flex; align-items: center; justify-content: center;
-  transition: all .15s;
+  font-size: 10px; font-weight: 800; flex-shrink: 0; transition: all .2s;
 }
-.btn-acao:hover         { border-color: var(--muted2); color: var(--text); background: var(--surface2); }
-.btn-acao.danger:hover  { border-color: var(--red); color: var(--red); background: rgba(230,57,70,.06); }
-.btn-acao.success:hover { border-color: var(--green); color: var(--green); background: rgba(29,185,84,.06); }
-.btn-acao.info:hover    { border-color: var(--blue); color: var(--blue); background: rgba(72,149,239,.06); }
+.step-tab.active .step-num { background: var(--brand); color: white; }
+.step-tab.done   .step-num { background: var(--green); color: white; }
 
-/* ──────────────────────────────────────────────
-   MODAL
-────────────────────────────────────────────── */
-.modal-overlay {
-  position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0,0,0,.8); backdrop-filter: blur(8px);
-  display: none; align-items: center; justify-content: center; padding: 20px;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--surface); border: 1px solid var(--border2);
-  border-radius: 22px; padding: 36px; width: 100%; max-width: 540px;
-  box-shadow: 0 40px 80px rgba(0,0,0,.7);
-  animation: modalIn .2s cubic-bezier(.34,1.4,.64,1);
-  max-height: 90vh; overflow-y: auto;
-}
-.modal.wide { max-width: 680px; }
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(.96) translateY(12px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-.modal-titulo {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 22px; font-weight: 700; margin-bottom: 4px;
-}
-.modal-sub { font-size: 13px; color: var(--muted2); margin-bottom: 28px; }
+/* FORM BODY */
+.form-body { padding: 40px 48px; }
+.etapa { display: none; }
+.etapa.active { display: block; }
+.etapa-titulo { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.etapa-sub { font-size: 14px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
 
+/* CAMPOS */
 .campo { margin-bottom: 16px; }
 .campo label {
-  display: block; font-size: 10px; font-weight: 700;
+  display: block; font-size: 10px; font-weight: 800;
   color: var(--muted); text-transform: uppercase;
-  letter-spacing: 1px; margin-bottom: 8px;
+  letter-spacing: 1px; margin-bottom: 7px;
 }
-.campo input, .campo select, .campo textarea {
-  width: 100%; padding: 11px 14px;
-  background: var(--surface2); border: 1px solid var(--border2);
-  border-radius: 10px; color: var(--text);
-  font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; outline: none;
-  transition: border-color .15s, box-shadow .15s;
+.campo input, .campo select {
+  width: 100%; padding: 12px 15px;
+  background: var(--white); border: 1.5px solid var(--border2);
+  border-radius: 11px; color: var(--text);
+  font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
+  outline: none; transition: border-color .15s, box-shadow .15s;
+  appearance: none; -webkit-appearance: none;
 }
-.campo input:focus, .campo select:focus, .campo textarea:focus {
-  border-color: rgba(201,168,76,.4);
-  box-shadow: 0 0 0 3px rgba(201,168,76,.06);
+.campo input:focus, .campo select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(227,6,19,.07);
 }
-.campo input::placeholder, .campo textarea::placeholder { color: var(--muted); }
-.campo select option { background: var(--surface2); }
-.campo textarea { resize: vertical; min-height: 80px; }
+.campo input::placeholder { color: var(--muted2); }
+.campo select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; cursor: pointer;
+}
 .campo-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.modal-footer {
-  display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;
-  padding-top: 20px; border-top: 1px solid var(--border);
-}
-.modal-erro {
-  display: none; background: rgba(230,57,70,.08);
-  border: 1px solid rgba(230,57,70,.2); border-radius: 8px;
-  padding: 10px 14px; font-size: 12px; color: var(--red); margin-top: 12px;
-}
-.modal-ok {
-  display: none; background: rgba(29,185,84,.06);
-  border: 1px solid rgba(29,185,84,.2); border-radius: 8px;
-  padding: 10px 14px; font-size: 12px; color: var(--green); margin-top: 12px;
-}
+.campo-icon { position: relative; }
+.campo-icon input { padding-left: 42px; }
+.campo-icon i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted2); font-size: 13px; pointer-events: none; }
 
-/* ──────────────────────────────────────────────
-   STEPS
-────────────────────────────────────────────── */
-.steps {
-  display: flex; gap: 0; margin-bottom: 28px;
-  background: var(--surface2); border-radius: 10px;
-  overflow: hidden; border: 1px solid var(--border);
+/* FATURAMENTO */
+.fat-label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.fat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.fat-card {
+  border: 1.5px solid var(--border2); border-radius: 11px;
+  padding: 13px 14px; cursor: pointer; transition: all .15s; position: relative;
 }
-.step {
-  flex: 1; padding: 10px; text-align: center;
-  font-size: 11px; font-weight: 600; color: var(--muted);
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  border-right: 1px solid var(--border); transition: all .2s;
-}
-.step:last-child { border-right: none; }
-.step.done   { color: var(--green); background: rgba(29,185,84,.05); }
-.step.active { color: var(--gold);  background: rgba(201,168,76,.05); }
-.step i { font-size: 12px; }
-
-/* ──────────────────────────────────────────────
-   CARDS DE USUÁRIO
-────────────────────────────────────────────── */
-.usuario-card {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 16px 20px;
-  display: flex; align-items: center; gap: 14px;
-  margin-bottom: 10px; transition: border-color .15s;
-}
-.usuario-card:hover { border-color: rgba(201,168,76,.2); }
-.usuario-avatar {
-  width: 40px; height: 40px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #7a000a);
+.fat-card:hover { border-color: var(--brand); background: #fff5f5; }
+.fat-card.selected { border-color: var(--brand); background: #fff5f5; }
+.fat-card.selected::after {
+  content: '✓'; position: absolute; top: 9px; right: 10px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--brand); color: white; font-size: 9px; font-weight: 900;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 700; color: white; flex-shrink: 0;
 }
-.usuario-info { flex: 1; min-width: 0; }
-.usuario-nome  { font-weight: 600; font-size: 14px; }
-.usuario-email { font-size: 12px; color: var(--muted); margin-top: 1px; }
-.usuario-rest  { font-size: 11px; color: var(--gold); margin-top: 2px; }
+.fat-valor { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+.fat-desc  { font-size: 11px; color: var(--muted); }
 
-/* ──────────────────────────────────────────────
-   INFO / WARN BOX
-────────────────────────────────────────────── */
-.info-box {
-  background: rgba(72,149,239,.05); border: 1px solid rgba(72,149,239,.15);
-  border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
-  font-size: 13px; color: #93c5fd; line-height: 1.6;
+/* BOTÕES */
+.btn-primary {
+  width: 100%; padding: 14px;
+  background: var(--brand); color: white; border: none; border-radius: 11px;
+  font-size: 15px; font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer; transition: background .15s, transform .1s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 6px;
 }
-.info-box strong { color: var(--blue); }
-.warn-box {
-  background: rgba(240,180,41,.05); border: 1px solid rgba(240,180,41,.15);
-  border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
-  font-size: 13px; color: #fcd34d; line-height: 1.6;
+.btn-primary:hover { background: var(--brand-dk); }
+.btn-primary:active { transform: scale(.99); }
+.btn-primary:disabled { background: var(--muted2); cursor: default; }
+.btn-back {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: none; border: none; color: var(--muted);
+  font-size: 13px; font-weight: 600; font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer; padding: 0; margin-bottom: 18px; transition: color .15s;
 }
-.warn-box strong { color: var(--yellow); }
+.btn-back:hover { color: var(--text); }
 
-/* ──────────────────────────────────────────────
-   LOADING / VAZIO
-────────────────────────────────────────────── */
-.loading {
+/* ERRO */
+.erro-box {
+  display: none; background: #fef2f2;
+  border: 1px solid #fecaca; border-radius: 10px;
+  padding: 11px 14px; font-size: 13px; color: #dc2626;
+  margin-top: 10px; align-items: flex-start; gap: 8px;
+}
+.erro-box.show { display: flex; }
+.erro-box i { margin-top: 1px; flex-shrink: 0; }
+
+/* RESUMO */
+.resumo { background: var(--surface); border-radius: 13px; padding: 18px; margin-bottom: 20px; }
+.resumo-titulo { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+.resumo-item {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px; gap: 12px;
+}
+.resumo-item:last-child { border-bottom: none; }
+.resumo-key { color: var(--muted); flex-shrink: 0; }
+.resumo-val { font-weight: 600; text-align: right; word-break: break-all; }
+
+.trial-box {
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  border-radius: 13px; padding: 16px 18px;
+  display: flex; gap: 12px; align-items: flex-start; margin-bottom: 20px;
+}
+.trial-box i { color: var(--green); font-size: 17px; margin-top: 1px; flex-shrink: 0; }
+.trial-box-titulo { font-size: 13px; font-weight: 800; color: #15803d; margin-bottom: 3px; }
+.trial-box-sub { font-size: 12px; color: #16a34a; line-height: 1.5; }
+
+/* SUCESSO */
+#tela-sucesso { display: none; padding: 52px 32px; text-align: center; }
+.sucesso-icon {
+  width: 68px; height: 68px; border-radius: 50%;
+  background: #f0fdf4; border: 2px solid #bbf7d0;
   display: flex; align-items: center; justify-content: center;
-  padding: 60px; color: var(--muted); gap: 12px; flex-direction: column;
+  font-size: 26px; color: var(--green);
+  margin: 0 auto 22px; animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
 }
+@keyframes popIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+.sucesso-titulo { font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+.sucesso-sub { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 360px; margin: 0 auto 24px; }
+.sucesso-email-box {
+  background: var(--surface); border: 1px solid var(--border2); border-radius: 11px;
+  padding: 13px 18px; margin-bottom: 20px; font-size: 13px; color: var(--muted);
+}
+.sucesso-email-box strong { color: var(--text); }
+
+/* SPIN */
 .spin { animation: spin 1s linear infinite; display: inline-block; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.vazio { text-align: center; padding: 60px; color: var(--muted); font-size: 14px; }
-.vazio-icon { font-size: 36px; margin-bottom: 12px; opacity: .25; }
+@keyframes spin{to{transform:rotate(360deg)}}
 
-/* ──────────────────────────────────────────────
-   TOAST
-────────────────────────────────────────────── */
-#toast {
-  position: fixed; bottom: 28px; right: 28px; z-index: 9999;
-  padding: 13px 20px; border-radius: 12px;
-  font-size: 13px; font-weight: 600;
-  box-shadow: 0 8px 32px rgba(0,0,0,.5);
-  transform: translateY(80px); opacity: 0;
-  transition: all .3s cubic-bezier(.34,1.56,.64,1);
-  pointer-events: none; max-width: 320px;
-  display: flex; align-items: center; gap: 10px;
-  backdrop-filter: blur(16px);
-}
-#toast.show { transform: translateY(0); opacity: 1; }
+/* SOCIAL PROOF */
+.social { background: white; border-top: 1px solid var(--border); padding: 36px 20px; text-align: center; }
+.social-titulo { font-size: 12px; color: var(--muted); margin-bottom: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; }
+.social-nums { display: flex; justify-content: center; gap: 48px; flex-wrap: wrap; }
+.social-num-val { font-size: 26px; font-weight: 800; color: var(--text); }
+.social-num-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-/* ──────────────────────────────────────────────
-   MISC
-────────────────────────────────────────────── */
-.divider { height: 1px; background: var(--border); margin: 24px 0; }
-.section-label {
-  font-size: 9px; font-weight: 700; color: var(--muted);
-  text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;
-}
+/* RODAPÉ */
+.rodape { text-align: center; padding: 24px 20px; font-size: 12px; color: var(--muted2); border-top: 1px solid var(--border); background: white; }
+.rodape a { color: var(--muted); text-decoration: none; }
 
-/* ──────────────────────────────────────────────
-   THEME TOGGLE
-────────────────────────────────────────────── */
-.btn-theme-toggle {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 12px; border-radius: 10px;
-  background: var(--surface2); border: 1px solid var(--border2);
-  color: var(--muted2); font-size: 12px; font-weight: 600;
-  font-family: 'Plus Jakarta Sans', sans-serif; width: 100%;
-  cursor: pointer; transition: all .15s; margin-bottom: 8px;
-  text-align: left;
-}
-.btn-theme-toggle:hover { border-color: var(--gold); color: var(--text); }
-
-.theme-icon-wrap {
-  width: 24px; height: 24px; border-radius: 6px;
-  background: rgba(212,168,67,.12); color: var(--gold);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; flex-shrink: 0;
-  transition: background .2s;
-}
-
-.theme-pill {
-  margin-left: auto;
-  width: 32px; height: 18px; border-radius: 9px;
-  background: var(--surface3); border: 1px solid var(--border2);
-  position: relative; flex-shrink: 0;
-  transition: background .2s;
-}
-.theme-pill-dot {
-  position: absolute; top: 3px; left: 3px;
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--muted); transition: transform .2s, background .2s;
-}
-[data-theme="light"] .theme-pill { background: var(--gold); border-color: var(--gold); }
-[data-theme="light"] .theme-pill-dot { background: white; transform: translateX(14px); }
-[data-theme="light"] .theme-icon-wrap { background: rgba(212,168,67,.15); }
-
-/* Light mode adjustments */
-[data-theme="light"] .sidebar { background: var(--surface); border-right: 1px solid var(--border2); }
-[data-theme="light"] .topbar { background: rgba(244,244,248,.9); border-bottom: 1px solid var(--border2); }
-[data-theme="light"] .login-wrap { box-shadow: 0 40px 80px rgba(0,0,0,.15), 0 0 0 1px var(--border2); }
-[data-theme="light"] .metrica-card { box-shadow: var(--shadow); }
-[data-theme="light"] .tabela-wrap { box-shadow: var(--shadow); }
-[data-theme="light"] th { background: var(--surface2); }
-[data-theme="light"] .login-left { background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%); }
-
-/* ──────────────────────────────────────────────
-   RESPONSIVE
-────────────────────────────────────────────── */
-@media (max-width: 1200px) { .metricas { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 900px)  {
-  .metricas { grid-template-columns: repeat(2, 1fr); }
-  .main-content { margin-left: 0; }
-  .sidebar { transform: translateX(-100%); }
-  .sidebar.open { transform: translateX(0); }
-  .page { padding: 20px 16px; }
-  .topbar { padding: 0 16px; }
-}
-@media (max-width: 600px) {
-  .metricas { grid-template-columns: 1fr 1fr; }
-  .campo-row { grid-template-columns: 1fr; }
-  .login-wrap { grid-template-columns: 1fr; }
-  .login-left { display: none; }
+@media(max-width:600px){
+  .header { padding: 0 16px; }
+  .hero   { padding: 36px 16px 16px; }
+  .form-body { padding: 24px 18px; }
+  .campo-row { grid-template-columns: 1fr; gap: 0; }
+  .fat-grid { grid-template-columns: 1fr 1fr; }
+  .beneficios { gap: 14px; flex-wrap: wrap; }
+  .step-tab span { display: none; }
 }
 </style>
 </head>
 <body>
 
-<!-- ══ LOGIN ══ -->
-<div id="tela-login">
-  <div class="login-bg-art"></div>
-  <div class="login-lines"></div>
-  <div class="login-wrap">
-    <div class="login-left">
-      <div class="login-left-deco"></div>
-      <div>
-        <div class="login-eyebrow"><i class="fas fa-gem"></i> Acesso Exclusivo</div>
-        <div class="login-brand">Painel<br><span>Master</span></div>
-        <div class="login-desc">Central de controle completa do ecossistema Fogueiro Burguer.</div>
-      </div>
-      <div class="login-stat">
-        <div class="login-stat-item">
-          <div class="login-stat-num">Multi</div>
-          <div class="login-stat-lbl">Tenant SaaS</div>
-        </div>
-        <div class="login-stat-item">
-          <div class="login-stat-num">Real</div>
-          <div class="login-stat-lbl">Time Sync</div>
-        </div>
-      </div>
-    </div>
-    <div class="login-right">
-      <div class="login-form-title">Bem-vindo de volta</div>
-      <div class="login-form-sub">Acesse com suas credenciais de superadmin</div>
-      <div class="l-campo">
-        <label>E-mail</label>
-        <input id="login-email" type="email" placeholder="seu@email.com.br"
-               onkeydown="if(event.key==='Enter')document.getElementById('login-senha').focus()">
-      </div>
-      <div class="l-campo">
-        <label>Senha</label>
-        <input id="login-senha" type="password" placeholder="••••••••"
-               onkeydown="if(event.key==='Enter')saLogin()">
-      </div>
-      <button class="login-btn" id="login-btn" onclick="saLogin()">
-        <i class="fas fa-arrow-right-to-bracket"></i> Entrar no Painel
-      </button>
-      <div class="login-erro" id="login-erro"></div>
-    </div>
+<!-- HEADER -->
+<header class="header">
+  <a href="#" class="header-logo">
+    <div class="header-logo-dot"><i class="fas fa-fire"></i></div>
+    Sistema Delivery
+  </a>
+  <div class="header-badge">
+    <span class="pulse"></span> 15 dias grátis, sem cartão
   </div>
-</div>
+</header>
 
-<!-- ══ APP ══ -->
-<div id="app">
-  <div class="app-layout">
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow"><i class="fas fa-rocket"></i> Comece agora — sem burocracia</div>
+  <h1 class="hero-title">Seu cardápio digital<br>funcionando em <span>minutos</span></h1>
+  <p class="hero-sub">Receba pedidos online, gerencie seu delivery e fidelize clientes. Teste grátis por 15 dias, sem precisar de cartão de crédito.</p>
+  <div class="beneficios">
+    <div class="beneficio"><i class="fas fa-check-circle"></i> 15 dias grátis</div>
+    <div class="beneficio"><i class="fas fa-check-circle"></i> Sem cartão de crédito</div>
+    <div class="beneficio"><i class="fas fa-check-circle"></i> Cardápio pronto em minutos</div>
+    <div class="beneficio"><i class="fas fa-check-circle"></i> Suporte incluído</div>
+  </div>
+</section>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-top">
-        <div class="sidebar-logo">
-          <div class="sidebar-logo-gem"><i class="fas fa-gem"></i></div>
-          Painel Master
+<!-- FORMULÁRIO -->
+<div class="form-container">
+  <div class="form-card">
+
+    <!-- STEPS -->
+    <div class="steps-bar" id="steps-bar">
+      <div class="step-tab active" id="tab-1">
+        <div class="step-num" id="num-1">1</div>
+        <span>Seu negócio</span>
+      </div>
+      <div class="step-tab" id="tab-2">
+        <div class="step-num" id="num-2">2</div>
+        <span>Seus dados</span>
+      </div>
+      <div class="step-tab" id="tab-3">
+        <div class="step-num" id="num-3">3</div>
+        <span>Confirmar</span>
+      </div>
+    </div>
+
+    <div class="form-body" id="form-body">
+
+      <!-- ETAPA 1 -->
+      <div class="etapa active" id="etapa-1">
+        <div class="etapa-titulo">Sobre seu restaurante</div>
+        <div class="etapa-sub">Vamos configurar seu cardápio digital agora mesmo</div>
+
+        <div class="campo">
+          <label>Nome do restaurante *</label>
+          <div class="campo-icon">
+            <i class="fas fa-store"></i>
+            <input id="f-nome-rest" type="text" placeholder="Ex: Burguer do João">
+          </div>
         </div>
-        <div class="sidebar-tagline">Sistema de Delivery</div>
-        <div class="sidebar-user">
-          <div class="sidebar-avatar" id="sa-avatar-letra">G</div>
+
+        <div class="campo-row">
+          <div class="campo">
+            <label>Cidade *</label>
+            <div class="campo-icon">
+              <i class="fas fa-map-marker-alt"></i>
+              <input id="f-cidade" type="text" placeholder="São Paulo">
+            </div>
+          </div>
+          <div class="campo">
+            <label>Estado *</label>
+            <select id="f-estado">
+              <option value="">UF</option>
+              <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+              <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+              <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+              <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+              <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+              <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+              <option selected>SP</option><option>SE</option><option>TO</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="campo">
+          <div class="fat-label">Faturamento mensal aproximado *</div>
+          <div class="fat-grid">
+            <div class="fat-card" onclick="selecionarFat(this,'ate10k')">
+              <div class="fat-valor">Até R$ 10k</div>
+              <div class="fat-desc">Negócio em crescimento</div>
+            </div>
+            <div class="fat-card" onclick="selecionarFat(this,'10k_50k')">
+              <div class="fat-valor">R$ 10k – 50k</div>
+              <div class="fat-desc">Negócio consolidado</div>
+            </div>
+            <div class="fat-card" onclick="selecionarFat(this,'50k_100k')">
+              <div class="fat-valor">R$ 50k – 100k</div>
+              <div class="fat-desc">Operação robusta</div>
+            </div>
+            <div class="fat-card" onclick="selecionarFat(this,'acima_100k')">
+              <div class="fat-valor">Acima de R$ 100k</div>
+              <div class="fat-desc">Grande operação</div>
+            </div>
+          </div>
+          <input type="hidden" id="f-faturamento">
+        </div>
+
+        <div class="erro-box" id="erro-1"><i class="fas fa-exclamation-circle"></i><span id="erro-1-txt"></span></div>
+        <button class="btn-primary" onclick="irEtapa2()">Continuar <i class="fas fa-arrow-right"></i></button>
+      </div>
+
+      <!-- ETAPA 2 -->
+      <div class="etapa" id="etapa-2">
+        <button class="btn-back" onclick="irEtapa(1)"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <div class="etapa-titulo">Seus dados de acesso</div>
+        <div class="etapa-sub">Enviaremos suas credenciais para o e-mail informado</div>
+
+        <div class="campo">
+          <label>Nome completo *</label>
+          <div class="campo-icon">
+            <i class="fas fa-user"></i>
+            <input id="f-nome" type="text" placeholder="Seu nome completo">
+          </div>
+        </div>
+        <div class="campo">
+          <label>E-mail *</label>
+          <div class="campo-icon">
+            <i class="fas fa-envelope"></i>
+            <input id="f-email" type="email" placeholder="seu@email.com.br">
+          </div>
+        </div>
+        <div class="campo">
+          <label>WhatsApp *</label>
+          <div class="campo-icon">
+            <i class="fab fa-whatsapp"></i>
+            <input id="f-telefone" type="tel" placeholder="(11) 99999-9999" oninput="mascaraTel(this)">
+          </div>
+        </div>
+
+        <div class="erro-box" id="erro-2"><i class="fas fa-exclamation-circle"></i><span id="erro-2-txt"></span></div>
+        <button class="btn-primary" onclick="irEtapa3()">Revisar cadastro <i class="fas fa-arrow-right"></i></button>
+      </div>
+
+      <!-- ETAPA 3 -->
+      <div class="etapa" id="etapa-3">
+        <button class="btn-back" onclick="irEtapa(2)"><i class="fas fa-arrow-left"></i> Voltar</button>
+        <div class="etapa-titulo">Confirme seus dados</div>
+        <div class="etapa-sub">Tudo certo? Clique em criar para receber seus acessos por e-mail</div>
+
+        <div class="trial-box">
+          <i class="fas fa-gift"></i>
           <div>
-            <div class="sidebar-user-name" id="sa-nome-usuario">—</div>
-            <div class="sidebar-user-role">Superadmin</div>
+            <div class="trial-box-titulo">15 dias grátis — sem cartão de crédito</div>
+            <div class="trial-box-sub">Acesso completo ao sistema por 15 dias. Após isso, escolha um plano para continuar.</div>
           </div>
         </div>
-      </div>
 
-      <nav class="sidebar-nav">
-        <div class="sidebar-nav-label">Gestão</div>
-        <button class="nav-item active" id="nav-restaurantes" onclick="saAba('restaurantes',this)">
-          <i class="fas fa-store"></i> Restaurantes
+        <div class="resumo">
+          <div class="resumo-titulo">Resumo do cadastro</div>
+          <div class="resumo-item"><span class="resumo-key">Restaurante</span><span class="resumo-val" id="r-nome-rest">—</span></div>
+          <div class="resumo-item"><span class="resumo-key">Localização</span><span class="resumo-val" id="r-local">—</span></div>
+          <div class="resumo-item"><span class="resumo-key">Faturamento</span><span class="resumo-val" id="r-fat">—</span></div>
+          <div class="resumo-item"><span class="resumo-key">Responsável</span><span class="resumo-val" id="r-nome">—</span></div>
+          <div class="resumo-item"><span class="resumo-key">E-mail</span><span class="resumo-val" id="r-email">—</span></div>
+          <div class="resumo-item"><span class="resumo-key">WhatsApp</span><span class="resumo-val" id="r-tel">—</span></div>
+        </div>
+
+        <div class="erro-box" id="erro-3"><i class="fas fa-exclamation-circle"></i><span id="erro-3-txt"></span></div>
+        <button class="btn-primary" id="btn-criar" onclick="criarConta()">
+          <i class="fas fa-rocket"></i> Criar minha conta grátis
         </button>
-        <button class="nav-item" id="nav-usuarios" onclick="saAba('usuarios',this)">
-          <i class="fas fa-users"></i> Usuários
-        </button>
-        <button class="nav-item" id="nav-pedidos" onclick="saAba('pedidos',this)">
-          <i class="fas fa-receipt"></i> Pedidos
-        </button>
-        <button class="nav-item" id="nav-pagamentos" onclick="saAba('pagamentos',this)">
-          <i class="fas fa-credit-card"></i> Pagamentos
-        </button>
-      </nav>
-
-      <div class="sidebar-bottom">
-        <button class="btn-theme-toggle" id="btn-theme" onclick="saToggleTema()">
-          <span class="theme-icon-wrap"><i class="fas fa-moon" id="theme-icon"></i></span>
-          <span id="theme-label">Tema Escuro</span>
-          <div class="theme-pill" id="theme-pill"><div class="theme-pill-dot"></div></div>
-        </button>
-        <button class="btn-logout-sb" onclick="saLogout()">
-          <i class="fas fa-right-from-bracket"></i> Sair da conta
-        </button>
+        <p style="text-align:center;font-size:11px;color:var(--muted2);margin-top:12px;line-height:1.5;">
+          Ao criar sua conta você concorda com os <a href="#" style="color:var(--muted);">Termos de Uso</a>.
+        </p>
       </div>
-    </aside>
 
-    <!-- MAIN -->
-    <div class="main-content">
-
-      <!-- TOPBAR -->
-      <div class="topbar">
-        <div class="topbar-path">
-          <i class="fas fa-gem" style="color:var(--gold);"></i>
-          <span style="color:var(--muted);">/</span>
-          <strong id="topbar-titulo">Restaurantes</strong>
-        </div>
-        <div class="topbar-right">
-          <span class="topbar-time" id="topbar-time"></span>
+      <!-- SUCESSO (hidden, cloned on success) -->
+      <div id="tela-sucesso">
+        <div class="sucesso-icon"><i class="fas fa-check"></i></div>
+        <div class="sucesso-titulo">Conta criada com sucesso! 🎉</div>
+        <p class="sucesso-sub">Seus acessos foram enviados para o e-mail abaixo. Verifique também a caixa de spam.</p>
+        <div class="sucesso-email-box">📧 Acessos enviados para <strong id="sucesso-email">—</strong></div>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:13px;padding:18px;text-align:left;font-size:13px;color:#6b7280;">
+          <div style="font-weight:800;color:#111;margin-bottom:10px;">O que você recebeu no e-mail:</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div><i class="fas fa-link" style="color:var(--brand);width:18px;"></i> Link do <strong style="color:#111;">cardápio digital</strong></div>
+            <div><i class="fas fa-cog" style="color:var(--brand);width:18px;"></i> Link do <strong style="color:#111;">painel admin</strong></div>
+            <div><i class="fas fa-key" style="color:var(--brand);width:18px;"></i> Seu <strong style="color:#111;">e-mail e senha</strong> de acesso</div>
+          </div>
         </div>
       </div>
 
-      <div class="page">
+    </div><!-- /form-body -->
+  </div><!-- /form-card -->
+</div>
 
-        <!-- MÉTRICAS -->
-        <div class="metricas">
-          <div class="metrica-card verde">
-            <div class="metrica-icon-wrap"><i class="fas fa-store"></i></div>
-            <div class="metrica-label">Restaurantes ativos</div>
-            <div class="metrica-valor" id="m-ativos">—</div>
-            <div class="metrica-sub" id="m-total-sub">de — total</div>
-          </div>
-          <div class="metrica-card azul">
-            <div class="metrica-icon-wrap"><i class="fas fa-users"></i></div>
-            <div class="metrica-label">Usuários cadastrados</div>
-            <div class="metrica-valor" id="m-usuarios">—</div>
-            <div class="metrica-sub">admins + superadmins</div>
-          </div>
-          <div class="metrica-card amarelo">
-            <div class="metrica-icon-wrap"><i class="fas fa-clock"></i></div>
-            <div class="metrica-label">Pagamentos pendentes</div>
-            <div class="metrica-valor" id="m-pendentes">—</div>
-            <div class="metrica-sub">aguardando confirmação</div>
-          </div>
-          <div class="metrica-card roxo">
-            <div class="metrica-icon-wrap"><i class="fas fa-receipt"></i></div>
-            <div class="metrica-label">Pedidos hoje</div>
-            <div class="metrica-valor" id="m-pedidos">—</div>
-            <div class="metrica-sub">em todos os restaurantes</div>
-          </div>
-          <div class="metrica-card ouro">
-            <div class="metrica-icon-wrap"><i class="fas fa-coins"></i></div>
-            <div class="metrica-label">Receita total</div>
-            <div class="metrica-valor" id="m-receita" style="font-size:22px;padding-top:4px;">—</div>
-            <div class="metrica-sub">todos os pedidos</div>
-          </div>
-        </div>
-
-        <!-- ══ ABA RESTAURANTES ══ -->
-        <div class="secao active" id="sec-restaurantes">
-          <div class="sec-header">
-            <div>
-              <div class="sec-titulo">Restaurantes</div>
-              <div class="sec-sub">Gerencie todos os restaurantes cadastrados no sistema</div>
-            </div>
-            <button class="btn-primary" onclick="saAbrirModalRest(null)">
-              <i class="fas fa-plus"></i> Novo Restaurante
-            </button>
-          </div>
-          <div class="tabela-wrap">
-            <div class="tabela-filtros">
-              <input class="filtro-input" id="filtro-rest" placeholder="🔍 Buscar por nome ou slug..." oninput="saFiltrarRest()">
-              <select class="filtro-select" id="filtro-status" onchange="saFiltrarRest()">
-                <option value="">Todos os status</option>
-                <option value="ativo">Ativos</option>
-                <option value="inativo">Inativos</option>
-              </select>
-              <select class="filtro-select" id="filtro-pgto" onchange="saFiltrarRest()">
-                <option value="">Todos os planos</option>
-                <option value="pago">Pago</option>
-                <option value="trial">Teste Grátis</option>
-                <option value="pendente">Pendente</option>
-                <option value="cancelado">Cancelado</option>
-              </select>
-            </div>
-            <div id="tabela-rest-body">
-              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando restaurantes...</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ══ ABA USUÁRIOS ══ -->
-        <div class="secao" id="sec-usuarios">
-          <div class="sec-header">
-            <div>
-              <div class="sec-titulo">Usuários</div>
-              <div class="sec-sub">Todos os usuários com acesso ao sistema admin</div>
-            </div>
-            <button class="btn-primary" onclick="saAbrirModalUsuario(null)">
-              <i class="fas fa-user-plus"></i> Novo Usuário
-            </button>
-          </div>
-          <div class="tabela-wrap">
-            <div class="tabela-filtros">
-              <input class="filtro-input" id="filtro-usuario" placeholder="🔍 Buscar por nome ou e-mail..." oninput="saFiltrarUsuarios()">
-              <select class="filtro-select" id="filtro-role" onchange="saFiltrarUsuarios()">
-                <option value="">Todos os papéis</option>
-                <option value="superadmin">Superadmin</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div id="tabela-usuarios-body">
-              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando usuários...</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ══ ABA PEDIDOS ══ -->
-        <div class="secao" id="sec-pedidos">
-          <div class="sec-header">
-            <div>
-              <div class="sec-titulo">Pedidos</div>
-              <div class="sec-sub">Visão geral de todos os pedidos em tempo real</div>
-            </div>
-            <button class="btn-secondary" onclick="saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value)">
-              <i class="fas fa-rotate-right"></i> Atualizar
-            </button>
-          </div>
-          <div class="tabela-wrap">
-            <div class="tabela-filtros">
-              <select class="filtro-select" id="filtro-rest-pedidos" onchange="saCarregarPedidos(this.value)">
-                <option value="">Todos os restaurantes</option>
-              </select>
-              <select class="filtro-select" id="filtro-status-pedido" onchange="saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value)">
-                <option value="">Todos os status</option>
-                <option value="analise">Em análise</option>
-                <option value="preparo">Em preparo</option>
-                <option value="pronto">Pronto</option>
-                <option value="entrega">Em entrega</option>
-                <option value="finalizado">Finalizado</option>
-                <option value="cancelado">Cancelado</option>
-              </select>
-            </div>
-            <div id="tabela-pedidos-body">
-              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando pedidos...</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ══ ABA PAGAMENTOS ══ -->
-        <div class="secao" id="sec-pagamentos">
-          <div class="sec-header">
-            <div>
-              <div class="sec-titulo">Pagamentos</div>
-              <div class="sec-sub">Controle de mensalidades e planos</div>
-            </div>
-          </div>
-          <div class="tabela-wrap">
-            <div id="tabela-pgto-body">
-              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando...</span></div>
-            </div>
-          </div>
-        </div>
-
-      </div><!-- /page -->
-    </div><!-- /main-content -->
-  </div><!-- /app-layout -->
-</div><!-- /app -->
-
-<!-- ══ MODAL: NOVO/EDITAR RESTAURANTE ══ -->
-<div class="modal-overlay" id="modal-rest">
-  <div class="modal">
-    <div class="modal-titulo" id="modal-rest-titulo">Novo Restaurante</div>
-    <div class="modal-sub" id="modal-rest-sub">Crie o restaurante e o usuário de acesso ao admin</div>
-
-    <div class="steps" id="steps-criar">
-      <div class="step active" id="step-1"><i class="fas fa-store"></i> Restaurante</div>
-      <div class="step"        id="step-2"><i class="fas fa-user"></i> Usuário</div>
-      <div class="step"        id="step-3"><i class="fas fa-link"></i> Vínculo</div>
-    </div>
-
-    <div class="campo"><label>Nome do Restaurante *</label>
-      <input id="m-nome" placeholder="Ex: Fogueiro Burguer" oninput="saAutoSlug()">
-    </div>
-    <div class="campo"><label>Slug (URL) *</label>
-      <input id="m-slug" placeholder="Ex: fogueiro-burguer" oninput="m_slug_manual=true">
-    </div>
-    <div class="campo" id="wrap-email"><label>E-mail de Acesso *</label>
-      <input id="m-email" type="email" placeholder="dono@restaurante.com.br">
-    </div>
-    <div class="campo-row" id="wrap-senhas">
-      <div class="campo" style="margin-bottom:0"><label>Senha *</label>
-        <input id="m-senha" type="password" placeholder="Mínimo 6 caracteres">
-      </div>
-      <div class="campo" style="margin-bottom:0"><label>Confirmar Senha *</label>
-        <input id="m-senha2" type="password" placeholder="Repita a senha">
-      </div>
-    </div>
-    <div class="campo-row">
-      <div class="campo" style="margin-bottom:0"><label>Plano</label>
-        <select id="m-plano">
-          <option value="trial">15 dias (Teste Grátis)</option>
-          <option value="mensal">Mensal</option>
-          <option value="trimestral">Trimestral</option>
-          <option value="semestral">Semestral</option>
-          <option value="anual">Anual</option>
-        </select>
-      </div>
-      <div class="campo" style="margin-bottom:0"><label>Valor Mensal (R$)</label>
-        <input id="m-valor" type="number" step="0.01" placeholder="0,00">
-      </div>
-    </div>
-    <div class="campo" style="margin-top:12px"><label>Observações</label>
-      <textarea id="m-obs" placeholder="Anotações internas..."></textarea>
-    </div>
-
-    <div class="modal-erro" id="modal-rest-erro"></div>
-    <div class="modal-ok"   id="modal-rest-ok"></div>
-
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="saFecharModalRest()">Cancelar</button>
-      <button class="btn-primary" id="modal-rest-btn" onclick="saSalvarRest()">
-        <i class="fas fa-check"></i> Criar Restaurante
-      </button>
-    </div>
+<!-- SOCIAL PROOF -->
+<div class="social">
+  <div class="social-titulo">Restaurantes que já usam o sistema</div>
+  <div class="social-nums">
+    <div><div class="social-num-val">+200</div><div class="social-num-lbl">Restaurantes ativos</div></div>
+    <div><div class="social-num-val">+15k</div><div class="social-num-lbl">Pedidos processados</div></div>
+    <div><div class="social-num-val">4.9★</div><div class="social-num-lbl">Avaliação média</div></div>
   </div>
 </div>
 
-<!-- ══ MODAL: NOVO/EDITAR USUÁRIO ══ -->
-<div class="modal-overlay" id="modal-usuario">
-  <div class="modal">
-    <div class="modal-titulo" id="modal-usuario-titulo">Novo Usuário</div>
-    <div class="modal-sub">Configure o acesso e vínculo com restaurante</div>
-
-    <div class="campo"><label>Nome Completo *</label>
-      <input id="mu-nome" placeholder="Nome do responsável">
-    </div>
-    <div class="campo"><label>E-mail de Acesso *</label>
-      <input id="mu-email" type="email" placeholder="usuario@email.com.br">
-    </div>
-    <div class="campo-row" id="mu-wrap-senhas">
-      <div class="campo" style="margin-bottom:0"><label>Senha *</label>
-        <input id="mu-senha" type="password" placeholder="Mínimo 6 caracteres">
-      </div>
-      <div class="campo" style="margin-bottom:0"><label>Confirmar Senha *</label>
-        <input id="mu-senha2" type="password" placeholder="Repita a senha">
-      </div>
-    </div>
-    <div class="campo-row">
-      <div class="campo" style="margin-bottom:0"><label>Papel (Role)</label>
-        <select id="mu-role">
-          <option value="admin">Admin (restaurante)</option>
-          <option value="superadmin">Superadmin</option>
-        </select>
-      </div>
-      <div class="campo" style="margin-bottom:0"><label>Restaurante vinculado</label>
-        <select id="mu-restaurante">
-          <option value="">— Nenhum (superadmin) —</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="modal-erro" id="modal-usuario-erro"></div>
-    <div class="modal-ok"   id="modal-usuario-ok"></div>
-
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="saFecharModalUsuario()">Cancelar</button>
-      <button class="btn-primary" id="modal-usuario-btn" onclick="saSalvarUsuario()">
-        <i class="fas fa-check"></i> Criar Usuário
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL: PAGAMENTO ══ -->
-<div class="modal-overlay" id="modal-pgto">
-  <div class="modal">
-    <div class="modal-titulo">Pagamento</div>
-    <div class="modal-sub" id="modal-pgto-nome">—</div>
-    <input type="hidden" id="mpgto-rest-id">
-    <div class="campo-row">
-      <div class="campo" style="margin-bottom:0"><label>Status</label>
-        <select id="mpgto-status">
-          <option value="trial">Trial</option>
-          <option value="pago">Pago</option>
-          <option value="pendente">Pendente</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-      </div>
-      <div class="campo" style="margin-bottom:0"><label>Plano</label>
-        <select id="mpgto-plano">
-          <option value="trial">15 dias (Teste Grátis)</option>
-          <option value="mensal">Mensal</option>
-          <option value="trimestral">Trimestral</option>
-          <option value="semestral">Semestral</option>
-          <option value="anual">Anual</option>
-        </select>
-      </div>
-    </div>
-    <div class="campo-row" style="margin-top:12px">
-      <div class="campo" style="margin-bottom:0"><label>Vencimento</label>
-        <input id="mpgto-venc" type="date">
-      </div>
-      <div class="campo" style="margin-bottom:0"><label>Valor (R$)</label>
-        <input id="mpgto-valor" type="number" step="0.01" placeholder="0,00">
-      </div>
-    </div>
-    <div class="campo" style="margin-top:12px"><label>Observação</label>
-      <textarea id="mpgto-obs" placeholder="Anotações sobre o pagamento..."></textarea>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="saFecharModalPgto()">Cancelar</button>
-      <button class="btn-primary" onclick="saSalvarPgto()">
-        <i class="fas fa-check"></i> Salvar
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ MODAL: DETALHES RESTAURANTE ══ -->
-<div class="modal-overlay" id="modal-detalhe">
-  <div class="modal wide">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <div>
-        <div class="modal-titulo" id="detalhe-nome">—</div>
-        <div class="modal-sub" id="detalhe-slug" style="margin-bottom:0;">—</div>
-      </div>
-      <button class="btn-ghost" onclick="saFecharDetalhe()"><i class="fas fa-xmark"></i></button>
-    </div>
-    <div id="detalhe-body"></div>
-    <div class="modal-footer">
-      <button class="btn-secondary" onclick="saFecharDetalhe()">Fechar</button>
-    </div>
-  </div>
-</div>
-
-<!-- TOAST -->
-<div id="toast"></div>
+<footer class="rodape">
+  © 2026 Sistema Delivery · <a href="#">Termos de uso</a> · <a href="#">Privacidade</a>
+</footer>
 
 <script>
-// ══════════════════════════════════════════════════════════════
-// CONFIGURAÇÃO
-// ══════════════════════════════════════════════════════════════
-const SA_URL  = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
-const SA_KEY  = 'sb_publishable_XtEWScp1E8Nfs2Oujdp93Q_Q59CSihV';
-const SA_ROLE = 'superadmin';
+// ══════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════
+const SB_URL         = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
+const SB_KEY         = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE0NzcsImV4cCI6MjA4ODMxNzQ3N30.URV7NROQ0wAGG_GzrS2yn2Kksxaefy4v4JJ49yRW51A';
+const SB_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc0MTQ3NywiZXhwIjoyMDg4MzE3NDc3fQ.hmY5Z4nIPefMUq-Q0AlBgRWzqhnEm18CVHqXwpOdO-E';
+const RESEND_KEY     = 're_TETXg5yb_QEKaZ8i5U515QwmJDgYxb6WY';
+const BASE_URL       = 'https://meusistema-eta.vercel.app';
 
-// ⚠️ SERVICE ROLE KEY — necessária para criar usuários sem confirmação de e-mail
-// Obtenha em: Supabase → Project Settings → API → service_role (secret)
-// NUNCA exponha essa chave em site público. Use Edge Function em produção.
-const SA_SERVICE_KEY = ''; // ← Cole aqui a service_role key do seu projeto
+const FAT_LABELS = {
+  ate10k:     'Até R$ 10.000/mês',
+  '10k_50k':  'R$ 10k – R$ 50k/mês',
+  '50k_100k': 'R$ 50k – R$ 100k/mês',
+  acima_100k: 'Acima de R$ 100k/mês'
+};
 
-let SA_TOKEN   = null;
-let _restaurantes = [];
-let _usuarios     = [];
-let _editRestId   = null;
-let _editUserId   = null;
-let m_slug_manual = false;
+let _fat = '';
 
-// ══════════════════════════════════════════════════════════════
-// RELÓGIO TOPBAR
-// ══════════════════════════════════════════════════════════════
-function _tickTime() {
-    const el = document.getElementById('topbar-time');
-    if (!el) return;
-    const now = new Date();
-    el.textContent = now.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-}
-setInterval(_tickTime, 1000);
-_tickTime();
-
-// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════
 // HELPERS
-// ══════════════════════════════════════════════════════════════
-async function saFetch(method, path, body, token) {
-    const r = await fetch(SA_URL + '/rest/v1/' + path, {
-        method,
-        headers: {
-            'apikey':        SA_KEY,
-            'Authorization': 'Bearer ' + (token || SA_TOKEN || SA_KEY),
-            'Content-Type':  'application/json',
-            'Prefer':        method === 'POST' ? 'return=representation' : ''
-        },
-        body: body ? JSON.stringify(body) : undefined
+// ══════════════════════════════════════
+function mascaraTel(el) {
+  let v = el.value.replace(/\D/g,'');
+  if (v.length > 11) v = v.slice(0,11);
+  if      (v.length > 6) v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
+  else if (v.length > 2) v = '(' + v.slice(0,2) + ') ' + v.slice(2);
+  else if (v.length > 0) v = '(' + v;
+  el.value = v;
+}
+
+function gerarSlug(nome) {
+  return nome.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').trim();
+}
+
+function gerarSenha() {
+  const c = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
+  let s = '';
+  for (let i = 0; i < 10; i++) s += c[Math.floor(Math.random() * c.length)];
+  return s;
+}
+
+function selecionarFat(el, val) {
+  document.querySelectorAll('.fat-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  _fat = val;
+  document.getElementById('f-faturamento').value = val;
+}
+
+function mostrarErro(n, msg) {
+  const box = document.getElementById('erro-' + n);
+  document.getElementById('erro-' + n + '-txt').textContent = msg;
+  box.classList.add('show');
+}
+function limparErro(n) { document.getElementById('erro-' + n).classList.remove('show'); }
+
+// ══════════════════════════════════════
+// NAVEGAÇÃO
+// ══════════════════════════════════════
+function irEtapa(n) {
+  [1,2,3].forEach(i => {
+    document.getElementById('etapa-' + i).classList.toggle('active', i === n);
+    const tab = document.getElementById('tab-' + i);
+    const num = document.getElementById('num-' + i);
+    tab.classList.remove('active','done');
+    if      (i < n)  { tab.classList.add('done');   num.innerHTML = '<i class="fas fa-check" style="font-size:8px;"></i>'; }
+    else if (i === n) { tab.classList.add('active'); num.textContent = i; }
+    else              { num.textContent = i; }
+  });
+  window.scrollTo({ top: document.querySelector('.form-container').offsetTop - 80, behavior: 'smooth' });
+}
+
+function irEtapa2() {
+  limparErro(1);
+  const nome   = document.getElementById('f-nome-rest').value.trim();
+  const cidade = document.getElementById('f-cidade').value.trim();
+  const estado = document.getElementById('f-estado').value;
+  const fat    = document.getElementById('f-faturamento').value;
+  if (!nome)   return mostrarErro(1, 'Informe o nome do restaurante.');
+  if (!cidade) return mostrarErro(1, 'Informe a cidade.');
+  if (!estado) return mostrarErro(1, 'Selecione o estado.');
+  if (!fat)    return mostrarErro(1, 'Selecione a faixa de faturamento.');
+  irEtapa(2);
+}
+
+function irEtapa3() {
+  limparErro(2);
+  const nome  = document.getElementById('f-nome').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const tel   = document.getElementById('f-telefone').value.trim();
+  if (!nome)                       return mostrarErro(2, 'Informe seu nome completo.');
+  if (!email || !email.includes('@')) return mostrarErro(2, 'Informe um e-mail válido.');
+  if (!tel || tel.length < 14)     return mostrarErro(2, 'Informe um WhatsApp válido com DDD.');
+
+  document.getElementById('r-nome-rest').textContent = document.getElementById('f-nome-rest').value.trim();
+  document.getElementById('r-local').textContent     = document.getElementById('f-cidade').value.trim() + ' — ' + document.getElementById('f-estado').value;
+  document.getElementById('r-fat').textContent       = FAT_LABELS[_fat] || _fat;
+  document.getElementById('r-nome').textContent      = nome;
+  document.getElementById('r-email').textContent     = email;
+  document.getElementById('r-tel').textContent       = tel;
+  irEtapa(3);
+}
+
+// ══════════════════════════════════════
+// CRIAR CONTA
+// ══════════════════════════════════════
+async function criarConta() {
+  limparErro(3);
+  const btn = document.getElementById('btn-criar');
+
+  const nomeRest = document.getElementById('f-nome-rest').value.trim();
+  const cidade   = document.getElementById('f-cidade').value.trim();
+  const estado   = document.getElementById('f-estado').value;
+  const nome     = document.getElementById('f-nome').value.trim();
+  const email    = document.getElementById('f-email').value.trim().toLowerCase();
+  const tel      = document.getElementById('f-telefone').value.trim();
+  const slug     = gerarSlug(nomeRest);
+  const senha    = gerarSenha();
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando restaurante...';
+
+  try {
+    // 1 — Criar restaurante
+    const restR = await fetch(SB_URL + '/rest/v1/restaurantes', {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({ nome: nomeRest, slug, ativo: true, obs: `${cidade}/${estado} | ${FAT_LABELS[_fat]||_fat} | ${tel}` })
     });
-    const txt = await r.text();
-    if (!r.ok) throw new Error(txt || r.status);
-    return txt ? JSON.parse(txt) : null;
-}
+    if (!restR.ok) {
+      const e = await restR.json();
+      if (e.code === '23505') throw new Error('Já existe um restaurante com esse nome. Tente um nome diferente ou adicione algo único.');
+      throw new Error(e.message || 'Erro ao criar restaurante.');
+    }
+    const restId = (await restR.json())[0].id;
 
-async function saAuthFetch(method, path, body, useServiceKey) {
-    const key = useServiceKey && SA_SERVICE_KEY ? SA_SERVICE_KEY : SA_KEY;
-    const tok = useServiceKey && SA_SERVICE_KEY ? SA_SERVICE_KEY : (SA_TOKEN || SA_KEY);
-    const r = await fetch(SA_URL + '/auth/v1/' + path, {
-        method,
-        headers: {
-            'apikey':          key,
-            'Authorization':   'Bearer ' + tok,
-            'Content-Type':    'application/json'
-        },
-        body: body ? JSON.stringify(body) : undefined
+    // 2 — Criar usuário no Auth
+    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando usuário...';
+    const authR = await fetch(SB_URL + '/auth/v1/admin/users', {
+      method: 'POST',
+      headers: { 'apikey': SB_SERVICE_KEY, 'Authorization': 'Bearer ' + SB_SERVICE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: senha, email_confirm: true, user_metadata: { nome, restaurante_id: restId } })
     });
-    const txt = await r.text();
-    if (!r.ok) throw new Error(txt);
-    return txt ? JSON.parse(txt) : null;
-}
-
-function toast(msg, ok = true) {
-    const el = document.getElementById('toast');
-    el.innerHTML = (ok ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>') + ' ' + msg;
-    el.style.background = ok ? 'rgba(29,185,84,.95)' : 'rgba(230,57,70,.95)';
-    el.style.color = 'white';
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 3500);
-}
-
-function money(v) { return 'R$ ' + parseFloat(v || 0).toFixed(2).replace('.', ','); }
-
-const _PLANO_LABELS = {
-    trial:       '15 dias (Teste Grátis)',
-    mensal:      'Mensal',
-    trimestral:  'Trimestral',
-    semestral:   'Semestral',
-    anual:       'Anual'
-};
-function _planoLabel(v) { return _PLANO_LABELS[v] || (v ? v.charAt(0).toUpperCase() + v.slice(1) : '—'); }
-
-function saAutoSlug() {
-    if (m_slug_manual) return;
-    const nome = document.getElementById('m-nome').value;
-    document.getElementById('m-slug').value = nome.toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
-}
-
-// ══════════════════════════════════════════════════════════════
-// LOGIN / SESSÃO
-// ══════════════════════════════════════════════════════════════
-async function saLogin() {
-    const email = document.getElementById('login-email').value.trim();
-    const senha = document.getElementById('login-senha').value;
-    const btn   = document.getElementById('login-btn');
-    const erro  = document.getElementById('login-erro');
-    erro.style.display = 'none';
-    if (!email || !senha) { erro.textContent = 'Preencha e-mail e senha.'; erro.style.display = 'block'; return; }
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Entrando...';
-    try {
-        const sess = await saAuthFetch('POST', 'token?grant_type=password', { email, password: senha });
-        SA_TOKEN = sess.access_token;
-        const userId = sess.user?.id;
-        const usuario = await saFetch('GET', `usuarios?select=role,nome&id=eq.${userId}&limit=1`, null, SA_TOKEN);
-        if (!usuario || !usuario[0] || usuario[0].role !== SA_ROLE) {
-            SA_TOKEN = null;
-            throw new Error('Acesso negado. Você não tem permissão de superadmin.');
-        }
-        const nome = usuario[0].nome || email;
-        document.getElementById('sa-nome-usuario').textContent = nome;
-        document.getElementById('sa-avatar-letra').textContent = nome[0].toUpperCase();
-        localStorage.setItem('sa_session', JSON.stringify({ token: SA_TOKEN, nome, salvoEm: Date.now() }));
-        mostrarApp();
-    } catch(e) {
-        let msg = e.message;
-        try { msg = JSON.parse(msg).error_description || JSON.parse(msg).message || msg; } catch {}
-        erro.textContent = msg;
-        erro.style.display = 'block';
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> Entrar no Painel';
+    if (!authR.ok) {
+      const e = await authR.json();
+      if ((e.message||'').toLowerCase().includes('already')) throw new Error('Este e-mail já está cadastrado. Use outro e-mail ou acesse sua conta.');
+      throw new Error(e.message || 'Erro ao criar usuário.');
     }
-}
+    const userId = (await authR.json()).id;
 
-async function saVerificarSessao() {
-    try {
-        const raw = localStorage.getItem('sa_session');
-        if (!raw) return false;
-        const sess = JSON.parse(raw);
-        if (Date.now() - sess.salvoEm > 7 * 86400000) { localStorage.removeItem('sa_session'); return false; }
-        SA_TOKEN = sess.token;
-        const nome = sess.nome || 'Admin';
-        document.getElementById('sa-nome-usuario').textContent = nome;
-        document.getElementById('sa-avatar-letra').textContent = nome[0].toUpperCase();
-        return true;
-    } catch { return false; }
-}
-
-function saLogout() {
-    localStorage.removeItem('sa_session');
-    SA_TOKEN = null;
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('tela-login').style.display = 'flex';
-}
-
-function mostrarApp() {
-    document.getElementById('tela-login').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    saCarregarTudo();
-}
-
-// ══════════════════════════════════════════════════════════════
-// CARREGAMENTO GERAL
-// ══════════════════════════════════════════════════════════════
-async function saCarregarTudo() {
-    await Promise.all([
-        saCarregarRestaurantes(),
-        saCarregarUsuarios()
-    ]);
-    saCalcularMetricas();
-    saCarregarPedidos('');
-    saCarregarPagamentos();
-}
-
-// ══════════════════════════════════════════════════════════════
-// RESTAURANTES
-// ══════════════════════════════════════════════════════════════
-async function saCarregarRestaurantes() {
-    try {
-        const [rests, pgtos] = await Promise.all([
-            saFetch('GET', 'restaurantes?select=*&order=nome.asc'),
-            saFetch('GET', 'pagamentos?select=*')
-        ]);
-        let pedidos = [];
-        try { pedidos = await saFetch('GET', 'pedidos?select=restaurante_id,total') || []; } catch {}
-
-        const pgtoMap = {};
-        (pgtos || []).forEach(p => { pgtoMap[p.restaurante_id] = p; });
-        const pedidosMap = {}, receitaMap = {};
-        (pedidos || []).forEach(p => {
-            pedidosMap[p.restaurante_id] = (pedidosMap[p.restaurante_id] || 0) + 1;
-            receitaMap[p.restaurante_id]  = (receitaMap[p.restaurante_id]  || 0) + parseFloat(p.total || 0);
-        });
-
-        _restaurantes = (rests || []).map(r => ({
-            ...r,
-            pgto: pgtoMap[r.id] || { status_pgto: 'pendente', plano: 'trial' },
-            totalPedidos: pedidosMap[r.id] || 0,
-            receitaTotal: receitaMap[r.id]  || 0,
-        }));
-
-        const sel = document.getElementById('filtro-rest-pedidos');
-        sel.innerHTML = '<option value="">Todos os restaurantes</option>' +
-            _restaurantes.map(r => `<option value="${r.id}">${r.nome}</option>`).join('');
-
-        saRenderRestaurantes(_restaurantes);
-    } catch(e) {
-        document.getElementById('tabela-rest-body').innerHTML =
-            `<div class="vazio"><div class="vazio-icon">⚠️</div>Erro: ${e.message}</div>`;
-    }
-}
-
-function saCalcularMetricas() {
-    const ativos    = _restaurantes.filter(r => r.ativo).length;
-    const total     = _restaurantes.length;
-    const pendentes = _restaurantes.filter(r => r.pgto?.status_pgto === 'pendente').length;
-    const receita   = _restaurantes.reduce((s, r) => s + (r.receitaTotal || 0), 0);
-
-    document.getElementById('m-ativos').textContent    = ativos;
-    document.getElementById('m-total-sub').textContent = `de ${total} total`;
-    document.getElementById('m-pendentes').textContent = pendentes;
-    document.getElementById('m-usuarios').textContent  = _usuarios.length || '—';
-    document.getElementById('m-receita').textContent   = money(receita);
-
-    const hoje = new Date(); hoje.setHours(0,0,0,0);
-    saFetch('GET', `pedidos?select=id&criado_em=gte.${hoje.toISOString()}`)
-        .then(r => { document.getElementById('m-pedidos').textContent = (r || []).length; })
-        .catch(() => { document.getElementById('m-pedidos').textContent = '—'; });
-}
-
-function saFiltrarRest() {
-    const termo  = (document.getElementById('filtro-rest')?.value || '').toLowerCase();
-    const status = document.getElementById('filtro-status')?.value || '';
-    const pgto   = document.getElementById('filtro-pgto')?.value || '';
-    const filtrados = _restaurantes.filter(r => {
-        const matchTermo  = !termo  || r.nome.toLowerCase().includes(termo) || (r.slug||'').includes(termo);
-        const matchStatus = !status || (status === 'ativo' ? r.ativo : !r.ativo);
-        const matchPgto   = !pgto   || r.pgto?.status_pgto === pgto;
-        return matchTermo && matchStatus && matchPgto;
+    // 3 — Vincular usuário
+    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Configurando acesso...';
+    await fetch(SB_URL + '/rest/v1/usuarios', {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: userId, restaurante_id: restId, nome, email, role: 'admin', ativo: true })
     });
-    saRenderRestaurantes(filtrados);
-}
 
-function saRenderRestaurantes(lista) {
-    const el = document.getElementById('tabela-rest-body');
-    if (!lista.length) {
-        el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-store"></i></div>Nenhum restaurante encontrado.</div>';
-        return;
-    }
-    const badgePgto = s => {
-        const map = { pago:'pago', pendente:'pendente', trial:'trial', cancelado:'cancelado' };
-        const labels = { pago:'Pago', pendente:'Pendente', trial:'Trial', cancelado:'Cancelado' };
-        return `<span class="badge ${map[s]||'pendente'}">${labels[s]||s}</span>`;
-    };
-    el.innerHTML = `<table>
-        <thead><tr>
-            <th>Restaurante</th><th>Plano</th><th>Pagamento</th>
-            <th>Pedidos</th><th>Receita</th><th>Ativo</th><th>Ações</th>
-        </tr></thead>
-        <tbody>
-        ${lista.map(r => `<tr>
-            <td>
-                <div class="rest-nome">${r.nome}</div>
-                <div class="rest-slug"><i class="fas fa-link" style="font-size:9px;"></i>${r.slug||'—'}</div>
-            </td>
-            <td><span style="font-size:12px;color:var(--muted2);">${_planoLabel(r.pgto?.plano||'trial')}</span></td>
-            <td>${badgePgto(r.pgto?.status_pgto||'pendente')}</td>
-            <td><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;">${r.totalPedidos}</span></td>
-            <td><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;">${money(r.receitaTotal)}</span></td>
-            <td>
-                <button class="toggle ${r.ativo?'on':''}" onclick="saToggleAtivo('${r.id}',this)"
-                    title="${r.ativo?'Clique para desativar':'Clique para ativar'}"></button>
-            </td>
-            <td>
-                <div class="acoes">
-                    <button class="btn-acao info" onclick="saVerDetalhe('${r.id}')" title="Ver detalhes"><i class="fas fa-eye"></i></button>
-                    <button class="btn-acao" onclick="saEditarRest('${r.id}')" title="Editar"><i class="fas fa-pen"></i></button>
-                    <button class="btn-acao success" onclick="saEditarPgto('${r.id}')" title="Pagamento"><i class="fas fa-credit-card"></i></button>
-                    <button class="btn-acao" onclick="saAbrirCardapio('${r.slug}')" title="Ver cardápio"><i class="fas fa-arrow-up-right-from-square"></i></button>
-                    <button class="btn-acao danger" onclick="saDeletarRest('${r.id}','${r.nome}')" title="Excluir"><i class="fas fa-trash"></i></button>
-                </div>
-            </td>
-        </tr>`).join('')}
-        </tbody>
-    </table>`;
-}
-
-async function saToggleAtivo(id, btn) {
-    const rest = _restaurantes.find(r => r.id === id);
-    if (!rest) return;
-    const novoAtivo = !rest.ativo;
-    try {
-        await saFetch('PATCH', `restaurantes?id=eq.${id}`, { ativo: novoAtivo });
-        rest.ativo = novoAtivo;
-        btn.classList.toggle('on', novoAtivo);
-        saCalcularMetricas();
-        toast(novoAtivo ? '✓ Restaurante ativado — cardápio online' : 'Restaurante desativado — cardápio offline', novoAtivo);
-    } catch(e) { toast('Erro: ' + e.message, false); }
-}
-
-// ── MODAL RESTAURANTE ──────────────────────────────────────────
-function saAbrirModalRest(id) {
-    _editRestId   = id || null;
-    m_slug_manual = false;
-    const modal = document.getElementById('modal-rest');
-    const titulo = document.getElementById('modal-rest-titulo');
-    const sub    = document.getElementById('modal-rest-sub');
-    const btn    = document.getElementById('modal-rest-btn');
-    const steps  = document.getElementById('steps-criar');
-
-    if (id) {
-        const r = _restaurantes.find(x => x.id === id);
-        titulo.textContent = 'Editar Restaurante';
-        sub.textContent    = 'Edite os dados do restaurante';
-        btn.innerHTML = '<i class="fas fa-check"></i> Salvar Alterações';
-        document.getElementById('m-nome').value  = r.nome || '';
-        document.getElementById('m-slug').value  = r.slug || '';
-        document.getElementById('m-plano').value = r.pgto?.plano || 'trial';
-        document.getElementById('m-valor').value = r.pgto?.valor || '';
-        document.getElementById('m-obs').value   = r.obs || '';
-        document.getElementById('wrap-email').style.display  = 'none';
-        document.getElementById('wrap-senhas').style.display = 'none';
-        steps.style.display = 'none';
-    } else {
-        titulo.textContent = 'Novo Restaurante';
-        sub.textContent    = 'Crie o restaurante e o usuário de acesso ao admin';
-        btn.innerHTML = '<i class="fas fa-check"></i> Criar Restaurante';
-        ['m-nome','m-slug','m-email','m-senha','m-senha2','m-obs','m-valor'].forEach(i => {
-            const el = document.getElementById(i); if (el) el.value = '';
-        });
-        document.getElementById('m-plano').value = 'trial';
-        document.getElementById('wrap-email').style.display  = '';
-        document.getElementById('wrap-senhas').style.display = '';
-        steps.style.display = '';
-        ['step-1','step-2','step-3'].forEach((s,i) => {
-            document.getElementById(s).className = 'step' + (i===0 ? ' active' : '');
-        });
-    }
-    document.getElementById('modal-rest-erro').style.display = 'none';
-    document.getElementById('modal-rest-ok').style.display   = 'none';
-    modal.classList.add('open');
-}
-
-function saFecharModalRest() {
-    document.getElementById('modal-rest').classList.remove('open');
-    _editRestId = null; m_slug_manual = false;
-}
-
-function saEditarRest(id) { saAbrirModalRest(id); }
-
-function _stepDone(n) {
-    const s = document.getElementById('step-' + n);
-    if (s) { s.className = 'step done'; s.innerHTML = '<i class="fas fa-check"></i> ' + s.textContent.trim().replace(/^✓\s*/,'').replace(/^\S+\s*/,''); }
-    const nx = document.getElementById('step-' + (n+1));
-    if (nx) nx.className = 'step active';
-}
-
-async function saSalvarRest() {
-    const btn  = document.getElementById('modal-rest-btn');
-    const erro = document.getElementById('modal-rest-erro');
-    const ok   = document.getElementById('modal-rest-ok');
-    erro.style.display = 'none'; ok.style.display = 'none';
-
-    const nome  = document.getElementById('m-nome').value.trim();
-    const slug  = document.getElementById('m-slug').value.trim().toLowerCase().replace(/\s+/g,'-');
-    const plano = document.getElementById('m-plano').value;
-    const valor = parseFloat(document.getElementById('m-valor').value) || 0;
-    const obs   = document.getElementById('m-obs').value.trim();
-
-    if (!nome) { erro.textContent = 'Informe o nome do restaurante.'; erro.style.display='block'; return; }
-    if (!slug) { erro.textContent = 'Informe o slug.'; erro.style.display='block'; return; }
-
-    btn.disabled = true;
-
-    try {
-        if (_editRestId) {
-            btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Salvando...';
-            await saFetch('PATCH', `restaurantes?id=eq.${_editRestId}`, { nome, slug, obs });
-            await saFetch('PATCH', `pagamentos?restaurante_id=eq.${_editRestId}`, { plano, valor });
-            const r = _restaurantes.find(x => x.id === _editRestId);
-            if (r) { r.nome = nome; r.slug = slug; r.obs = obs; if(r.pgto){r.pgto.plano=plano;r.pgto.valor=valor;} }
-            ok.textContent = '✓ Restaurante atualizado!';
-            ok.style.display = 'block';
-            saRenderRestaurantes(_restaurantes);
-            toast('✓ Restaurante atualizado!');
-            setTimeout(saFecharModalRest, 1200);
-        } else {
-            const email  = document.getElementById('m-email').value.trim();
-            const senha  = document.getElementById('m-senha').value;
-            const senha2 = document.getElementById('m-senha2').value;
-            if (!email) { erro.textContent='Informe o e-mail.'; erro.style.display='block'; return; }
-            if (!senha || senha.length < 6) { erro.textContent='A senha precisa ter pelo menos 6 caracteres.'; erro.style.display='block'; return; }
-            if (senha !== senha2) { erro.textContent='As senhas não coincidem.'; erro.style.display='block'; return; }
-
-            btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando restaurante...';
-            const restRows = await saFetch('POST', 'restaurantes', { nome, slug, ativo: true, obs });
-            const restId = restRows[0].id;
-            _stepDone(1);
-
-            btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando usuário...';
-            let userId;
-            if (SA_SERVICE_KEY) {
-                const adminUser = await saAuthFetch('POST', 'admin/users', {
-                    email, password: senha,
-                    email_confirm: true,
-                    user_metadata: { nome, restaurante_id: restId }
-                }, true);
-                userId = adminUser.id;
-            } else {
-                const signupR = await fetch(SA_URL + '/auth/v1/signup', {
-                    method: 'POST',
-                    headers: { 'apikey': SA_KEY, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password: senha })
-                });
-                const signupD = await signupR.json();
-                if (!signupR.ok) throw new Error(signupD.message || signupD.msg || 'Erro ao criar usuário');
-                userId = signupD.user?.id || signupD.id;
-                if (!userId) throw new Error('ID do usuário não retornado. Verifique se o e-mail já existe.');
-            }
-            _stepDone(2);
-
-            btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Finalizando...';
-            await saFetch('POST', 'usuarios', { id: userId, restaurante_id: restId, nome, role: 'admin' });
-            const venc = new Date(); venc.setDate(venc.getDate() + 15);
-            await saFetch('POST', 'pagamentos', {
-                restaurante_id: restId, plano, status_pgto: 'trial',
-                vencimento: venc.toISOString().split('T')[0], valor
-            });
-            _stepDone(3);
-
-            ok.textContent = `✓ Tudo pronto! Login: ${email}`;
-            ok.style.display = 'block';
-            toast('✓ Restaurante e usuário criados com sucesso!');
-            await saCarregarRestaurantes();
-            await saCarregarUsuarios();
-            saCalcularMetricas();
-            setTimeout(saFecharModalRest, 2000);
-        }
-    } catch(e) {
-        let msg = e.message;
-        try { const p = JSON.parse(msg); msg = p.message || p.error_description || p.msg || msg; } catch {}
-        erro.textContent = msg;
-        erro.style.display = 'block';
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = _editRestId
-            ? '<i class="fas fa-check"></i> Salvar Alterações'
-            : '<i class="fas fa-check"></i> Criar Restaurante';
-    }
-}
-
-async function saDeletarRest(id, nome) {
-    if (!confirm(`Tem certeza que deseja excluir "${nome}"?\n\nIsso vai remover o restaurante e pode deixar usuários sem vínculo.`)) return;
-    try {
-        await saFetch('DELETE', `restaurantes?id=eq.${id}`);
-        _restaurantes = _restaurantes.filter(r => r.id !== id);
-        saRenderRestaurantes(_restaurantes);
-        saCalcularMetricas();
-        toast('Restaurante excluído.');
-    } catch(e) { toast('Erro: ' + e.message, false); }
-}
-
-function saAbrirCardapio(slug) {
-    if (!slug) { toast('Slug não configurado.', false); return; }
-    window.open(window.location.origin + '?r=' + slug, '_blank');
-}
-
-function saVerDetalhe(id) {
-    const r = _restaurantes.find(x => x.id === id);
-    if (!r) return;
-    document.getElementById('detalhe-nome').textContent = r.nome;
-    document.getElementById('detalhe-slug').textContent = '/' + (r.slug || '—');
-    const usuariosVinculados = _usuarios.filter(u => u.restaurante_id === id);
-    document.getElementById('detalhe-body').innerHTML = `
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
-            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;">
-                <div class="section-label">Status</div>
-                <span class="badge ${r.ativo?'ativo':'inativo'}">${r.ativo?'● Ativo':'● Inativo'}</span>
-            </div>
-            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;">
-                <div class="section-label">Plano</div>
-                <span style="font-weight:700;">${_planoLabel(r.pgto?.plano||'trial')}</span>
-                <span class="badge ${r.pgto?.status_pgto||'pendente'}" style="margin-left:8px;">${r.pgto?.status_pgto||'pendente'}</span>
-            </div>
-            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;">
-                <div class="section-label">Total de Pedidos</div>
-                <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:24px;font-weight:800;">${r.totalPedidos}</span>
-            </div>
-            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;">
-                <div class="section-label">Receita Total</div>
-                <span style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;">${money(r.receitaTotal)}</span>
-            </div>
-        </div>
-        <div class="section-label">Usuários vinculados</div>
-        ${usuariosVinculados.length
-            ? usuariosVinculados.map(u => `
-                <div class="usuario-card" style="margin-bottom:8px;">
-                    <div class="usuario-avatar">${(u.nome||'?')[0].toUpperCase()}</div>
-                    <div class="usuario-info">
-                        <div class="usuario-nome">${u.nome||'—'}</div>
-                        <div class="usuario-email">${u.email||'—'}</div>
-                    </div>
-                    <span class="badge ${u.role}">${u.role}</span>
-                </div>`).join('')
-            : '<div style="color:var(--muted);font-size:13px;padding:12px 0;">Nenhum usuário vinculado a este restaurante.</div>'
-        }
-        ${r.obs ? `<div class="divider"></div><div class="section-label">Observações</div><div style="font-size:13px;color:var(--muted2);">${r.obs}</div>` : ''}
-    `;
-    document.getElementById('modal-detalhe').classList.add('open');
-}
-
-function saFecharDetalhe() {
-    document.getElementById('modal-detalhe').classList.remove('open');
-}
-
-// ══════════════════════════════════════════════════════════════
-// USUÁRIOS
-// ══════════════════════════════════════════════════════════════
-async function saCarregarUsuarios() {
-    try {
-        const usuarios = await saFetch('GET', 'usuarios?select=*&order=nome.asc');
-        _usuarios = usuarios || [];
-        saRenderUsuarios(_usuarios);
-        const sel = document.getElementById('mu-restaurante');
-        sel.innerHTML = '<option value="">— Nenhum (superadmin) —</option>' +
-            _restaurantes.map(r => `<option value="${r.id}">${r.nome}</option>`).join('');
-    } catch(e) {
-        document.getElementById('tabela-usuarios-body').innerHTML =
-            `<div class="vazio"><div class="vazio-icon">⚠️</div>Erro: ${e.message}</div>`;
-    }
-}
-
-function saFiltrarUsuarios() {
-    const termo = (document.getElementById('filtro-usuario')?.value||'').toLowerCase();
-    const role  = document.getElementById('filtro-role')?.value || '';
-    const filtrados = _usuarios.filter(u => {
-        const matchTermo = !termo || (u.nome||'').toLowerCase().includes(termo) || (u.email||'').toLowerCase().includes(termo);
-        const matchRole  = !role  || u.role === role;
-        return matchTermo && matchRole;
+    // 4 — Registrar trial 15 dias
+    const venc = new Date();
+    venc.setDate(venc.getDate() + 15);
+    const vencStr = venc.toISOString().split('T')[0];
+    await fetch(SB_URL + '/rest/v1/pagamentos', {
+      method: 'POST',
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ restaurante_id: restId, plano: 'trial', status_pgto: 'trial', vencimento: vencStr, valor: 0, obs: 'Trial via cadastro self-service' })
     });
-    saRenderUsuarios(filtrados);
+
+    // 5 — Enviar e-mail via Resend
+    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Enviando e-mail...';
+    const urlCardapio = BASE_URL + '?r=' + slug;
+    const urlAdmin    = BASE_URL + '/admin.html';
+
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Sistema Delivery <onboarding@resend.dev>',
+        to: [email],
+        subject: `🎉 Seus acessos estão prontos, ${nome.split(' ')[0]}!`,
+        html: `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f8;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f8;padding:32px 16px;">
+<tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.09);max-width:560px;width:100%;">
+
+<tr><td style="background:#e30613;padding:28px 36px;text-align:center;">
+  <div style="font-size:26px;font-weight:800;color:#fff;">🔥 Sistema Delivery</div>
+  <div style="color:rgba(255,255,255,.8);font-size:13px;margin-top:4px;">Seu cardápio digital está pronto!</div>
+</td></tr>
+
+<tr><td style="padding:36px;">
+  <p style="font-size:17px;font-weight:800;color:#111;margin:0 0 6px;">Olá, ${nome.split(' ')[0]}! 👋</p>
+  <p style="font-size:14px;color:#6b7280;margin:0 0 24px;line-height:1.6;">Sua conta foi criada com sucesso. Aqui estão todos os seus dados de acesso:</p>
+
+  <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:16px 18px;margin-bottom:24px;">
+    <div style="font-size:13px;font-weight:800;color:#15803d;margin-bottom:3px;">✅ 15 dias grátis ativados!</div>
+    <div style="font-size:12px;color:#16a34a;">Trial válido até <strong>${venc.toLocaleDateString('pt-BR')}</strong>. Sem cartão de crédito.</div>
+  </div>
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+    <tr>
+      <td width="48%" style="padding-right:8px;">
+        <a href="${urlCardapio}" style="display:block;background:#fff5f5;border:1.5px solid #fecaca;border-radius:12px;padding:16px;text-decoration:none;text-align:center;">
+          <div style="font-size:22px;margin-bottom:6px;">🍔</div>
+          <div style="font-size:13px;font-weight:700;color:#e30613;">Cardápio Digital</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:4px;word-break:break-all;">${urlCardapio}</div>
+        </a>
+      </td>
+      <td width="48%" style="padding-left:8px;">
+        <a href="${urlAdmin}" style="display:block;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:12px;padding:16px;text-decoration:none;text-align:center;">
+          <div style="font-size:22px;margin-bottom:6px;">⚙️</div>
+          <div style="font-size:13px;font-weight:700;color:#111;">Painel Admin</div>
+          <div style="font-size:10px;color:#9ca3af;margin-top:4px;">${urlAdmin}</div>
+        </a>
+      </td>
+    </tr>
+  </table>
+
+  <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:18px;margin-bottom:24px;">
+    <p style="font-size:10px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;margin:0 0 12px;">🔑 Credenciais de acesso</p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td style="padding:7px 0;border-bottom:1px solid #e5e7eb;font-size:12px;color:#9ca3af;">Restaurante<span style="float:right;color:#111;font-weight:700;">${nomeRest}</span></td></tr>
+      <tr><td style="padding:7px 0;border-bottom:1px solid #e5e7eb;font-size:12px;color:#9ca3af;">E-mail<span style="float:right;color:#111;font-weight:700;">${email}</span></td></tr>
+      <tr><td style="padding:7px 0;font-size:12px;color:#9ca3af;">Senha<span style="float:right;color:#e30613;font-weight:800;font-family:monospace;letter-spacing:1.5px;font-size:14px;">${senha}</span></td></tr>
+    </table>
+  </div>
+
+  <div style="text-align:center;">
+    <a href="${urlAdmin}" style="display:inline-block;background:#e30613;color:#fff;text-decoration:none;padding:13px 32px;border-radius:11px;font-size:14px;font-weight:700;">
+      Acessar meu painel agora →
+    </a>
+  </div>
+
+  <p style="font-size:11px;color:#9ca3af;text-align:center;margin-top:20px;line-height:1.5;">
+    Guarde esta senha em local seguro.<br>Dúvidas? Entre em contato com nosso suporte.
+  </p>
+</td></tr>
+
+<tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:16px 36px;text-align:center;">
+  <p style="font-size:11px;color:#9ca3af;margin:0;">© 2026 Sistema Delivery · Todos os direitos reservados</p>
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`
+      })
+    });
+
+    // SUCESSO — mostrar tela
+    const telaS = document.getElementById('tela-sucesso');
+    document.getElementById('sucesso-email').textContent = email;
+    document.getElementById('steps-bar').style.display = 'none';
+    document.getElementById('form-body').innerHTML = '';
+    const clone = telaS.cloneNode(true);
+    clone.style.display = 'block';
+    document.getElementById('form-body').appendChild(clone);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  } catch(e) {
+    mostrarErro(3, e.message || 'Erro inesperado. Tente novamente.');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-rocket"></i> Criar minha conta grátis';
+  }
 }
-
-function saRenderUsuarios(lista) {
-    const el = document.getElementById('tabela-usuarios-body');
-    if (!lista.length) {
-        el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-users"></i></div>Nenhum usuário encontrado.</div>';
-        return;
-    }
-    const nomeMap = {};
-    _restaurantes.forEach(r => { nomeMap[r.id] = r.nome; });
-    el.innerHTML = `<table>
-        <thead><tr>
-            <th>Usuário</th><th>E-mail</th><th>Papel</th>
-            <th>Restaurante</th><th>Ativo</th><th>Ações</th>
-        </tr></thead>
-        <tbody>
-        ${lista.map(u => `<tr>
-            <td>
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="usuario-avatar" style="width:32px;height:32px;font-size:12px;border-radius:50%;">${(u.nome||'?')[0].toUpperCase()}</div>
-                    <span style="font-weight:600;">${u.nome||'—'}</span>
-                </div>
-            </td>
-            <td style="color:var(--muted2);font-size:13px;">${u.email||'—'}</td>
-            <td><span class="badge ${u.role}">${u.role}</span></td>
-            <td>
-                ${u.restaurante_id
-                    ? `<span style="font-size:13px;">${nomeMap[u.restaurante_id]||'—'}</span>`
-                    : `<span style="color:var(--muted);font-size:12px;">—</span>`
-                }
-            </td>
-            <td>
-                <button class="toggle ${u.ativo!==false?'on':''}" onclick="saToggleUsuario('${u.id}',this)"
-                    title="${u.ativo!==false?'Clique para desativar':'Clique para ativar'}"></button>
-            </td>
-            <td>
-                <div class="acoes">
-                    <button class="btn-acao" onclick="saEditarUsuario('${u.id}')" title="Editar"><i class="fas fa-pen"></i></button>
-                    <button class="btn-acao danger" onclick="saDeletarUsuario('${u.id}','${u.nome||u.email}')" title="Excluir"><i class="fas fa-trash"></i></button>
-                </div>
-            </td>
-        </tr>`).join('')}
-        </tbody>
-    </table>`;
-}
-
-async function saToggleUsuario(id, btn) {
-    const u = _usuarios.find(x => x.id === id);
-    if (!u) return;
-    const novoAtivo = !(u.ativo !== false);
-    try {
-        await saFetch('PATCH', `usuarios?id=eq.${id}`, { ativo: novoAtivo });
-        u.ativo = novoAtivo;
-        btn.classList.toggle('on', novoAtivo);
-        toast(novoAtivo ? '✓ Usuário ativado' : 'Usuário desativado', novoAtivo);
-    } catch(e) { toast('Erro: ' + e.message, false); }
-}
-
-function saAbrirModalUsuario(id) {
-    _editUserId = id || null;
-    const titulo = document.getElementById('modal-usuario-titulo');
-    const btn    = document.getElementById('modal-usuario-btn');
-    if (id) {
-        const u = _usuarios.find(x => x.id === id);
-        titulo.textContent = 'Editar Usuário';
-        btn.innerHTML = '<i class="fas fa-check"></i> Salvar Alterações';
-        document.getElementById('mu-nome').value        = u.nome || '';
-        document.getElementById('mu-email').value       = u.email || '';
-        document.getElementById('mu-role').value        = u.role || 'admin';
-        document.getElementById('mu-restaurante').value = u.restaurante_id || '';
-        document.getElementById('mu-wrap-senhas').style.display = 'none';
-    } else {
-        titulo.textContent = 'Novo Usuário';
-        btn.innerHTML = '<i class="fas fa-check"></i> Criar Usuário';
-        ['mu-nome','mu-email','mu-senha','mu-senha2'].forEach(i => { const el=document.getElementById(i); if(el) el.value=''; });
-        document.getElementById('mu-role').value        = 'admin';
-        document.getElementById('mu-restaurante').value = '';
-        document.getElementById('mu-wrap-senhas').style.display = '';
-    }
-    document.getElementById('modal-usuario-erro').style.display = 'none';
-    document.getElementById('modal-usuario-ok').style.display   = 'none';
-    document.getElementById('modal-usuario').classList.add('open');
-}
-
-function saFecharModalUsuario() {
-    document.getElementById('modal-usuario').classList.remove('open');
-    _editUserId = null;
-}
-
-function saEditarUsuario(id) { saAbrirModalUsuario(id); }
-
-async function saSalvarUsuario() {
-    const btn  = document.getElementById('modal-usuario-btn');
-    const erro = document.getElementById('modal-usuario-erro');
-    const ok   = document.getElementById('modal-usuario-ok');
-    erro.style.display = 'none'; ok.style.display = 'none';
-
-    const nome       = document.getElementById('mu-nome').value.trim();
-    const email      = document.getElementById('mu-email').value.trim();
-    const role       = document.getElementById('mu-role').value;
-    const restId     = document.getElementById('mu-restaurante').value || null;
-
-    if (!nome)  { erro.textContent='Informe o nome.'; erro.style.display='block'; return; }
-    if (!email) { erro.textContent='Informe o e-mail.'; erro.style.display='block'; return; }
-
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Salvando...';
-    try {
-        if (_editUserId) {
-            await saFetch('PATCH', `usuarios?id=eq.${_editUserId}`, { nome, role, restaurante_id: restId });
-            const u = _usuarios.find(x => x.id === _editUserId);
-            if (u) { u.nome = nome; u.role = role; u.restaurante_id = restId; }
-            ok.textContent = '✓ Usuário atualizado!';
-            ok.style.display = 'block';
-            saRenderUsuarios(_usuarios);
-            toast('✓ Usuário atualizado!');
-            setTimeout(saFecharModalUsuario, 1200);
-        } else {
-            const senha  = document.getElementById('mu-senha').value;
-            const senha2 = document.getElementById('mu-senha2').value;
-            if (!senha || senha.length < 6) { erro.textContent='Senha precisa ter ao menos 6 caracteres.'; erro.style.display='block'; return; }
-            if (senha !== senha2) { erro.textContent='As senhas não coincidem.'; erro.style.display='block'; return; }
-
-            btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando usuário no Auth...';
-            let userId;
-            if (SA_SERVICE_KEY) {
-                const adminUser = await saAuthFetch('POST', 'admin/users', {
-                    email, password: senha,
-                    email_confirm: true,
-                    user_metadata: { nome, restaurante_id: restId }
-                }, true);
-                userId = adminUser.id;
-            } else {
-                const signupR = await fetch(SA_URL + '/auth/v1/signup', {
-                    method: 'POST',
-                    headers: { 'apikey': SA_KEY, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password: senha })
-                });
-                const signupD = await signupR.json();
-                if (!signupR.ok) throw new Error(signupD.message || 'Erro ao criar usuário');
-                userId = signupD.user?.id || signupD.id;
-                if (!userId) throw new Error('ID do usuário não retornado.');
-            }
-
-            btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Vinculando...';
-            await saFetch('POST', 'usuarios', { id: userId, restaurante_id: restId, nome, email, role, ativo: true });
-            _usuarios.push({ id: userId, nome, email, role, restaurante_id: restId, ativo: true });
-            saRenderUsuarios(_usuarios);
-            saCalcularMetricas();
-            ok.textContent = `✓ Usuário criado! Login: ${email}`;
-            ok.style.display = 'block';
-            toast('✓ Usuário criado com sucesso!');
-            setTimeout(saFecharModalUsuario, 1500);
-        }
-    } catch(e) {
-        let msg = e.message;
-        try { const p = JSON.parse(msg); msg = p.message || p.error_description || msg; } catch {}
-        erro.textContent = msg;
-        erro.style.display = 'block';
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = _editUserId
-            ? '<i class="fas fa-check"></i> Salvar Alterações'
-            : '<i class="fas fa-check"></i> Criar Usuário';
-    }
-}
-
-async function saDeletarUsuario(id, nome) {
-    if (!confirm(`Excluir usuário "${nome}"?\n\nIsso remove o vínculo na tabela usuarios. O acesso Auth precisa ser removido manualmente no painel do Supabase.`)) return;
-    try {
-        await saFetch('DELETE', `usuarios?id=eq.${id}`);
-        _usuarios = _usuarios.filter(u => u.id !== id);
-        saRenderUsuarios(_usuarios);
-        saCalcularMetricas();
-        toast('Usuário removido do sistema.');
-    } catch(e) { toast('Erro: ' + e.message, false); }
-}
-
-// ══════════════════════════════════════════════════════════════
-// PEDIDOS
-// ══════════════════════════════════════════════════════════════
-async function saCarregarPedidos(restId) {
-    const el = document.getElementById('tabela-pedidos-body');
-    el.innerHTML = '<div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando...</span></div>';
-    try {
-        let path = 'pedidos?select=*&order=criado_em.desc&limit=200';
-        if (restId) path += `&restaurante_id=eq.${restId}`;
-        const statusFiltro = document.getElementById('filtro-status-pedido')?.value;
-        if (statusFiltro) path += `&status=eq.${statusFiltro}`;
-        const pedidos = await saFetch('GET', path);
-        const nomeMap = {};
-        _restaurantes.forEach(r => { nomeMap[r.id] = r.nome; });
-        if (!pedidos || !pedidos.length) {
-            el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-receipt"></i></div>Nenhum pedido encontrado.</div>';
-            return;
-        }
-        const statusColor = { analise:'#f0b429',preparo:'#4895ef',pronto:'#9b5de5',entrega:'#e30613',finalizado:'#1db954',cancelado:'#6b7280' };
-        el.innerHTML = `<table>
-            <thead><tr>
-                <th>Pedido</th><th>Restaurante</th><th>Cliente</th>
-                <th>Total</th><th>Status</th><th>Data</th>
-            </tr></thead>
-            <tbody>
-            ${pedidos.map(p => `<tr>
-                <td><strong style="font-family:'Plus Jakarta Sans',sans-serif;">${p.numero||p.id?.slice(0,8)||'—'}</strong></td>
-                <td><span style="font-size:12px;">${nomeMap[p.restaurante_id]||'—'}</span></td>
-                <td>
-                    <div style="font-weight:600;font-size:13px;">${p.cliente||'—'}</div>
-                    <div style="font-size:11px;color:var(--muted);">${p.tipo||''}</div>
-                </td>
-                <td><strong style="font-family:'Plus Jakarta Sans',sans-serif;">${money(p.total)}</strong></td>
-                <td><span style="background:${statusColor[p.status]||'#6b7280'}18;color:${statusColor[p.status]||'#6b7280'};padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.3px;">${p.status||'—'}</span></td>
-                <td style="font-size:12px;color:var(--muted);">${(p.criado_em||p.created_at) ? new Date(p.criado_em||p.created_at).toLocaleString('pt-BR') : '—'}</td>
-            </tr>`).join('')}
-            </tbody>
-        </table>`;
-    } catch(e) {
-        el.innerHTML = `<div class="vazio"><div class="vazio-icon">⚠️</div>Erro: ${e.message}</div>`;
-    }
-}
-
-// ══════════════════════════════════════════════════════════════
-// PAGAMENTOS
-// ══════════════════════════════════════════════════════════════
-async function saCarregarPagamentos() {
-    const el = document.getElementById('tabela-pgto-body');
-    try {
-        const pgtos = await saFetch('GET', 'pagamentos?select=*&order=vencimento.asc');
-        const nomeMap = {};
-        _restaurantes.forEach(r => { nomeMap[r.id] = r.nome; });
-        if (!pgtos || !pgtos.length) {
-            el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-credit-card"></i></div>Nenhum registro.</div>';
-            return;
-        }
-        const hoje = new Date(); hoje.setHours(0,0,0,0);
-        el.innerHTML = `<table>
-            <thead><tr>
-                <th>Restaurante</th><th>Plano</th><th>Status</th>
-                <th>Vencimento</th><th>Valor</th><th>Obs</th><th>Ações</th>
-            </tr></thead>
-            <tbody>
-            ${pgtos.map(p => {
-                const venc   = p.vencimento ? new Date(p.vencimento + 'T12:00:00') : null;
-                const vencido = venc && venc < hoje;
-                return `<tr>
-                    <td><strong style="font-size:13px;">${nomeMap[p.restaurante_id]||'—'}</strong></td>
-                    <td><span style="font-size:12px;color:var(--muted2);">${_planoLabel(p.plano||'—')}</span></td>
-                    <td><span class="badge ${p.status_pgto==='pago'?'pago':p.status_pgto==='trial'?'trial':p.status_pgto==='cancelado'?'cancelado':'pendente'}">${p.status_pgto||'pendente'}</span></td>
-                    <td style="font-size:12px;${vencido?'color:var(--red);font-weight:700;':'color:var(--muted);'}">
-                        ${venc ? venc.toLocaleDateString('pt-BR') : '—'}
-                        ${vencido ? ' <span style="font-size:10px;">(vencido)</span>' : ''}
-                    </td>
-                    <td><strong style="font-family:'Plus Jakarta Sans',sans-serif;">${money(p.valor)}</strong></td>
-                    <td style="font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;">${p.obs||'—'}</td>
-                    <td>
-                        <button class="btn-acao success" onclick="saEditarPgto('${p.restaurante_id}')" title="Editar"><i class="fas fa-pen"></i></button>
-                    </td>
-                </tr>`;
-            }).join('')}
-            </tbody>
-        </table>`;
-    } catch(e) {
-        el.innerHTML = `<div class="vazio"><div class="vazio-icon">⚠️</div>Erro: ${e.message}</div>`;
-    }
-}
-
-function saEditarPgto(restId) {
-    const rest = _restaurantes.find(r => r.id === restId);
-    if (!rest) return;
-    document.getElementById('modal-pgto-nome').textContent = rest.nome;
-    document.getElementById('mpgto-rest-id').value  = restId;
-    document.getElementById('mpgto-status').value   = rest.pgto?.status_pgto || 'pendente';
-    document.getElementById('mpgto-plano').value    = rest.pgto?.plano || 'trial';
-    document.getElementById('mpgto-venc').value     = rest.pgto?.vencimento || '';
-    document.getElementById('mpgto-valor').value    = rest.pgto?.valor || '';
-    document.getElementById('mpgto-obs').value      = rest.pgto?.obs || '';
-    document.getElementById('modal-pgto').classList.add('open');
-}
-
-function saFecharModalPgto() { document.getElementById('modal-pgto').classList.remove('open'); }
-
-async function saSalvarPgto() {
-    const restId = document.getElementById('mpgto-rest-id').value;
-    const dados  = {
-        restaurante_id: restId,
-        status_pgto: document.getElementById('mpgto-status').value,
-        plano:       document.getElementById('mpgto-plano').value,
-        vencimento:  document.getElementById('mpgto-venc').value || null,
-        valor:       parseFloat(document.getElementById('mpgto-valor').value) || 0,
-        obs:         document.getElementById('mpgto-obs').value.trim()
-    };
-    try {
-        // Tenta PATCH primeiro (atualizar registro existente)
-        const patchR = await fetch(SA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + restId, {
-            method: 'PATCH',
-            headers: {
-                'apikey':        SA_KEY,
-                'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY),
-                'Content-Type':  'application/json',
-                'Prefer':        'return=representation'
-            },
-            body: JSON.stringify({
-                status_pgto: dados.status_pgto,
-                plano:       dados.plano,
-                vencimento:  dados.vencimento,
-                valor:       dados.valor,
-                obs:         dados.obs
-            })
-        });
-        const patchTxt = await patchR.text();
-        const patchData = patchTxt ? JSON.parse(patchTxt) : [];
-
-        // Se PATCH não atualizou nada (array vazio = registro não existe), faz POST
-        if (!patchData || patchData.length === 0) {
-            await saFetch('POST', 'pagamentos', dados);
-        }
-
-        const r = _restaurantes.find(x => x.id === restId);
-        if (r) r.pgto = { ...r.pgto, ...dados };
-        saFecharModalPgto();
-        saCarregarPagamentos();
-        saRenderRestaurantes(_restaurantes);
-        saCalcularMetricas();
-        toast('✓ Pagamento atualizado!');
-    } catch(e) {
-        let msg = e.message;
-        try { const p = JSON.parse(msg); msg = p.message || p.details || msg; } catch {}
-        toast('Erro: ' + msg, false);
-    }
-}
-
-// ══════════════════════════════════════════════════════════════
-// ABAS (sidebar nav)
-// ══════════════════════════════════════════════════════════════
-const tabTitles = {
-    restaurantes: 'Restaurantes',
-    usuarios: 'Usuários',
-    pedidos: 'Pedidos',
-    pagamentos: 'Pagamentos'
-};
-
-function saAba(id, btn) {
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.secao').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('sec-' + id).classList.add('active');
-    document.getElementById('topbar-titulo').textContent = tabTitles[id] || id;
-    if (id === 'pedidos')    saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value);
-    if (id === 'pagamentos') saCarregarPagamentos();
-    if (id === 'usuarios')   saCarregarUsuarios();
-}
-
-// ══════════════════════════════════════════════════════════════
-// TEMA CLARO / ESCURO
-// ══════════════════════════════════════════════════════════════
-function saToggleTema() {
-    const html = document.documentElement;
-    const isLight = html.getAttribute('data-theme') === 'light';
-    const novoTema = isLight ? 'dark' : 'light';
-    if (novoTema === 'dark') {
-        html.removeAttribute('data-theme');
-    } else {
-        html.setAttribute('data-theme', 'light');
-    }
-    localStorage.setItem('sa_tema', novoTema);
-    _atualizarIconeTema(novoTema);
-}
-
-function _atualizarIconeTema(tema) {
-    const icon  = document.getElementById('theme-icon');
-    const label = document.getElementById('theme-label');
-    if (!icon || !label) return;
-    if (tema === 'light') {
-        icon.className  = 'fas fa-sun';
-        label.textContent = 'Tema Claro';
-    } else {
-        icon.className  = 'fas fa-moon';
-        label.textContent = 'Tema Escuro';
-    }
-}
-
-function _carregarTema() {
-    const salvo = localStorage.getItem('sa_tema') || 'dark';
-    if (salvo === 'light') {
-        document.documentElement.setAttribute('data-theme', 'light');
-    }
-    _atualizarIconeTema(salvo);
-}
-_carregarTema();
-
-// ══════════════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════════════
-(async function init() {
-    const temSessao = await saVerificarSessao();
-    if (temSessao) mostrarApp();
-})();
 </script>
 </body>
 </html>
