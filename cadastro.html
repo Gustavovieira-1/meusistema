@@ -672,9 +672,9 @@ async function criarConta() {
     const urlCardapio = BASE_URL + '?r=' + slug;
     const urlAdmin    = BASE_URL + '/admin.html';
 
-    await fetch('https://api.resend.com/emails', {
+    await fetch(SB_URL + '/functions/v1/resend-email', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: 'Zira <noreply@zirafood.com.br>',
         to: [email],
