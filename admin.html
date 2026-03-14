@@ -464,8 +464,67 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
     border-top: 2px solid #e30613 !important;
 }
 </style>
+<style>
+/* ── TELA DE BLOQUEIO ─────────────────────────────────────── */
+#tela-bloqueio {
+    display: none;
+    position: fixed; inset: 0; z-index: 99999;
+    background: #0a0a12;
+    align-items: center; justify-content: center;
+    font-family: inherit;
+}
+#tela-bloqueio.ativo { display: flex; }
+.bloqueio-card {
+    background: #13131f;
+    border: 1px solid #2a2a3d;
+    border-radius: 24px;
+    padding: 48px 40px;
+    max-width: 480px; width: 90%;
+    text-align: center;
+    box-shadow: 0 24px 64px rgba(0,0,0,.5);
+}
+.bloqueio-icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: rgba(227,6,19,.1); border: 2px solid rgba(227,6,19,.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; margin: 0 auto 24px;
+}
+.bloqueio-titulo { font-size: 22px; font-weight: 800; color: #f1f5f9; margin-bottom: 12px; }
+.bloqueio-sub { font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 28px; }
+.bloqueio-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(227,6,19,.1); border: 1px solid rgba(227,6,19,.25);
+    color: #f87171; padding: 8px 18px; border-radius: 20px;
+    font-size: 13px; font-weight: 700; margin-bottom: 28px;
+}
+.bloqueio-btn {
+    display: block; width: 100%; padding: 15px;
+    background: #e30613; color: white; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer;
+    transition: background .15s; text-decoration: none; margin-bottom: 12px;
+}
+.bloqueio-btn:hover { background: #b8000e; }
+.bloqueio-btn-sec {
+    display: block; width: 100%; padding: 13px;
+    background: transparent; color: #64748b;
+    border: 1px solid #2a2a3d; border-radius: 12px;
+    font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer;
+}
+</style>
 </head>
 <body>
+<!-- TELA DE BLOQUEIO TRIAL/INADIMPLENTE -->
+<div id="tela-bloqueio">
+    <div class="bloqueio-card">
+        <div class="bloqueio-icon">🔒</div>
+        <div class="bloqueio-titulo">Seu acesso foi suspenso</div>
+        <p class="bloqueio-sub">Seu período de teste gratuito encerrou ou há uma pendência no seu plano. Assine agora para continuar usando o sistema.</p>
+        <div class="bloqueio-badge">⏰ <span id="bloqueio-msg">Trial encerrado</span></div>
+        <a href="https://zirafood.com.br/cadastro" class="bloqueio-btn" target="_blank">🚀 Assinar agora</a>
+        <button class="bloqueio-btn-sec" onclick="authFazerLogout()">Sair da conta</button>
+    </div>
+</div>
+
 <!-- TELA DE BLOQUEIO TRIAL/INADIMPLENTE -->
 <div id="tela-bloqueio">
     <div class="bloqueio-card">
@@ -3138,6 +3197,36 @@ function mostrarBloqueio(msg) {
     document.getElementById('tela-bloqueio').classList.add('ativo');
 }
 
+
+// ── VERIFICAÇÃO DE BLOQUEIO TRIAL ──────────────────────────
+async function verificarBloqueio() {
+    if (!REST_ID) return false;
+    try {
+        const r = await fetch(SUPA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + REST_ID + '&select=status_pgto,vencimento&limit=1', {
+            headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_TOKEN }
+        });
+        const data = await r.json();
+        if (!data || data.length === 0) return false;
+        const pgto = data[0];
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
+        const status = pgto.status_pgto;
+        if (status === 'inadimplente' || status === 'cancelado') {
+            mostrarBloqueio('Pagamento pendente');
+            return true;
+        }
+        if (status === 'trial' && venc && hoje > venc) {
+            const dias = Math.floor((hoje - venc) / 86400000);
+            mostrarBloqueio('Trial encerrado há ' + dias + ' dia' + (dias > 1 ? 's' : ''));
+            return true;
+        }
+        return false;
+    } catch(e) { console.warn('Erro bloqueio:', e); return false; }
+}
+function mostrarBloqueio(msg) {
+    document.getElementById('bloqueio-msg').textContent = msg;
+    document.getElementById('tela-bloqueio').classList.add('ativo');
+}
 // Inicialização: verificar sessão salva primeiro
 async function iniciarApp() {
     const temSessao = await authVerificarSessao();
