@@ -616,6 +616,7 @@ async function init(){
         const rest = restRows[0];
         REST_ID = rest.id;
         console.log('[INIT] ✅ REST_ID carregado:', REST_ID);
+        await verificarPagamentoCardapio(REST_ID);
 
         // Buscar cardápio, configs e taxas em paralelo
         const [cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
@@ -1345,6 +1346,35 @@ function fidelMostrarSucesso(total) {
     }
 }
 
+
+// Verificar se restaurante tem pagamento ativo
+async function verificarPagamentoCardapio(restId) {
+    try {
+        const r = await supaFetch('pagamentos?restaurante_id=eq.' + restId + '&select=status_pgto,vencimento&limit=1');
+        if (!r || r.length === 0) return; // sem registro = libera
+        const pgto = r[0];
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
+        const status = pgto.status_pgto;
+        if (status === 'inadimplente' || status === 'cancelado') {
+            document.getElementById('cardapio-bloqueio').style.display = 'flex';
+            return;
+        }
+        if (status === 'trial' && venc && hoje > venc) {
+            document.getElementById('cardapio-bloqueio').style.display = 'flex';
+            return;
+        }
+    } catch(e) { console.warn('Erro verificação pagamento:', e); }
+}
 </script>
+
+<!-- TELA DE BLOQUEIO CARDÁPIO -->
+<div id="cardapio-bloqueio" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);backdrop-filter:blur(8px) brightness(0.5);-webkit-backdrop-filter:blur(8px) brightness(0.5);align-items:center;justify-content:center;font-family:inherit;">
+  <div style="background:#fff;border-radius:20px;padding:40px 32px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="width:64px;height:64px;border-radius:50%;background:#fff5f5;border:2px solid #fecaca;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 20px;">🔒</div>
+    <div style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px;">Cardápio temporariamente indisponível</div>
+    <p style="font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:0;">Este restaurante está fora do ar no momento. Tente novamente mais tarde.</p>
+  </div>
+</div>
 </body>
 </html>
