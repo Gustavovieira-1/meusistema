@@ -469,7 +469,9 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 #tela-bloqueio {
     display: none;
     position: fixed; inset: 0; z-index: 99999;
-    background: #0a0a12;
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(6px) brightness(0.4);
+    -webkit-backdrop-filter: blur(6px) brightness(0.4);
     align-items: center; justify-content: center;
     font-family: inherit;
 }
