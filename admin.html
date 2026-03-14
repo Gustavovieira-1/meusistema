@@ -6043,66 +6043,7 @@ function imprimirNavegador(o, cfg, cfgTx, totalPedidosLoja) {
           'body{margin:0;}' +
           '@page{size:' + largura + 'mm auto;margin:0;}' +
         '}' +
-        '
-/* ── TELA DE BLOQUEIO ─────────────────────────────────────── */
-#tela-bloqueio {
-    display: none;
-    position: fixed; inset: 0; z-index: 99999;
-    background: #0a0a12;
-    align-items: center; justify-content: center;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-}
-#tela-bloqueio.ativo { display: flex; }
-.bloqueio-card {
-    background: #13131f;
-    border: 1px solid #2a2a3d;
-    border-radius: 24px;
-    padding: 48px 40px;
-    max-width: 480px; width: 90%;
-    text-align: center;
-    box-shadow: 0 24px 64px rgba(0,0,0,.5);
-    animation: fadeUp .4s ease;
-}
-.bloqueio-icon {
-    width: 72px; height: 72px; border-radius: 50%;
-    background: rgba(227,6,19,.1); border: 2px solid rgba(227,6,19,.3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 28px; margin: 0 auto 24px;
-}
-.bloqueio-titulo {
-    font-size: 22px; font-weight: 800; color: #f1f5f9;
-    margin-bottom: 12px; letter-spacing: -.3px;
-}
-.bloqueio-sub {
-    font-size: 14px; color: #64748b; line-height: 1.6;
-    margin-bottom: 28px;
-}
-.bloqueio-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(227,6,19,.1); border: 1px solid rgba(227,6,19,.25);
-    color: #f87171; padding: 8px 18px; border-radius: 20px;
-    font-size: 13px; font-weight: 700; margin-bottom: 28px;
-}
-.bloqueio-btn {
-    display: block; width: 100%; padding: 15px;
-    background: #e30613; color: white;
-    border: none; border-radius: 12px;
-    font-size: 15px; font-weight: 700;
-    font-family: inherit; cursor: pointer;
-    transition: background .15s; text-decoration: none;
-    margin-bottom: 12px;
-}
-.bloqueio-btn:hover { background: #b8000e; }
-.bloqueio-btn-sec {
-    display: block; width: 100%; padding: 13px;
-    background: transparent; color: #64748b;
-    border: 1px solid #2a2a3d; border-radius: 12px;
-    font-size: 14px; font-weight: 600;
-    font-family: inherit; cursor: pointer;
-    transition: all .15s;
-}
-.bloqueio-btn-sec:hover { color: #94a3b8; border-color: #3a3a50; }
-</style></head><body>' +
+        +
         L.join('\n') +
         '<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>' +
         '</body></html>';
