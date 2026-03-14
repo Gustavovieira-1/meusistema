@@ -676,7 +676,7 @@ async function criarConta() {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'Zira <onboarding@resend.dev>',
+        from: 'Zira <noreply@zirafood.com.br>',
         to: [email],
         subject: `🎉 Seus acessos estão prontos, ${nome.split(' ')[0]}!`,
         html: `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"></head>
