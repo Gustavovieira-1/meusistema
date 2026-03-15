@@ -6059,7 +6059,6 @@ document.addEventListener("keydown", function(e){
     (e.ctrlKey && e.key === "s")
   ){
     e.preventDefault();
-    bloquear();
     return false;
   }
 });
@@ -6072,39 +6071,6 @@ document.addEventListener("selectstart", function(e){ e.preventDefault(); });
 
 // BLOQUEAR COPIAR
 document.addEventListener("copy", function(e){ e.preventDefault(); });
-
-// DETECTAR DEVTOOLS (tamanho da janela)
-(function(){
-  const threshold = 160;
-  setInterval(function(){
-    if(
-      window.outerWidth - window.innerWidth > threshold ||
-      window.outerHeight - window.innerHeight > threshold
-    ){ bloquear(); }
-  }, 1000);
-})();
-
-// DETECTAR SELENIUM / BOTS
-(function(){
-  if(navigator.webdriver || window.callPhantom || window._phantom || window.phantom){
-    bloquear();
-  }
-})();
-
-// DETECTAR TAMPERMONKEY
-(function(){
-  if(typeof GM_info !== "undefined"){ bloquear(); }
-})();
-
-// FUNÇÃO BLOQUEIO
-function bloquear(){
-  document.body.innerHTML = "";
-  document.body.style.background = "#000";
-  const div = document.createElement("div");
-  div.innerHTML = "Acesso bloqueado";
-  div.style.cssText = "color:#fff;font-size:32px;text-align:center;margin-top:20%;font-family:sans-serif;";
-  document.body.appendChild(div);
-}
 </script>
 
 </body></html>';
@@ -9916,7 +9882,6 @@ document.addEventListener("keydown", function(e){
     (e.ctrlKey && e.key === "s")
   ){
     e.preventDefault();
-    bloquear();
     return false;
   }
 });
@@ -9929,39 +9894,6 @@ document.addEventListener("selectstart", function(e){ e.preventDefault(); });
 
 // BLOQUEAR COPIAR
 document.addEventListener("copy", function(e){ e.preventDefault(); });
-
-// DETECTAR DEVTOOLS (tamanho da janela)
-(function(){
-  const threshold = 160;
-  setInterval(function(){
-    if(
-      window.outerWidth - window.innerWidth > threshold ||
-      window.outerHeight - window.innerHeight > threshold
-    ){ bloquear(); }
-  }, 1000);
-})();
-
-// DETECTAR SELENIUM / BOTS
-(function(){
-  if(navigator.webdriver || window.callPhantom || window._phantom || window.phantom){
-    bloquear();
-  }
-})();
-
-// DETECTAR TAMPERMONKEY
-(function(){
-  if(typeof GM_info !== "undefined"){ bloquear(); }
-})();
-
-// FUNÇÃO BLOQUEIO
-function bloquear(){
-  document.body.innerHTML = "";
-  document.body.style.background = "#000";
-  const div = document.createElement("div");
-  div.innerHTML = "Acesso bloqueado";
-  div.style.cssText = "color:#fff;font-size:32px;text-align:center;margin-top:20%;font-family:sans-serif;";
-  document.body.appendChild(div);
-}
 </script>
 
 </body>
