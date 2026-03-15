@@ -6048,32 +6048,7 @@ function imprimirNavegador(o, cfg, cfgTx, totalPedidosLoja) {
         +
         L.join('\n') +
         '<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>' +
-        '
-<script>
-// BLOQUEAR TECLAS
-document.addEventListener("keydown", function(e){
-  if(
-    e.key === "F12" ||
-    (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
-    (e.ctrlKey && e.key === "u") ||
-    (e.ctrlKey && e.key === "s")
-  ){
-    e.preventDefault();
-    return false;
-  }
-});
-
-// BLOQUEAR CLIQUE DIREITO
-document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
-
-// BLOQUEAR SELEÇÃO
-document.addEventListener("selectstart", function(e){ e.preventDefault(); });
-
-// BLOQUEAR COPIAR
-document.addEventListener("copy", function(e){ e.preventDefault(); });
-</script>
-
-</body></html>';
+        '</body></html>';
 
     var win = window.open('', '_blank', 'width=460,height=700');
     if (!win) { alert('Permita pop-ups para imprimir.'); return; }
@@ -9871,29 +9846,10 @@ async function cfgAlterarSenha() {
 
 
 </div><!-- /app-wrapper -->
-
 <script>
-// BLOQUEAR TECLAS
-document.addEventListener("keydown", function(e){
-  if(
-    e.key === "F12" ||
-    (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
-    (e.ctrlKey && e.key === "u") ||
-    (e.ctrlKey && e.key === "s")
-  ){
-    e.preventDefault();
-    return false;
-  }
-});
-
-// BLOQUEAR CLIQUE DIREITO
-document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
-
-// BLOQUEAR SELEÇÃO
-document.addEventListener("selectstart", function(e){ e.preventDefault(); });
-
-// BLOQUEAR COPIAR
-document.addEventListener("copy", function(e){ e.preventDefault(); });
+document.addEventListener("keydown",function(e){if(e.key==="F12"||(e.ctrlKey&&e.shiftKey&&["I","J","C"].includes(e.key))||(e.ctrlKey&&e.key==="u")||(e.ctrlKey&&e.key==="s")){e.preventDefault();return false;}});
+document.addEventListener("contextmenu",function(e){e.preventDefault();});
+document.addEventListener("selectstart",function(e){e.preventDefault();});
+document.addEventListener("copy",function(e){e.preventDefault();});
 </script>
-
 </body>
