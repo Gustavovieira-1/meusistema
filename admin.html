@@ -6050,124 +6050,60 @@ function imprimirNavegador(o, cfg, cfgTx, totalPedidosLoja) {
         '<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>' +
         '
 <script>
-// ================================
 // BLOQUEAR TECLAS
-// ================================
 document.addEventListener("keydown", function(e){
-if(
-e.key === "F12" ||
-(e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
-(e.ctrlKey && e.key === "u") ||
-(e.ctrlKey && e.key === "s")
-){
-e.preventDefault();
-bloquear();
-return false;
-}
+  if(
+    e.key === "F12" ||
+    (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
+    (e.ctrlKey && e.key === "u") ||
+    (e.ctrlKey && e.key === "s")
+  ){
+    e.preventDefault();
+    bloquear();
+    return false;
+  }
 });
-// ================================
+
 // BLOQUEAR CLIQUE DIREITO
-// ================================
-document.addEventListener("contextmenu", function(e){
-e.preventDefault();
-});
-// ================================
+document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+
 // BLOQUEAR SELEÇÃO
-// ================================
-document.addEventListener("selectstart", function(e){
-e.preventDefault();
-});
-// ================================
+document.addEventListener("selectstart", function(e){ e.preventDefault(); });
+
 // BLOQUEAR COPIAR
-// ================================
-document.addEventListener("copy", function(e){
-e.preventDefault();
-});
-// ================================
-// DETECTAR DEVTOOLS
-// ================================
+document.addEventListener("copy", function(e){ e.preventDefault(); });
+
+// DETECTAR DEVTOOLS (tamanho da janela)
 (function(){
-const threshold = 160;
-setInterval(function(){
-if(
-window.outerWidth - window.innerWidth > threshold ||
-window.outerHeight - window.innerHeight > threshold
-){
-bloquear();
-}
-}, 1000);
+  const threshold = 160;
+  setInterval(function(){
+    if(
+      window.outerWidth - window.innerWidth > threshold ||
+      window.outerHeight - window.innerHeight > threshold
+    ){ bloquear(); }
+  }, 1000);
 })();
-// ================================
-// DETECTAR CONSOLE
-// ================================
-(function(){
-let devtoolsOpen = false;
-const element = new Image();
-Object.defineProperty(element, 'id', {
-get: function() {
-devtoolsOpen = true;
-bloquear();
-}
-});
-setInterval(function(){
-devtoolsOpen = false;
-console.log(element);
-console.clear();
-}, 1000);
-})();
-// ================================
-// ANTI DEBUGGER
-// ================================
-setInterval(function(){
-(function(){
-return false;
-})['constructor']('debugger')();
-}, 1000);
-// ================================
+
 // DETECTAR SELENIUM / BOTS
-// ================================
 (function(){
-if(
-navigator.webdriver ||
-window.callPhantom ||
-window._phantom ||
-window.phantom
-){
-bloquear();
-}
+  if(navigator.webdriver || window.callPhantom || window._phantom || window.phantom){
+    bloquear();
+  }
 })();
-// ================================
-// DETECTAR HEADLESS
-// ================================
-(function(){
-if(
-navigator.plugins.length === 0 ||
-navigator.languages === ""
-){
-bloquear();
-}
-})();
-// ================================
+
 // DETECTAR TAMPERMONKEY
-// ================================
 (function(){
-if(typeof GM_info !== "undefined"){
-bloquear();
-}
+  if(typeof GM_info !== "undefined"){ bloquear(); }
 })();
-// ================================
+
 // FUNÇÃO BLOQUEIO
-// ================================
 function bloquear(){
-document.body.innerHTML="";
-document.body.style.background="#000";
-const div = document.createElement("div");
-div.innerHTML="Acesso bloqueado";
-div.style.color="#fff";
-div.style.fontSize="32px";
-div.style.textAlign="center";
-div.style.marginTop="20%";
-document.body.appendChild(div);
+  document.body.innerHTML = "";
+  document.body.style.background = "#000";
+  const div = document.createElement("div");
+  div.innerHTML = "Acesso bloqueado";
+  div.style.cssText = "color:#fff;font-size:32px;text-align:center;margin-top:20%;font-family:sans-serif;";
+  document.body.appendChild(div);
 }
 </script>
 
@@ -9971,124 +9907,60 @@ async function cfgAlterarSenha() {
 </div><!-- /app-wrapper -->
 
 <script>
-// ================================
 // BLOQUEAR TECLAS
-// ================================
 document.addEventListener("keydown", function(e){
-if(
-e.key === "F12" ||
-(e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
-(e.ctrlKey && e.key === "u") ||
-(e.ctrlKey && e.key === "s")
-){
-e.preventDefault();
-bloquear();
-return false;
-}
+  if(
+    e.key === "F12" ||
+    (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(e.key)) ||
+    (e.ctrlKey && e.key === "u") ||
+    (e.ctrlKey && e.key === "s")
+  ){
+    e.preventDefault();
+    bloquear();
+    return false;
+  }
 });
-// ================================
+
 // BLOQUEAR CLIQUE DIREITO
-// ================================
-document.addEventListener("contextmenu", function(e){
-e.preventDefault();
-});
-// ================================
+document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+
 // BLOQUEAR SELEÇÃO
-// ================================
-document.addEventListener("selectstart", function(e){
-e.preventDefault();
-});
-// ================================
+document.addEventListener("selectstart", function(e){ e.preventDefault(); });
+
 // BLOQUEAR COPIAR
-// ================================
-document.addEventListener("copy", function(e){
-e.preventDefault();
-});
-// ================================
-// DETECTAR DEVTOOLS
-// ================================
+document.addEventListener("copy", function(e){ e.preventDefault(); });
+
+// DETECTAR DEVTOOLS (tamanho da janela)
 (function(){
-const threshold = 160;
-setInterval(function(){
-if(
-window.outerWidth - window.innerWidth > threshold ||
-window.outerHeight - window.innerHeight > threshold
-){
-bloquear();
-}
-}, 1000);
+  const threshold = 160;
+  setInterval(function(){
+    if(
+      window.outerWidth - window.innerWidth > threshold ||
+      window.outerHeight - window.innerHeight > threshold
+    ){ bloquear(); }
+  }, 1000);
 })();
-// ================================
-// DETECTAR CONSOLE
-// ================================
-(function(){
-let devtoolsOpen = false;
-const element = new Image();
-Object.defineProperty(element, 'id', {
-get: function() {
-devtoolsOpen = true;
-bloquear();
-}
-});
-setInterval(function(){
-devtoolsOpen = false;
-console.log(element);
-console.clear();
-}, 1000);
-})();
-// ================================
-// ANTI DEBUGGER
-// ================================
-setInterval(function(){
-(function(){
-return false;
-})['constructor']('debugger')();
-}, 1000);
-// ================================
+
 // DETECTAR SELENIUM / BOTS
-// ================================
 (function(){
-if(
-navigator.webdriver ||
-window.callPhantom ||
-window._phantom ||
-window.phantom
-){
-bloquear();
-}
+  if(navigator.webdriver || window.callPhantom || window._phantom || window.phantom){
+    bloquear();
+  }
 })();
-// ================================
-// DETECTAR HEADLESS
-// ================================
-(function(){
-if(
-navigator.plugins.length === 0 ||
-navigator.languages === ""
-){
-bloquear();
-}
-})();
-// ================================
+
 // DETECTAR TAMPERMONKEY
-// ================================
 (function(){
-if(typeof GM_info !== "undefined"){
-bloquear();
-}
+  if(typeof GM_info !== "undefined"){ bloquear(); }
 })();
-// ================================
+
 // FUNÇÃO BLOQUEIO
-// ================================
 function bloquear(){
-document.body.innerHTML="";
-document.body.style.background="#000";
-const div = document.createElement("div");
-div.innerHTML="Acesso bloqueado";
-div.style.color="#fff";
-div.style.fontSize="32px";
-div.style.textAlign="center";
-div.style.marginTop="20%";
-document.body.appendChild(div);
+  document.body.innerHTML = "";
+  document.body.style.background = "#000";
+  const div = document.createElement("div");
+  div.innerHTML = "Acesso bloqueado";
+  div.style.cssText = "color:#fff;font-size:32px;text-align:center;margin-top:20%;font-family:sans-serif;";
+  document.body.appendChild(div);
 }
 </script>
 
