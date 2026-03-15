@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planos — Zira</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --brand:    #e30613;
+  --brand-dk: #b8000e;
+  --brand-lt: #ff4757;
+  --gold:     #f59e0b;
+  --text:     #0a0a12;
+  --muted:    #6b7280;
+  --muted2:   #9ca3af;
+  --border:   #e5e7eb;
+  --surface:  #f9fafb;
+  --white:    #ffffff;
+  --green:    #16a34a;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #fafafa;
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* HEADER */
+.header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px; height: 64px;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+}
+.header-logo {
+  display: flex; align-items: center; gap: 11px;
+  text-decoration: none; flex-shrink: 0;
+}
+.header-logo-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, #e30613 0%, #ff4757 100%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(227,6,19,.35); flex-shrink: 0;
+}
+.header-logo-icon svg { width: 20px; height: 20px; }
+.header-logo-text { display: flex; flex-direction: column; line-height: 1.1; }
+.header-logo-name { font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -.3px; }
+.header-logo-sub  { font-size: 9.5px; font-weight: 600; color: var(--muted2); letter-spacing: .3px; text-transform: uppercase; }
+.header-back {
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 6px; font-size: 13px; font-weight: 600; color: var(--muted);
+  text-decoration: none; transition: color .15s;
+}
+.header-back:hover { color: var(--text); }
+
+/* HERO */
+.hero {
+  text-align: center;
+  padding: 64px 20px 48px;
+  animation: fadeUp .5s ease both;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #fff7ed; border: 1px solid #fed7aa;
+  color: #c2410c; padding: 6px 16px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; letter-spacing: .4px;
+  margin-bottom: 20px;
+}
+.hero-title {
+  font-size: clamp(32px, 5vw, 52px); font-weight: 900;
+  line-height: 1.08; letter-spacing: -.8px; margin-bottom: 16px;
+}
+.hero-title span { color: var(--brand); }
+.hero-sub {
+  font-size: 17px; color: var(--muted); line-height: 1.6;
+  max-width: 480px; margin: 0 auto 16px;
+}
+.hero-trial {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  color: var(--green); padding: 8px 18px; border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+}
+
+/* TOGGLE PERÍODO */
+.toggle-wrap {
+  display: flex; justify-content: center; margin-bottom: 48px;
+  animation: fadeUp .5s .1s ease both;
+}
+.toggle-bar {
+  display: flex; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 14px;
+  padding: 4px; gap: 4px;
+}
+.toggle-btn {
+  padding: 10px 24px; border-radius: 10px; border: none;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  font-family: inherit; transition: all .2s; color: var(--muted);
+  background: none; position: relative;
+}
+.toggle-btn.active {
+  background: var(--white); color: var(--text);
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.toggle-btn .economia {
+  position: absolute; top: -10px; right: -8px;
+  background: var(--green); color: white;
+  font-size: 9px; font-weight: 800; padding: 2px 6px;
+  border-radius: 20px; white-space: nowrap;
+}
+
+/* CARDS */
+.cards-wrap {
+  max-width: 1060px; margin: 0 auto;
+  padding: 0 20px 80px;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 20px; align-items: start;
+  animation: fadeUp .5s .15s ease both;
+}
+
+.card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 24px;
+  padding: 36px 32px;
+  position: relative;
+  transition: transform .2s, box-shadow .2s;
+}
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0,0,0,.1);
+}
+.card.destaque {
+  border-color: var(--brand);
+  box-shadow: 0 8px 32px rgba(227,6,19,.12);
+  transform: translateY(-8px);
+}
+.card.destaque:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 20px 56px rgba(227,6,19,.18);
+}
+
+.card-badge {
+  position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+  background: var(--brand); color: white;
+  font-size: 11px; font-weight: 800; padding: 4px 16px;
+  border-radius: 20px; white-space: nowrap; letter-spacing: .5px;
+}
+
+.card-nome {
+  font-size: 13px; font-weight: 800; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;
+}
+.card-preco {
+  margin-bottom: 4px;
+}
+.card-preco-valor {
+  font-size: 48px; font-weight: 900; color: var(--text);
+  letter-spacing: -2px; line-height: 1;
+}
+.card-preco-periodo { font-size: 16px; color: var(--muted); font-weight: 600; }
+.card-preco-mes {
+  font-size: 13px; color: var(--muted); margin-bottom: 6px;
+}
+.card-economia {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #f0fdf4; border: 1px solid #bbf7d0;
+  color: var(--green); padding: 4px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; margin-bottom: 24px;
+}
+
+.card-divisor {
+  height: 1px; background: var(--border); margin-bottom: 24px;
+}
+
+.card-features {
+  list-style: none; display: flex; flex-direction: column; gap: 12px;
+  margin-bottom: 32px;
+}
+.card-feature {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 14px; color: var(--text); line-height: 1.4;
+}
+.card-feature-icon {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #f0fdf4; border: 1.5px solid #bbf7d0;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 10px; color: var(--green); margin-top: 1px;
+}
+.card.destaque .card-feature-icon {
+  background: #fff5f5; border-color: #fecaca; color: var(--brand);
+}
+
+.card-btn {
+  display: block; width: 100%; padding: 15px;
+  border-radius: 12px; border: none; cursor: pointer;
+  font-size: 15px; font-weight: 700; font-family: inherit;
+  transition: all .15s; text-align: center; text-decoration: none;
+}
+.card-btn-outline {
+  background: transparent; color: var(--text);
+  border: 1.5px solid var(--border2, #d1d5db);
+}
+.card-btn-outline:hover { border-color: var(--brand); color: var(--brand); }
+.card-btn-primary {
+  background: var(--brand); color: white;
+  box-shadow: 0 4px 16px rgba(227,6,19,.25);
+}
+.card-btn-primary:hover { background: var(--brand-dk); }
+
+/* GARANTIA */
+.garantia {
+  text-align: center; padding: 0 20px 64px;
+  animation: fadeUp .5s .2s ease both;
+}
+.garantia-box {
+  display: inline-flex; align-items: center; gap: 16px;
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px 32px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.04);
+}
+.garantia-icon { font-size: 32px; }
+.garantia-titulo { font-size: 15px; font-weight: 800; margin-bottom: 3px; }
+.garantia-sub { font-size: 13px; color: var(--muted); }
+
+/* FAQ */
+.faq {
+  max-width: 680px; margin: 0 auto;
+  padding: 0 20px 80px;
+  animation: fadeUp .5s .25s ease both;
+}
+.faq-titulo {
+  font-size: 24px; font-weight: 800; text-align: center;
+  margin-bottom: 32px; letter-spacing: -.3px;
+}
+.faq-item {
+  border-bottom: 1px solid var(--border); padding: 20px 0;
+}
+.faq-pergunta {
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 16px; user-select: none;
+}
+.faq-pergunta-icon { font-size: 18px; color: var(--muted); flex-shrink: 0; transition: transform .2s; }
+.faq-resposta {
+  font-size: 14px; color: var(--muted); line-height: 1.7;
+  max-height: 0; overflow: hidden; transition: max-height .3s ease, padding .3s;
+}
+.faq-item.open .faq-resposta { max-height: 200px; padding-top: 12px; }
+.faq-item.open .faq-pergunta-icon { transform: rotate(45deg); }
+
+/* RODAPÉ */
+.rodape {
+  text-align: center; padding: 24px 20px;
+  font-size: 12px; color: var(--muted2);
+  border-top: 1px solid var(--border); background: white;
+}
+.rodape a { color: var(--muted); text-decoration: none; }
+
+@media(max-width:768px){
+  .header { padding: 0 16px; }
+  .cards-wrap { grid-template-columns: 1fr; max-width: 440px; }
+  .card.destaque { transform: none; }
+  .card.destaque:hover { transform: translateY(-4px); }
+  .hero { padding: 40px 16px 32px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a href="/" class="header-logo">
+    <div class="header-logo-icon">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(255,255,255,0.25)" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M8.5 12l2.5 2.5 4.5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="header-logo-text">
+      <span class="header-logo-name">Zira</span>
+      <span class="header-logo-sub">Cardápio &amp; Gestão de Delivery</span>
+    </div>
+  </a>
+  <div></div>
+  <a href="/admin" class="header-back">
+    ← Voltar ao painel
+  </a>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">🚀 Sem taxa de setup · Cancele quando quiser</div>
+  <h1 class="hero-title">Escolha o plano<br>ideal para <span>seu negócio</span></h1>
+  <p class="hero-sub">Receba pedidos online, gerencie seu delivery e fidelize clientes. Tudo em um só lugar.</p>
+  <div class="hero-trial">✅ Planos sem fidelidade — cancele quando quiser</div>
+</section>
+
+<!-- TOGGLE -->
+<div class="toggle-wrap">
+  <div class="toggle-bar">
+    <button class="toggle-btn active" onclick="setPeriodo('mensal')" id="btn-mensal">Mensal</button>
+    <button class="toggle-btn" onclick="setPeriodo('trimestral')" id="btn-trimestral">
+      Trimestral
+      <span class="economia">-10%</span>
+    </button>
+    <button class="toggle-btn" onclick="setPeriodo('anual')" id="btn-anual">
+      Anual
+      <span class="economia">-15%</span>
+    </button>
+  </div>
+</div>
+
+<!-- CARDS -->
+<div class="cards-wrap">
+
+  <!-- MENSAL -->
+  <div class="card" id="card-mensal">
+    <div class="card-nome">Mensal</div>
+    <div class="card-preco">
+      <span class="card-preco-valor" id="preco-mensal">R$ 147</span>
+      <span class="card-preco-periodo">/mês</span>
+    </div>
+    <div class="card-preco-mes" id="mes-mensal">Cobrado mensalmente</div>
+    <ul class="card-features">
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Cardápio digital ilimitado</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Gestor de pedidos em tempo real</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Relatórios de vendas</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Cupons e fidelização</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Integração com WhatsApp</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Suporte por e-mail</span></li>
+    </ul>
+    <a href="#" class="card-btn card-btn-outline" id="cta-mensal" onclick="irCheckout('mensal')">Assinar agora</a>
+  </div>
+
+  <!-- TRIMESTRAL (DESTAQUE) -->
+  <div class="card destaque" id="card-trimestral" style="display:none;">
+    <div class="card-badge">⭐ MAIS POPULAR</div>
+    <div class="card-nome">Trimestral</div>
+    <div class="card-preco">
+      <span class="card-preco-valor">R$ 397</span>
+      <span class="card-preco-periodo">/trimestre</span>
+    </div>
+    <div class="card-preco-mes">R$ 132/mês · Economia de R$ 44</div>
+    <div class="card-economia">✓ Você economiza R$ 44</div>
+    <ul class="card-features">
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Cardápio digital ilimitado</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Gestor de pedidos em tempo real</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Relatórios de vendas</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Cupons e fidelização</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Integração com WhatsApp</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Suporte prioritário</span></li>
+    </ul>
+    <a href="#" class="card-btn card-btn-primary" onclick="irCheckout('trimestral')">Assinar agora</a>
+  </div>
+
+  <!-- ANUAL -->
+  <div class="card" id="card-anual" style="display:none;">
+    <div class="card-nome">Anual</div>
+    <div class="card-preco">
+      <span class="card-preco-valor">R$ 1.497</span>
+      <span class="card-preco-periodo">/ano</span>
+    </div>
+    <div class="card-preco-mes">R$ 124/mês · Economia de R$ 267</div>
+    <div class="card-economia">✓ Você economiza R$ 267</div>
+    <ul class="card-features">
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Cardápio digital ilimitado</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Gestor de pedidos em tempo real</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Relatórios de vendas</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Cupons e fidelização</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Integração com WhatsApp</span></li>
+      <li class="card-feature"><div class="card-feature-icon">✓</div><span>Suporte VIP + onboarding</span></li>
+    </ul>
+    <a href="#" class="card-btn card-btn-outline" onclick="irCheckout('anual')">Assinar agora</a>
+  </div>
+
+  <!-- SEMPRE VISÍVEL: todos os 3 lados a lado no modo "todos" -->
+</div>
+
+<!-- GARANTIA -->
+<div class="garantia">
+  <div class="garantia-box">
+    <div class="garantia-icon">🛡️</div>
+    <div>
+      <div class="garantia-titulo">Garantia de 7 dias</div>
+      <div class="garantia-sub">Se não gostar, devolvemos 100% do seu dinheiro. Sem perguntas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ -->
+<div class="faq">
+  <div class="faq-titulo">Perguntas frequentes</div>
+
+  <div class="faq-item">
+    <div class="faq-pergunta" onclick="toggleFaq(this)">
+      Posso cancelar a qualquer momento?
+      <span class="faq-pergunta-icon">+</span>
+    </div>
+    <div class="faq-resposta">Sim! Não há fidelidade. Você pode cancelar quando quiser pelo painel ou entrando em contato com nosso suporte. Sem multas ou burocracia.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-pergunta" onclick="toggleFaq(this)">
+      O que acontece quando o plano vence?
+      <span class="faq-pergunta-icon">+</span>
+    </div>
+    <div class="faq-resposta">Seu cardápio e painel são temporariamente suspensos até a renovação. Seus dados ficam salvos por 30 dias. Basta reativar o plano para voltar ao normal.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-pergunta" onclick="toggleFaq(this)">
+      Preciso de cartão de crédito para o trial?
+      <span class="faq-pergunta-icon">+</span>
+    </div>
+    <div class="faq-resposta">Não! O período de 15 dias grátis não exige cartão. Você só informa os dados de pagamento quando decidir assinar um plano.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-pergunta" onclick="toggleFaq(this)">
+      Quais formas de pagamento são aceitas?
+      <span class="faq-pergunta-icon">+</span>
+    </div>
+    <div class="faq-resposta">Aceitamos cartão de crédito (todas as bandeiras) e PIX. O pagamento é processado com segurança pelo Mercado Pago.</div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-pergunta" onclick="toggleFaq(this)">
+      Posso mudar de plano depois?
+      <span class="faq-pergunta-icon">+</span>
+    </div>
+    <div class="faq-resposta">Sim! Você pode fazer upgrade ou downgrade do seu plano a qualquer momento entrando em contato com nosso suporte.</div>
+  </div>
+</div>
+
+<footer class="rodape">
+  © 2026 Zira · <a href="#">Termos de uso</a> · <a href="#">Privacidade</a>
+</footer>
+
+<script>
+// Links do Mercado Pago — substitua pelos links reais quando criar os planos lá
+const LINKS_MP = {
+  mensal:      '#checkout-mensal',
+  trimestral:  '#checkout-trimestral',
+  anual:       '#checkout-anual'
+};
+
+let periodoAtual = 'mensal';
+
+function setPeriodo(p) {
+  periodoAtual = p;
+  ['mensal','trimestral','anual'].forEach(x => {
+    document.getElementById('btn-' + x).classList.toggle('active', x === p);
+  });
+
+  // Mostrar/esconder cards conforme período
+  const cardMensal     = document.getElementById('card-mensal');
+  const cardTrimestral = document.getElementById('card-trimestral');
+  const cardAnual      = document.getElementById('card-anual');
+
+  if (p === 'mensal') {
+    cardMensal.style.display     = 'block';
+    cardTrimestral.style.display = 'none';
+    cardAnual.style.display      = 'none';
+    cardMensal.classList.remove('destaque');
+  } else if (p === 'trimestral') {
+    cardMensal.style.display     = 'block';
+    cardTrimestral.style.display = 'block';
+    cardAnual.style.display      = 'none';
+    cardMensal.classList.remove('destaque');
+    cardTrimestral.classList.add('destaque');
+  } else {
+    cardMensal.style.display     = 'block';
+    cardTrimestral.style.display = 'none';
+    cardAnual.style.display      = 'block';
+    cardMensal.classList.remove('destaque');
+    cardAnual.classList.add('destaque');
+  }
+}
+
+// Inicializar mostrando todos os 3 de uma vez
+function initCards() {
+  document.getElementById('card-mensal').style.display     = 'block';
+  document.getElementById('card-trimestral').style.display = 'block';
+  document.getElementById('card-anual').style.display      = 'block';
+
+  // Remover toggle e mostrar todos juntos
+  document.querySelector('.toggle-wrap').style.display = 'none';
+}
+
+function irCheckout(plano) {
+  const link = LINKS_MP[plano];
+  if (link.startsWith('#')) {
+    alert('Link do Mercado Pago ainda não configurado para o plano ' + plano + '. Configure em LINKS_MP no código.');
+    return;
+  }
+  window.location.href = link;
+}
+
+function toggleFaq(el) {
+  const item = el.parentElement;
+  item.classList.toggle('open');
+}
+
+// Mostrar todos os 3 cards por padrão
+initCards();
+</script>
+</body>
+</html>
