@@ -1796,11 +1796,26 @@ async function saEntrarComoAdmin(email, senha, slug) {
         });
         const data = await res.json();
         if (!data.access_token) { toast('Credenciais inválidas — verifique a senha cadastrada.', false); return; }
+
+        // Busca restaurante_id no formato correto
+        const uRes = await fetch('https://oijcggqfcgjkgcaymjqx.supabase.co/rest/v1/usuarios?select=restaurante_id,nome,role&email=eq.' + encodeURIComponent(email) + '&limit=1', {
+            headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + data.access_token }
+        });
+        const uData = await uRes.json();
+        const restId      = uData[0]?.restaurante_id || '';
+        const nomeUsuario = uData[0]?.nome || email;
+        const role        = uData[0]?.role || 'admin';
+
+        // Formato EXATO que o admin.html espera em authVerificarSessao
         localStorage.setItem('supa_session', JSON.stringify({
-            access_token: data.access_token,
-            refresh_token: data.refresh_token,
-            user: data.user
+            token:         data.access_token,
+            refresh_token: data.refresh_token || '',
+            restId:        restId,
+            nomeUsuario:   nomeUsuario,
+            role:          role,
+            salvoEm:       Date.now()
         }));
+
         window.open('https://zirafood.com.br/admin', '_blank');
         toast('✓ Abrindo painel de ' + (slug || email));
     } catch(e) { toast('Erro: ' + e.message, false); }
