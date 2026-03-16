@@ -522,7 +522,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
         <div class="bloqueio-titulo">Seu acesso foi suspenso</div>
         <p class="bloqueio-sub">Seu período de teste gratuito encerrou ou há uma pendência no seu plano. Assine agora para continuar usando o sistema.</p>
         <div class="bloqueio-badge">⏰ <span id="bloqueio-msg">Trial encerrado</span></div>
-        <a href="https://zirafood.com.br/cadastro" class="bloqueio-btn" target="_blank">🚀 Assinar agora</a>
+        <a href="#" class="bloqueio-btn" onclick="irParaPlanos()">🚀 Assinar agora</a>
         <button class="bloqueio-btn-sec" onclick="authFazerLogout()">Sair da conta</button>
     </div>
 </div>
@@ -539,7 +539,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
         <div class="bloqueio-badge">
             <span>⏰</span> <span id="bloqueio-msg">Trial encerrado</span>
         </div>
-        <a href="https://zirafood.com.br/cadastro" class="bloqueio-btn" target="_blank">
+        <a href="#" class="bloqueio-btn" onclick="irParaPlanos()">
             🚀 Assinar agora
         </a>
         <button class="bloqueio-btn-sec" onclick="authFazerLogout()">
@@ -9847,6 +9847,10 @@ async function cfgAlterarSenha() {
 
 </div><!-- /app-wrapper -->
 <script>
+function irParaPlanos() {
+    const rid = REST_ID || '';
+    window.open('https://zirafood.com.br/planos?rid=' + rid, '_blank');
+}
 document.addEventListener("keydown",function(e){if(e.key==="F12"||(e.ctrlKey&&e.shiftKey&&["I","J","C"].includes(e.key))||(e.ctrlKey&&e.key==="u")||(e.ctrlKey&&e.key==="s")){e.preventDefault();return false;}});
 document.addEventListener("contextmenu",function(e){e.preventDefault();});
 document.addEventListener("selectstart",function(e){e.preventDefault();});
