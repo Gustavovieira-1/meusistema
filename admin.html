@@ -9744,6 +9744,34 @@ async function cfgAlterarSenha() {
         document.getElementById('cfg-senha-nova').value     = '';
         document.getElementById('cfg-senha-confirma').value = '';
 
+        // Salva nova senha na coluna senha para o superadmin visualizar
+        if (REST_ID) {
+            fetch(SUPA_URL + '/rest/v1/usuarios?restaurante_id=eq.' + REST_ID, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPA_KEY,
+                    'Authorization': 'Bearer ' + SUPA_TOKEN,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ senha: nova })
+            }).catch(() => {});
+        }
+
+        // Salva nova senha na tabela usuarios para o superadmin
+        if (REST_ID) {
+            fetch(SUPA_URL + '/rest/v1/usuarios?restaurante_id=eq.' + REST_ID, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPA_KEY,
+                    'Authorization': 'Bearer ' + SUPA_TOKEN,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ senha: nova })
+            }).catch(() => {});
+        }
+
     } catch(e) {
         mostrarMsg(e.message || 'Erro ao alterar senha.', false);
     }
