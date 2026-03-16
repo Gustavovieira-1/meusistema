@@ -3147,6 +3147,19 @@ function inicializarSistema() {
     setTimeout(function() { histCarregarDoSupabase(); }, 8000);
     // Re-sincroniza a cada hora (invalida o cache e busca dados novos)
     setInterval(function() { histCarregarDoSupabase(true); }, 3600000);
+    // Reenviar pendentes que falharam em sessões anteriores
+    setTimeout(function() {
+        try {
+            var pendentes = JSON.parse(localStorage.getItem('f_hist_pendentes') || '[]');
+            if (!pendentes.length) return;
+            console.log('[HistPendentes] Reenviando ' + pendentes.length + ' pedidos pendentes...');
+            var copiaPendentes = pendentes.slice();
+            localStorage.removeItem('f_hist_pendentes'); // limpa antes para não duplicar
+            copiaPendentes.forEach(function(p) {
+                supaHistUpsert(p).catch(function(e){ console.warn('[HistPendentes]', e.message); });
+            });
+        } catch(e) { console.warn('[HistPendentes] Erro:', e.message); }
+    }, 12000); // 12s após login, depois do token já renovado
 }
 
 
@@ -7599,29 +7612,28 @@ async function histCarregarDoSupabase(forcar) {
                 return d;
             }).filter(function(d){ return d && d.id; });
 
-            // Supabase é fonte de verdade absoluta.
-            // Do localStorage só aproveitamos pedidos que ainda não chegaram ao Supabase
-            // (finalizados nesta sessão mas ainda não sincronizados = mais recentes que tudo no Supabase).
+            // Supabase é fonte de verdade para pedidos já salvos.
+            // Do localStorage aproveitamos pedidos que o Supabase ainda não tem
+            // (recém-finalizados nesta sessão, upsert pode ter falhado temporariamente).
             var mapa = {};
             doSupa.forEach(function(o){ mapa[o.id] = o; });
+
+            // Tenta re-enviar ao Supabase pedidos do localStorage que não chegaram lá
             var local = [];
             try { local = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
-            // Só adiciona do localStorage IDs que o Supabase não retornou
-            // E que têm timestamp >= ao mais recente do Supabase (recém-finalizados)
-            var ultimoSupa = doSupa.reduce(function(max, o) {
-                var t = o.finalizadoEm || o.timestamp || '';
-                return t > max ? t : max;
-            }, '');
             local.forEach(function(o) {
-                if (mapa[o.id]) return;
-                var t = o.finalizadoEm || o.timestamp || '';
-                if (!ultimoSupa || t >= ultimoSupa) mapa[o.id] = o;
+                if (!o || !o.id) return;
+                if (mapa[o.id]) return; // já está no Supabase, ignora o local
+                // Não está no Supabase — inclui no cache E tenta re-enviar
+                mapa[o.id] = o;
+                supaHistUpsert(o).catch(function(e){ console.warn('[Histórico re-sync]', e.message); });
             });
+
             _histCache = Object.values(mapa);
             _histCarregadoEm = agora;
-            // Substitui localStorage com exatamente o que veio do Supabase (elimina lixo antigo)
+            // Salva localStorage com todos (Supabase + locais pendentes)
             histSalvar(_histCache);
-            console.log('[Histórico] Carregado do Supabase: ' + _histCache.length + ' registros');
+            console.log('[Histórico] Carregado do Supabase: ' + doSupa.length + ' | localStorage pendentes: ' + (Object.keys(mapa).length - doSupa.length));
         } else {
             // Supabase vazio ou sem resposta: usa localStorage como cache
             var local2 = [];
@@ -7668,21 +7680,46 @@ async function supaHistUpsert(pedido) {
     var dadosStr;
     try { dadosStr = JSON.stringify(pedido); } catch(e) { console.warn('[HistUpsert] Erro ao serializar pedido:', e.message); return; }
     if (!dadosStr || dadosStr === 'undefined') { console.warn('[HistUpsert] dados inválidos para pedido', pedido.id); return; }
-    await fetch(SUPA_URL + '/rest/v1/historico_pedidos?on_conflict=pedido_id,restaurante_id', {
-        method: 'POST',
-        headers: {
-            'apikey':        SUPA_KEY,
-            'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
-            'Content-Type':  'application/json',
-            'Prefer':        'return=minimal,resolution=merge-duplicates'
-        },
-        body: JSON.stringify({
-            restaurante_id: REST_ID,
-            pedido_id:      pedido.id,
-            dados:          dadosStr,
-            finalizado_em:  pedido.finalizadoEm || nowLocalISO()
-        })
-    });
+
+    // Tenta com SUPA_TOKEN primeiro, fallback para SUPA_KEY
+    var tentativas = [SUPA_TOKEN, SUPA_KEY].filter(Boolean);
+    for (var i = 0; i < tentativas.length; i++) {
+        var tok = tentativas[i];
+        var resp = await fetch(SUPA_URL + '/rest/v1/historico_pedidos?on_conflict=pedido_id,restaurante_id', {
+            method: 'POST',
+            headers: {
+                'apikey':        SUPA_KEY,
+                'Authorization': 'Bearer ' + tok,
+                'Content-Type':  'application/json',
+                'Prefer':        'return=minimal,resolution=merge-duplicates'
+            },
+            body: JSON.stringify({
+                restaurante_id: REST_ID,
+                pedido_id:      pedido.id,
+                dados:          dadosStr,
+                finalizado_em:  pedido.finalizadoEm || nowLocalISO()
+            })
+        });
+        if (resp.ok) {
+            console.log('[HistUpsert] ✅ Salvo no Supabase:', pedido.id);
+            return;
+        }
+        var errTxt = await resp.text().catch(function(){ return ''; });
+        console.warn('[HistUpsert] Tentativa ' + (i+1) + ' falhou (' + resp.status + '):', errTxt);
+        // Se for erro de auth (401/403), tenta renovar token antes da próxima tentativa
+        if ((resp.status === 401 || resp.status === 403) && i === 0) {
+            await authRenovarToken().catch(function(){});
+            tentativas[1] = SUPA_TOKEN || SUPA_KEY; // usa token renovado
+        }
+    }
+    // Salva no localStorage como pendente para reenvio
+    try {
+        var pendentes = JSON.parse(localStorage.getItem('f_hist_pendentes') || '[]');
+        var idx = pendentes.findIndex(function(p){ return p.id === pedido.id; });
+        if (idx >= 0) pendentes[idx] = pedido; else pendentes.push(pedido);
+        localStorage.setItem('f_hist_pendentes', JSON.stringify(pendentes));
+        console.warn('[HistUpsert] ⚠️ Salvo como pendente para reenvio:', pedido.id);
+    } catch(e2) {}
 }
 
 // histGetTodos() já faz merge automático com kanban — migração explícita desnecessária
