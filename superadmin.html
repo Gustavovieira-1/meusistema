@@ -1235,7 +1235,7 @@ const SA_ROLE = 'superadmin';
 // ⚠️ SERVICE ROLE KEY — necessária para criar usuários sem confirmação de e-mail
 // Obtenha em: Supabase → Project Settings → API → service_role (secret)
 // NUNCA exponha essa chave em site público. Use Edge Function em produção.
-const SA_SERVICE_KEY = ''; // ← Cole aqui a service_role key do seu projeto
+const SA_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc0MTQ3NywiZXhwIjoyMDg4MzE3NDc3fQ.hmY5Z4nIPefMUq-Q0AlBgRWzqhnEm18CVHqXwpOdO-E';
 
 let SA_TOKEN   = null;
 let _restaurantes = [];
@@ -1773,13 +1773,29 @@ function saFecharDetalhe() {
 }
 
 async function saAtualizarSenha(uid, senha) {
-    if (!senha) return;
+    if (!senha || senha.length < 6) { toast('Senha precisa ter ao menos 6 caracteres', false); return; }
     try {
+        // 1. Salva na coluna senha (visível no olhinho)
         await saFetch('PATCH', `usuarios?id=eq.${uid}`, { senha });
         const u = _usuarios.find(x => x.id === uid);
         if (u) u.senha = senha;
-        toast('✓ Senha atualizada');
-    } catch(e) { toast('Erro ao salvar senha: ' + e.message, false); }
+
+        // 2. Atualiza no Supabase Auth (senha real de login)
+        const res = await fetch(SA_URL + '/auth/v1/admin/users/' + uid, {
+            method: 'PUT',
+            headers: {
+                'apikey': SA_SERVICE_KEY,
+                'Authorization': 'Bearer ' + SA_SERVICE_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: senha })
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.message || 'Erro ao atualizar Auth');
+        }
+        toast('✓ Senha atualizada em todos os lugares');
+    } catch(e) { toast('Erro: ' + e.message, false); }
 }
 
 async function saEntrarComoAdmin(email, senha, slug) {
