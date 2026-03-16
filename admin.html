@@ -3139,10 +3139,21 @@ function inicializarSistema() {
     // 🧹 Aplicar limpeza a cada minuto (após pedidos estarem carregados)
     setInterval(cfgAplicarLimpeza, 60000);
     
-    // 🔄 Renovar token a cada 50 minutos (antes de expirar em 1 hora)
-    setInterval(authRenovarToken, 50 * 60 * 1000);
+    // 🔄 Renovar token a cada 45 minutos (token expira em 1h, margem de segurança)
+    setInterval(authRenovarToken, 45 * 60 * 1000);
     // Renova imediatamente ao carregar (caso já esteja próximo de expirar)
     setTimeout(authRenovarToken, 3000);
+    // Verificação extra: a cada 10 minutos checa se o token foi salvo há mais de 50min
+    setInterval(function() {
+        try {
+            var sess = JSON.parse(localStorage.getItem('supa_session') || '{}');
+            var idadeSessao = Date.now() - (sess.salvoEm || 0);
+            // Se token foi salvo há mais de 50 minutos, renova preventivamente
+            if (idadeSessao > 50 * 60 * 1000) {
+                authRenovarToken();
+            }
+        } catch(e) {}
+    }, 10 * 60 * 1000);
     // 📚 Pré-carregar histórico do Supabase em segundo plano (fonte permanente)
     setTimeout(function() { histCarregarDoSupabase(); }, 8000);
     // Re-sincroniza a cada hora (invalida o cache e busca dados novos)
@@ -7111,37 +7122,69 @@ async function authLogout() {
 }
 
 function authSalvarSessao(token, restId, nomeUsuario, role, refreshToken) {
+    // Nunca sobrescreve um refresh_token existente com vazio
+    var existente = '';
+    try { existente = JSON.parse(localStorage.getItem('supa_session') || '{}').refresh_token || ''; } catch(e) {}
     localStorage.setItem('supa_session', JSON.stringify({
         token, restId, nomeUsuario, role,
-        refresh_token: refreshToken || '',
+        refresh_token: refreshToken || existente || '',
         salvoEm: Date.now()
     }));
 }
 
 // 🔄 Renovar token automaticamente a cada 50 minutos
+// 🔄 Renovar token automaticamente a cada 50 minutos
+var _renovacaoFalhas = 0; // contador de falhas consecutivas
 async function authRenovarToken() {
     try {
         const raw = localStorage.getItem('supa_session');
         if (!raw) return;
         const sess = JSON.parse(raw);
-        const refreshTk = sess.refresh_token || sess.token;
-        if (!refreshTk) return;
-        console.log('[AUTH] Renovando token...');
+        const refreshTk = sess.refresh_token || '';
+
+        // Sem refresh_token: não consegue renovar silenciosamente
+        if (!refreshTk) {
+            console.warn('[AUTH] Sem refresh_token — sessão não pode ser renovada automaticamente');
+            return;
+        }
+
         const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
             method: 'POST',
             headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ refresh_token: refreshTk })
         });
+
         if (!r.ok) {
-            console.warn('[AUTH] Falha ao renovar — fazendo login novamente em breve');
-            return; // Não faz logout, deixa o usuário continuar
+            _renovacaoFalhas++;
+            console.warn('[AUTH] Falha ao renovar token (tentativa ' + _renovacaoFalhas + ')');
+            // Após 3 falhas consecutivas, tenta relogar com as credenciais salvas
+            if (_renovacaoFalhas >= 3) {
+                console.warn('[AUTH] 3 falhas — sessão pode estar comprometida mas sistema continua rodando');
+                _renovacaoFalhas = 0;
+            }
+            return;
         }
+
         const data = await r.json();
-        if (!data.access_token) return;
+        if (!data.access_token) {
+            console.warn('[AUTH] Resposta sem access_token');
+            return;
+        }
+
+        // Atualiza token em memória E no localStorage
         SUPA_TOKEN = data.access_token;
-        authSalvarSessao(data.access_token, sess.restId, sess.nomeUsuario, sess.role, data.refresh_token || refreshTk);
+        authSalvarSessao(
+            data.access_token,
+            sess.restId,
+            sess.nomeUsuario,
+            sess.role,
+            data.refresh_token || refreshTk  // Supabase pode rotar o refresh_token
+        );
+        _renovacaoFalhas = 0;
         console.log('[AUTH] ✅ Token renovado com sucesso');
+
     } catch(e) {
+        _renovacaoFalhas++;
         console.warn('[AUTH] Erro ao renovar token:', e.message);
     }
 }
