@@ -7575,13 +7575,11 @@ function histSalvar(lista) {
  *  Retorna Promise<Array> com todos os pedidos do histórico. */
 async function histCarregarDoSupabase(forcar) {
     if (!REST_ID) return histGetTodos();
-    // Evita recargas desnecessárias (TTL de 5 minutos, a menos que forçado)
     var agora = Date.now();
     if (!forcar && _histCache !== null && (agora - _histCarregadoEm) < 300000) {
         return histGetTodos();
     }
     if (_histCarregando) {
-        // Aguarda o carregamento em curso (poll a cada 200ms, máx 10s)
         return new Promise(function(resolve) {
             var t = 0;
             var iv = setInterval(function() {
@@ -7592,58 +7590,68 @@ async function histCarregarDoSupabase(forcar) {
     }
     _histCarregando = true;
     try {
-        // Busca todos os registros do Supabase (sem limite de data)
+        // ── FONTE PRIMÁRIA: tabela pedidos com status=finalizado ──
+        // Esta tabela sempre tem todos os pedidos finalizados e nunca perde dados.
         var rows = await supaReq('GET',
-            'historico_pedidos?restaurante_id=eq.' + REST_ID +
-            '&select=dados,finalizado_em&order=finalizado_em.desc&limit=10000',
+            'pedidos?restaurante_id=eq.' + REST_ID +
+            '&status=eq.finalizado' +
+            '&select=*&order=finalizado_em.desc.nullslast&limit=10000',
             null
         );
         if (rows && rows.length) {
             var doSupa = rows.map(function(r) {
-                var d;
-                if (typeof r.dados === 'string') {
-                    if (!r.dados || r.dados === 'undefined' || r.dados === 'null') return null;
-                    try { d = JSON.parse(r.dados); } catch(e) { return null; }
-                } else {
-                    d = r.dados || null;
-                }
-                if (!d) return null;
-                d.finalizadoEm = d.finalizadoEm || r.finalizado_em;
-                return d;
+                var itens = r.itens || [];
+                if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
+                return {
+                    id:               r.numero || r.id,
+                    _supa_id:         r.id,
+                    client:           r.cliente,
+                    phone:            r.telefone,
+                    address:          r.endereco,
+                    bairro:           r.bairro,
+                    complemento:      r.complemento || '',
+                    cidade:           r.cidade || '',
+                    tipo:             r.tipo,
+                    pagamento:        r.pagamento,
+                    troco:            r.troco,
+                    subtotal:         r.subtotal || r.total,
+                    taxaEntrega:      r.taxa_entrega || 0,
+                    descontoCupom:    r.desconto_cupom || 0,
+                    descontoPontos:   r.desconto_pontos || 0,
+                    cupom:            r.cupom || '',
+                    produtoBrindeNome: r.produto_brinde_nome || '',
+                    produtoBrindeId:   r.produto_brinde_id   || '',
+                    total:            r.total,
+                    status:           r.status,
+                    items:            itens,
+                    timestamp:        r.criado_em,
+                    finalizadoEm:     r.finalizado_em || r.criado_em
+                };
             }).filter(function(d){ return d && d.id; });
 
-            // Supabase é fonte de verdade para pedidos já salvos.
-            // Do localStorage aproveitamos pedidos que o Supabase ainda não tem
-            // (recém-finalizados nesta sessão, upsert pode ter falhado temporariamente).
+            // Mescla com localStorage: mantém pedidos recém-finalizados ainda não no Supabase
             var mapa = {};
             doSupa.forEach(function(o){ mapa[o.id] = o; });
-
-            // Tenta re-enviar ao Supabase pedidos do localStorage que não chegaram lá
             var local = [];
             try { local = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
             local.forEach(function(o) {
-                if (!o || !o.id) return;
-                if (mapa[o.id]) return; // já está no Supabase, ignora o local
-                // Não está no Supabase — inclui no cache E tenta re-enviar
-                mapa[o.id] = o;
-                supaHistUpsert(o).catch(function(e){ console.warn('[Histórico re-sync]', e.message); });
+                if (!o || !o.id || mapa[o.id]) return;
+                mapa[o.id] = o; // pedido recém-finalizado ainda não chegou ao Supabase
             });
 
             _histCache = Object.values(mapa);
             _histCarregadoEm = agora;
-            // Salva localStorage com todos (Supabase + locais pendentes)
             histSalvar(_histCache);
-            console.log('[Histórico] Carregado do Supabase: ' + doSupa.length + ' | localStorage pendentes: ' + (Object.keys(mapa).length - doSupa.length));
+            console.log('[Histórico] Carregado de pedidos: ' + doSupa.length + ' finalizados');
         } else {
-            // Supabase vazio ou sem resposta: usa localStorage como cache
+            // Fallback: localStorage
             var local2 = [];
             try { local2 = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
             _histCache = local2;
             _histCarregadoEm = agora;
         }
     } catch(e) {
-        console.warn('[Histórico] Erro ao carregar do Supabase:', e.message);
-        // Em caso de erro, mantém localStorage como cache
+        console.warn('[Histórico] Erro ao carregar:', e.message);
         if (_histCache === null) {
             try { _histCache = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e2) { _histCache = []; }
         }
