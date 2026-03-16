@@ -527,6 +527,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
 .badge.pendente  { background: rgba(240,180,41,.08); color: var(--yellow); border: 1px solid rgba(240,180,41,.2); }
 .badge.trial     { background: rgba(201,168,76,.08); color: var(--gold); border: 1px solid rgba(201,168,76,.2); }
 .badge.cancelado { background: rgba(230,57,70,.08); color: var(--red); border: 1px solid rgba(230,57,70,.2); }
+.badge.inadimplente { background: rgba(230,57,70,.15); color: var(--red); border: 1px solid rgba(230,57,70,.4); font-weight: 700; }
 .badge.superadmin{ background: rgba(155,93,229,.1); color: var(--purple); border: 1px solid rgba(155,93,229,.3); }
 .badge.admin     { background: rgba(72,149,239,.08); color: var(--blue); border: 1px solid rgba(72,149,239,.2); }
 
@@ -957,6 +958,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
                 <option value="">Todos os planos</option>
                 <option value="pago">Pago</option>
                 <option value="trial">Teste Grátis</option>
+                <option value="inadimplente">Inadimplente</option>
                 <option value="pendente">Pendente</option>
                 <option value="cancelado">Cancelado</option>
               </select>
@@ -1164,6 +1166,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
         <select id="mpgto-status">
           <option value="trial">Trial</option>
           <option value="pago">Pago</option>
+          <option value="inadimplente">Inadimplente</option>
           <option value="pendente">Pendente</option>
           <option value="cancelado">Cancelado</option>
         </select>
@@ -1466,8 +1469,8 @@ function saRenderRestaurantes(lista) {
         return;
     }
     const badgePgto = s => {
-        const map = { pago:'pago', pendente:'pendente', trial:'trial', cancelado:'cancelado' };
-        const labels = { pago:'Pago', pendente:'Pendente', trial:'Trial', cancelado:'Cancelado' };
+        const map = { pago:'pago', pendente:'pendente', trial:'trial', cancelado:'cancelado', inadimplente:'inadimplente' };
+        const labels = { pago:'Pago', pendente:'Pendente', trial:'Trial', cancelado:'Cancelado', inadimplente:'Inadimplente' };
         return `<span class="badge ${map[s]||'pendente'}">${labels[s]||s}</span>`;
     };
     el.innerHTML = `<table>
@@ -2075,6 +2078,15 @@ async function saSalvarPgto() {
 
         const r = _restaurantes.find(x => x.id === restId);
         if (r) r.pgto = { ...r.pgto, ...dados };
+
+        // Ativa/desativa restaurante conforme status
+        const deveDesativar = ['inadimplente', 'cancelado'].includes(dados.status_pgto);
+        const deveAtivar    = dados.status_pgto === 'pago';
+        if (deveDesativar || deveAtivar) {
+            await saFetch('PATCH', `restaurantes?id=eq.${restId}`, { ativo: deveAtivar });
+            if (r) r.ativo = deveAtivar;
+        }
+
         saFecharModalPgto();
         saCarregarPagamentos();
         saRenderRestaurantes(_restaurantes);
