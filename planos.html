@@ -504,7 +504,10 @@ function irCheckout(plano) {
     alert('Link do Mercado Pago ainda não configurado para o plano ' + plano + '. Configure em LINKS_MP no código.');
     return;
   }
-  window.location.href = link;
+  const params = new URLSearchParams(window.location.search);
+  const rid = params.get('rid') || '';
+  const url = link + (rid ? '&external_reference=' + rid : '');
+  window.location.href = url;
 }
 
 function toggleFaq(el) {
