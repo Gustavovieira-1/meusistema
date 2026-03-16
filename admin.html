@@ -3171,6 +3171,17 @@ function inicializarSistema() {
             });
         } catch(e) { console.warn('[HistPendentes] Erro:', e.message); }
     }, 12000); // 12s após login, depois do token já renovado
+
+    // 🔁 Restaurar última seção visitada após F5
+    setTimeout(function() {
+        try {
+            var lastSec = localStorage.getItem('f_last_sec');
+            if (!lastSec || lastSec === 'produtos') return; // produtos é o padrão, não precisa restaurar
+            // Encontra o botão nav correspondente para marcar como ativo
+            var navBtn = document.querySelector('[onclick*="showSec(\'' + lastSec + '\'"]');
+            showSec(lastSec, navBtn || null);
+        } catch(e) {}
+    }, 200);
 }
 
 
@@ -3365,6 +3376,9 @@ function showSec(id, btn) {
 
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
+
+    // Salva a seção atual para restaurar após F5
+    try { localStorage.setItem('f_last_sec', id); } catch(e) {}
 
     if (id === 'gestor')           renderOrders();
     if (id === 'produtos')         { renderCategories(); renderProds(); }
