@@ -112,6 +112,8 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .loader-spin{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .loader-txt{font-size:13px;color:var(--sub);}
+@keyframes shimmer{0%{background-color:#f0f0f0;}50%{background-color:#e4e4e4;}100%{background-color:#f0f0f0;}}
+#skeleton-wrap div{animation:shimmer 1.4s ease-in-out infinite;}
 
 /* ── FAB ── */
 .fab{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--white);border:none;border-radius:14px;padding:14px 20px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 6px 24px rgba(0,0,0,.25);z-index:200;min-width:280px;}
@@ -281,7 +283,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
     <div class="loja-top-row">
       <div class="loja-logo" id="loja-logo">🍔</div>
       <div class="loja-txt">
-        <div class="loja-nome" id="loja-nome">Carregando...</div>
+        <div class="loja-nome" id="loja-nome"><span id="loja-nome-skeleton" style="display:inline-block;height:18px;width:140px;background:#f0f0f0;border-radius:6px;vertical-align:middle;animation:shimmer 1.4s ease-in-out infinite;"></span></div>
         <div class="loja-sub" id="loja-sub"></div>
         <div class="status-row">
           <div class="status-pill status-open" id="loja-status"><span class="status-dot"></span>Aberta agora</div>
@@ -313,7 +315,29 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 
   <!-- Produtos -->
   <div class="content" id="content">
-    <div class="loader"><div class="loader-spin"></div><div class="loader-txt">Carregando cardápio...</div></div>
+    <div id="skeleton-wrap">
+  <div style="padding:0 16px 12px;">
+    <div style="height:16px;background:#f0f0f0;border-radius:8px;margin-bottom:10px;width:60%;"></div>
+    <div style="height:12px;background:#f0f0f0;border-radius:8px;margin-bottom:8px;width:80%;"></div>
+    <div style="height:12px;background:#f0f0f0;border-radius:8px;width:40%;"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f0f0f0;">
+    <div style="flex:1;"><div style="height:14px;background:#f0f0f0;border-radius:6px;margin-bottom:8px;width:70%;"></div><div style="height:11px;background:#f0f0f0;border-radius:6px;margin-bottom:6px;width:90%;"></div><div style="height:13px;background:#f0f0f0;border-radius:6px;width:30%;"></div></div>
+    <div style="width:82px;height:82px;border-radius:10px;background:#f0f0f0;flex-shrink:0;"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f0f0f0;">
+    <div style="flex:1;"><div style="height:14px;background:#f0f0f0;border-radius:6px;margin-bottom:8px;width:55%;"></div><div style="height:11px;background:#f0f0f0;border-radius:6px;margin-bottom:6px;width:85%;"></div><div style="height:13px;background:#f0f0f0;border-radius:6px;width:25%;"></div></div>
+    <div style="width:82px;height:82px;border-radius:10px;background:#f0f0f0;flex-shrink:0;"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f0f0f0;">
+    <div style="flex:1;"><div style="height:14px;background:#f0f0f0;border-radius:6px;margin-bottom:8px;width:65%;"></div><div style="height:11px;background:#f0f0f0;border-radius:6px;margin-bottom:6px;width:75%;"></div><div style="height:13px;background:#f0f0f0;border-radius:6px;width:35%;"></div></div>
+    <div style="width:82px;height:82px;border-radius:10px;background:#f0f0f0;flex-shrink:0;"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;">
+    <div style="flex:1;"><div style="height:14px;background:#f0f0f0;border-radius:6px;margin-bottom:8px;width:50%;"></div><div style="height:11px;background:#f0f0f0;border-radius:6px;margin-bottom:6px;width:80%;"></div><div style="height:13px;background:#f0f0f0;border-radius:6px;width:28%;"></div></div>
+    <div style="width:82px;height:82px;border-radius:10px;background:#f0f0f0;flex-shrink:0;"></div>
+  </div>
+</div>
   </div>
 
 </div><!-- /page-card -->
@@ -734,6 +758,7 @@ function renderHeader(){
     var c=db.cfg||{},tx=db.txCfg||{};
     var nome=c.nomeMarca||c.nome||'Restaurante';
     document.getElementById('loja-nome').textContent=nome;
+    var sk=document.getElementById('loja-nome-skeleton');if(sk)sk.remove();
     document.title=nome;
     if(c.nomeUnidade)document.getElementById('loja-sub').textContent=c.nomeUnidade;
     if(c.logo)document.getElementById('loja-logo').innerHTML='<img src="'+c.logo+'" alt="logo">';
@@ -757,6 +782,7 @@ function renderHeader(){
 }
 
 function renderCardapio(){
+    var sk=document.getElementById('skeleton-wrap');if(sk)sk.remove();
     var cats=db.categories.filter(function(c){return c.active!==false;});
     var nav=document.getElementById('nav-scroll'),cont=document.getElementById('content');
     if(!cats.length){cont.innerHTML='<div class="loader"><div style="font-size:44px">🍽️</div><div class="loader-txt">Nenhum produto disponível</div></div>';return;}
