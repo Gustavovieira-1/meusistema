@@ -1032,6 +1032,9 @@ tr:hover td { background: rgba(255,255,255,.015); }
               <div class="sec-titulo">Pagamentos</div>
               <div class="sec-sub">Controle de mensalidades e planos</div>
             </div>
+            <button class="btn-primary" onclick="saAutomatizarPagamentos().then(()=>saCarregarPagamentos())" style="display:flex;align-items:center;gap:6px;">
+              <i class="fas fa-sync-alt"></i> Sincronizar status
+            </button>
           </div>
           <div class="tabela-wrap">
             <div id="tabela-pgto-body">
@@ -2144,11 +2147,78 @@ function _carregarTema() {
 _carregarTema();
 
 // ══════════════════════════════════════════════════════════════
+// AUTOMAÇÃO — atualiza status/vencimento/ativação automaticamente
+// ══════════════════════════════════════════════════════════════
+async function saAutomatizarPagamentos() {
+    try {
+        const pgtos = await saFetch('GET', 'pagamentos?select=*');
+        if (!pgtos || !pgtos.length) return;
+
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        let atualizados = 0;
+
+        for (const p of pgtos) {
+            const venc = p.vencimento ? new Date(p.vencimento + 'T12:00:00') : null;
+            const vencido = venc && venc < hoje;
+
+            // Caso 1: pago ou trial com vencimento passado → inadimplente + desativa restaurante
+            if ((p.status_pgto === 'pago' || p.status_pgto === 'trial') && vencido) {
+                await fetch(SA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + p.restaurante_id, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY),
+                        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({
+                        status_pgto: 'inadimplente',
+                        obs: (p.obs ? p.obs + ' | ' : '') + 'Auto: vencido em ' + (venc ? venc.toLocaleDateString('pt-BR') : '?') + ' → inadimplente em ' + new Date().toLocaleDateString('pt-BR')
+                    })
+                });
+                await fetch(SA_URL + '/rest/v1/restaurantes?id=eq.' + p.restaurante_id, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY),
+                        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ ativo: false })
+                });
+                atualizados++;
+            }
+
+            // Caso 2: inadimplente mas vencimento ainda válido (pagou via webhook MP) → reativa
+            if (p.status_pgto === 'pago' && venc && venc >= hoje) {
+                await fetch(SA_URL + '/rest/v1/restaurantes?id=eq.' + p.restaurante_id, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY),
+                        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify({ ativo: true })
+                });
+            }
+        }
+
+        if (atualizados > 0) {
+            console.log('[AutoPgto] ' + atualizados + ' registros atualizados.');
+            // Recarrega dados se estiver na aba de pagamentos ou restaurantes
+            await saCarregarRestaurantes();
+        }
+    } catch(e) {
+        console.warn('[AutoPgto] Erro na automação:', e.message);
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
 (async function init() {
     const temSessao = await saVerificarSessao();
-    if (temSessao) mostrarApp();
+    if (temSessao) {
+        mostrarApp();
+        // Roda automação logo ao carregar e depois a cada 1 hora
+        setTimeout(saAutomatizarPagamentos, 3000);
+        setInterval(saAutomatizarPagamentos, 60 * 60 * 1000);
+    }
 })();
 </script>
 </body>
