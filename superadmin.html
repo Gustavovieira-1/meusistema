@@ -859,7 +859,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
 
       <nav class="sidebar-nav">
         <div class="sidebar-nav-label">Gestão</div>
-        <button class="nav-item active" id="nav-restaurantes" onclick="saAba('restaurantes',this)">
+        <button class="nav-item" id="nav-restaurantes" onclick="saAba('restaurantes',this)">
           <i class="fas fa-store"></i> Restaurantes
         </button>
         <button class="nav-item" id="nav-usuarios" onclick="saAba('usuarios',this)">
@@ -937,7 +937,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
         </div>
 
         <!-- ══ ABA RESTAURANTES ══ -->
-        <div class="secao active" id="sec-restaurantes">
+        <div class="secao" id="sec-restaurantes">
           <div class="sec-header">
             <div>
               <div class="sec-titulo">Restaurantes</div>
@@ -1321,6 +1321,49 @@ function saAutoSlug() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// RENOVAÇÃO AUTOMÁTICA DE TOKEN JWT
+// ══════════════════════════════════════════════════════════════
+var _renovacaoFalhas = 0;
+async function authRenovarToken() {
+    try {
+        const raw = localStorage.getItem('sa_session');
+        if (!raw) return;
+        const sess = JSON.parse(raw);
+        const refreshTk = sess.refresh_token || '';
+        if (!refreshTk) {
+            console.warn('[AUTH] Sem refresh_token — não é possível renovar automaticamente');
+            return;
+        }
+        const r = await fetch(SA_URL + '/auth/v1/token?grant_type=refresh_token', {
+            method: 'POST',
+            headers: { 'apikey': SA_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshTk })
+        });
+        if (!r.ok) {
+            _renovacaoFalhas++;
+            console.warn('[AUTH] Falha ao renovar token (tentativa ' + _renovacaoFalhas + ')');
+            if (_renovacaoFalhas >= 3) { _renovacaoFalhas = 0; }
+            return;
+        }
+        const data = await r.json();
+        if (!data.access_token) return;
+        SA_TOKEN = data.access_token;
+        const novoRefresh = data.refresh_token || sess.refresh_token || '';
+        localStorage.setItem('sa_session', JSON.stringify({
+            ...sess,
+            token: data.access_token,
+            refresh_token: novoRefresh,
+            salvoEm: Date.now()
+        }));
+        _renovacaoFalhas = 0;
+        console.log('[AUTH] ✅ Token renovado com sucesso');
+    } catch(e) {
+        _renovacaoFalhas++;
+        console.warn('[AUTH] Erro ao renovar:', e.message);
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
 // LOGIN / SESSÃO
 // ══════════════════════════════════════════════════════════════
 async function saLogin() {
@@ -1343,7 +1386,10 @@ async function saLogin() {
         const nome = usuario[0].nome || email;
         document.getElementById('sa-nome-usuario').textContent = nome;
         document.getElementById('sa-avatar-letra').textContent = nome[0].toUpperCase();
-        localStorage.setItem('sa_session', JSON.stringify({ token: SA_TOKEN, nome, salvoEm: Date.now() }));
+        // Preserva refresh_token existente caso o novo venha vazio
+        var _rtExistente = '';
+        try { _rtExistente = JSON.parse(localStorage.getItem('sa_session') || '{}').refresh_token || ''; } catch(e) {}
+        localStorage.setItem('sa_session', JSON.stringify({ token: SA_TOKEN, refresh_token: sess.refresh_token || _rtExistente || '', nome, salvoEm: Date.now() }));
         mostrarApp();
     } catch(e) {
         let msg = e.message;
@@ -1380,7 +1426,29 @@ function saLogout() {
 function mostrarApp() {
     document.getElementById('tela-login').style.display = 'none';
     document.getElementById('app').style.display = 'block';
+
+    // ── Renovação automática de token JWT (expira em 1h no Supabase) ──
+    setTimeout(authRenovarToken, 3000);
+    setInterval(authRenovarToken, 45 * 60 * 1000);
+    setInterval(function() {
+        try {
+            var sess = JSON.parse(localStorage.getItem('sa_session') || '{}');
+            var idade = Date.now() - (sess.salvoEm || 0);
+            if (idade > 50 * 60 * 1000) authRenovarToken();
+        } catch(e) {}
+    }, 10 * 60 * 1000);
     saCarregarTudo();
+
+    // ── Restaurar última aba visitada (sem flash) ──
+    (function() {
+        try {
+            var lastSec = localStorage.getItem('sa_last_sec') || 'restaurantes';
+            var navBtn = document.getElementById('nav-' + lastSec);
+            saAba(lastSec, navBtn || document.getElementById('nav-restaurantes'));
+        } catch(e) {
+            saAba('restaurantes', document.getElementById('nav-restaurantes'));
+        }
+    })();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2218,9 +2286,11 @@ const tabTitles = {
 function saAba(id, btn) {
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.secao').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
+    if (btn) btn.classList.add('active');
     document.getElementById('sec-' + id).classList.add('active');
     document.getElementById('topbar-titulo').textContent = tabTitles[id] || id;
+    // Salva a aba atual para restaurar após F5
+    try { localStorage.setItem('sa_last_sec', id); } catch(e) {}
     if (id === 'pedidos')    saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value);
     if (id === 'pagamentos') saCarregarPagamentos();
     if (id === 'usuarios')   saCarregarUsuarios();
