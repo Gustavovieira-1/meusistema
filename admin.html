@@ -520,18 +520,6 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
     <div class="bloqueio-card">
         <div class="bloqueio-icon">🔒</div>
         <div class="bloqueio-titulo">Seu acesso foi suspenso</div>
-        <p class="bloqueio-sub">Seu período de teste gratuito encerrou ou há uma pendência no seu plano. Assine agora para continuar usando o sistema.</p>
-        <div class="bloqueio-badge">⏰ <span id="bloqueio-msg">Trial encerrado</span></div>
-        <a href="#" class="bloqueio-btn" onclick="irParaPlanos()">🚀 Assinar agora</a>
-        <button class="bloqueio-btn-sec" onclick="authFazerLogout()">Sair da conta</button>
-    </div>
-</div>
-
-<!-- TELA DE BLOQUEIO TRIAL/INADIMPLENTE -->
-<div id="tela-bloqueio">
-    <div class="bloqueio-card">
-        <div class="bloqueio-icon">🔒</div>
-        <div class="bloqueio-titulo">Seu acesso foi suspenso</div>
         <p class="bloqueio-sub">
             Seu período de teste gratuito encerrou ou há uma pendência no seu plano.<br>
             Assine agora para continuar usando o sistema.
@@ -3163,42 +3151,6 @@ function inicializarSistema() {
 
 
 // ── VERIFICAÇÃO DE BLOQUEIO TRIAL ──────────────────────────
-async function verificarBloqueio() {
-    if (!REST_ID) return false;
-    try {
-        const r = await fetch(SUPA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + REST_ID + '&select=status_pgto,vencimento&limit=1', {
-            headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_TOKEN }
-        });
-        const data = await r.json();
-        if (!data || data.length === 0) return false;
-
-        const pgto = data[0];
-        const hoje = new Date(); hoje.setHours(0,0,0,0);
-        const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
-        const status = pgto.status_pgto;
-
-        // Bloqueado se: inadimplente, cancelado, ou trial/trial vencido
-        if (status === 'inadimplente' || status === 'cancelado') {
-            mostrarBloqueio('Pagamento pendente');
-            return true;
-        }
-        if ((status === 'trial') && venc && hoje > venc) {
-            const dias = Math.floor((hoje - venc) / 86400000);
-            mostrarBloqueio('Trial encerrado há ' + dias + ' dia' + (dias > 1 ? 's' : ''));
-            return true;
-        }
-        return false;
-    } catch(e) {
-        console.warn('Erro ao verificar bloqueio:', e);
-        return false;
-    }
-}
-
-function mostrarBloqueio(msg) {
-    document.getElementById('bloqueio-msg').textContent = msg;
-    document.getElementById('tela-bloqueio').classList.add('ativo');
-}
-
 
 // ── VERIFICAÇÃO DE BLOQUEIO TRIAL ──────────────────────────
 async function verificarBloqueio() {
