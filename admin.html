@@ -4803,8 +4803,17 @@ function impInicializar() {
             applyToggle('aceitar', 'imp-tog-aceitar', 'imp-aceitar', ic.aceitar);
             applyField('lojaNome',    'imp-loja-nome',    ic.lojaNome);
             applyField('rodape',      'imp-rodape',       ic.rodape);
-            applyField('fontNome',    'imp-font-nome',    ic.fontNome);
-            applyField('fontTamanho', 'imp-font-tamanho', ic.fontTamanho);
+            // Selects precisam de tratamento especial — força o value após DOM estar pronto
+            if (ic.fontNome) {
+                cfgS.fontNome = ic.fontNome;
+                var selFn = document.getElementById('imp-font-nome');
+                if (selFn) { selFn.value = ic.fontNome; if (selFn.value !== ic.fontNome) selFn.value = 'Courier New'; }
+            }
+            if (ic.fontTamanho) {
+                cfgS.fontTamanho = ic.fontTamanho;
+                var selFt = document.getElementById('imp-font-tamanho');
+                if (selFt) { selFt.value = String(ic.fontTamanho); }
+            }
             applyCheck('showCodigo',   'imp-show-codigo',   ic.showCodigo);
             applyCheck('showData',     'imp-show-data',     ic.showData);
             applyCheck('showPrevisao', 'imp-show-previsao', ic.showPrevisao);
@@ -4836,7 +4845,7 @@ function impInicializar() {
     var fnEl = document.getElementById('imp-font-nome');
     if (fnEl) fnEl.value = cfg.fontNome || 'Courier New';
     var ftEl = document.getElementById('imp-font-tamanho');
-    if (ftEl) ftEl.value = cfg.fontTamanho || '8';
+    if (ftEl) ftEl.value = String(cfg.fontTamanho || '8');
     // Botão largura
     var larg = cfg.largura||'80';
     document.querySelectorAll('.imp-largura-btn').forEach(function(b){
@@ -4903,7 +4912,7 @@ function impSalvar() {
     if ((gv = c('imp-show-subtotal')) !== null) cfg.showSubtotal = gv;
     if ((gv = c('imp-show-pgto'))     !== null) cfg.showPgto     = gv;
     if ((gv = g('imp-font-nome'))     !== null) cfg.fontNome     = gv || 'Courier New';
-    if ((gv = g('imp-font-tamanho'))  !== null) cfg.fontTamanho  = gv || '8';
+    if ((gv = g('imp-font-tamanho'))  !== null) cfg.fontTamanho  = String(gv || '8');
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
     // Salva configs de impressão no Supabase via configuracoes.dados_extras
     if (REST_ID) {
