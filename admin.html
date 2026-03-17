@@ -7349,18 +7349,17 @@ async function supaCarregarConfigs() {
         }
 
         if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
-            const atual = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
             var _cfgCarregada = cfgRows[0].dados_extras || {};
             if (_linkCardapio) _cfgCarregada.linkSlug = _linkCardapio;
-            if (!atual.nomeMarca) localStorage.setItem('f_cfg_loja', JSON.stringify(_cfgCarregada));
+            // Sempre sobrescreve com os dados do Supabase — fonte de verdade por restaurante
+            localStorage.setItem('f_cfg_loja', JSON.stringify(_cfgCarregada));
             if (_cfgCarregada.nomeMarca) {
                 var _sn = document.getElementById('sidebar-nome-loja');
                 if (_sn) _sn.textContent = _cfgCarregada.nomeMarca;
                 document.title = _cfgCarregada.nomeMarca + ' — Admin';
             }
-        }
-        // Garante que o localStorage sempre tem o link atualizado
-        if (_linkCardapio) {
+        } else if (_linkCardapio) {
+            // Sem dados_extras ainda — só injeta o link no que já tem no localStorage
             try {
                 var _cfgLocal = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
                 _cfgLocal.linkSlug = _linkCardapio;
