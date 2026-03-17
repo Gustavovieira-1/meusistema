@@ -5507,17 +5507,59 @@ function wppGetConfig() {
 function wppSaveConfig(obj) {
     localStorage.setItem(WPP_KEY + '_' + (REST_ID||'x'), JSON.stringify(obj));
 }
+async function wppSalvarSupabase(obj) {
+    if (!REST_ID) return;
+    var row = {
+        restaurante_id: REST_ID,
+        ativar:        obj.ativar        || false,
+        pix_chave:     obj.pixChave      || '',
+        pix_titular:   obj.pixTitular    || '',
+        rodape:        obj.rodape        || '',
+        msg_preparo:   (obj.mensagens && obj.mensagens.preparo)    || '',
+        msg_pronto:    (obj.mensagens && obj.mensagens.pronto)     || '',
+        msg_entrega:   (obj.mensagens && obj.mensagens.entrega)    || '',
+        msg_finalizado:(obj.mensagens && obj.mensagens.finalizado) || '',
+        msg_cancelado: (obj.mensagens && obj.mensagens.cancelado)  || '',
+        atualizado_em: new Date().toISOString()
+    };
+    try {
+        await supaFetch('whatsapp_config', 'POST', row, {
+            headers: { 'Prefer': 'resolution=merge-duplicates' }
+        });
+    } catch(e) { console.warn('[WPP] Erro ao salvar no Supabase:', e.message); }
+}
+async function wppCarregarSupabase() {
+    if (!REST_ID) return;
+    try {
+        var rows = await supaGet('whatsapp_config?restaurante_id=eq.' + REST_ID + '&limit=1');
+        if (!rows || !rows.length) return;
+        var r = rows[0];
+        var cfg = wppGetConfig();
+        cfg.ativar     = r.ativar     || false;
+        cfg.pixChave   = r.pix_chave  || '';
+        cfg.pixTitular = r.pix_titular|| '';
+        cfg.rodape     = r.rodape     || '';
+        cfg.mensagens  = {
+            preparo:    r.msg_preparo    || '',
+            pronto:     r.msg_pronto     || '',
+            entrega:    r.msg_entrega    || '',
+            finalizado: r.msg_finalizado || '',
+            cancelado:  r.msg_cancelado  || ''
+        };
+        wppSaveConfig(cfg);
+    } catch(e) { console.warn('[WPP] Erro ao carregar do Supabase:', e.message); }
+}
 
 function wppGetInstancia() {
-    // Cada restaurante tem sua própria instância nomeada pelo REST_ID
     return 'zira_' + (REST_ID || 'default');
 }
 
-function wppInicializar() {
+async function wppInicializar() {
+    // Carrega do Supabase primeiro, depois aplica na tela
+    await wppCarregarSupabase();
     var cfg = wppGetConfig();
-    // Carrega mensagens salvas nos textareas
     var msgs = cfg.mensagens || {};
-    var set = function(id, val) { var el = document.getElementById(id); if(el && val) el.value = val; };
+    var set = function(id, val) { var el = document.getElementById(id); if(el !== null) el.value = val || ''; };
     set('wpp-msg-preparo',    msgs.preparo);
     set('wpp-msg-pronto',     msgs.pronto);
     set('wpp-msg-entrega',    msgs.entrega);
@@ -5526,10 +5568,8 @@ function wppInicializar() {
     set('wpp-pix-chave',   cfg.pixChave   || '');
     set('wpp-pix-titular', cfg.pixTitular || '');
     set('wpp-rodape',      cfg.rodape     || '');
-    // Toggle ativar
     var tog = document.getElementById('wpp-tog-ativar');
     if (tog) { if (cfg.ativar) tog.classList.remove('off'); else tog.classList.add('off'); }
-    // Verifica status da conexão
     wppVerificarStatus();
 }
 
@@ -5537,8 +5577,8 @@ function wppToggleAtivar(el) {
     var on = el.classList.contains('off');
     if (on) el.classList.remove('off'); else el.classList.add('off');
     var cfg = wppGetConfig(); cfg.ativar = on; wppSaveConfig(cfg);
+    wppSalvarSupabase(cfg);
     cupToast(on ? 'Disparos WhatsApp ativados!' : 'Disparos WhatsApp desativados.', on ? '#25d366' : '#64748b');
-    console.log('[WPP] Toggle ativar salvo:', on, 'key:', WPP_KEY + '_' + (REST_ID||'x'));
 }
 
 function wppSalvarMensagens() {
@@ -5551,6 +5591,7 @@ function wppSalvarMensagens() {
         cancelado:  document.getElementById('wpp-msg-cancelado')?.value  || ''
     };
     wppSaveConfig(cfg);
+    wppSalvarSupabase(cfg);
     cupToast('Mensagens salvas!', '#25d366');
 }
 
@@ -5702,6 +5743,7 @@ function wppSalvarConfirmacao() {
     cfg.pixTitular = (document.getElementById('wpp-pix-titular') ||{}).value || '';
     cfg.rodape     = (document.getElementById('wpp-rodape')       ||{}).value || '';
     wppSaveConfig(cfg);
+    wppSalvarSupabase(cfg);
     cupToast('Configurações de confirmação salvas!', '#25d366');
 }
 
