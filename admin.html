@@ -7130,6 +7130,7 @@ async function authLogout() {
     localStorage.removeItem('f_hist_pedidos');
     localStorage.removeItem('f_last_sec');
     localStorage.removeItem('f_rest_id_ativo');
+    _histCache = null; _histCarregadoEm = 0;
     REST_ID = null; SUPA_TOKEN = null;
     // Resetar nome da sidebar
     var sn = document.getElementById('sidebar-nome-loja');
@@ -7223,21 +7224,21 @@ async function authVerificarSessao() {
         }
         if (!REST_ID) return false;
 
-        // ── CRÍTICO: limpar cache se o restaurante mudou ──────────────
-        // Isso acontece quando o superadmin entra como outro restaurante
+        // Se o restaurante mudou (superadmin entrando como outro cliente),
+        // limpa APENAS os caches em memória e localStorage de dados do restaurante anterior.
+        // NÃO limpa f_hist_pedidos pois ele é recarregado pelo restaurante_id correto do Supabase.
         var restAnterior = localStorage.getItem('f_rest_id_ativo');
         if (restAnterior && restAnterior !== REST_ID) {
-            // Restaurante diferente — limpar TODOS os dados do anterior
+            orders = [];
+            _histCache = null;
+            _histCarregadoEm = 0;
             ['f_orders','f_cats','f_prods','f_comps','f_cfg_loja',
              'f_horarios','f_taxas_config','f_fidelidade_cfg','f_fidelidade_cli',
-             'f_cupons','f_integracoes','f_hist_pedidos','f_last_sec'].forEach(function(k) {
+             'f_cupons','f_integracoes','f_hist_pedidos','f_last_sec'].forEach(function(k){
                 localStorage.removeItem(k);
             });
-            orders = [];
         }
-        // Salva o restaurante atual como ativo
         localStorage.setItem('f_rest_id_ativo', REST_ID);
-        // ─────────────────────────────────────────────────────────────
 
         impAtualizarChaves();
         var _elNome = document.getElementById('login-usuario-nome');
@@ -7280,6 +7281,8 @@ async function authFazerLogin() {
 
         // Limpar dados do restaurante anterior antes de carregar o novo
         orders = [];
+        _histCache = null;
+        _histCarregadoEm = 0;
         localStorage.removeItem('f_orders');
         localStorage.removeItem('f_cats');
         localStorage.removeItem('f_prods');
