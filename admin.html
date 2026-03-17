@@ -5706,8 +5706,8 @@ function wppSalvarConfirmacao() {
 }
 
 function wppEnviarConfirmacao(order) {
+    // Confirmação dispara sempre que WhatsApp conectado — independente do toggle de etapas
     var cfg = wppGetConfig();
-    if (!cfg.ativar) return;
     if (!order || !order.phone) return;
 
     var impCfg  = impGetConfig();
@@ -7584,16 +7584,16 @@ async function supaCarregarPedidos() {
             // 🔊 Tocar som se chegou novo pedido em análise
             if (pedidosNovos.length > 0) {
                 tocarSomNotificacao();
-                // Envia confirmação WhatsApp para cada pedido novo
+                // Envia confirmação WhatsApp PRIMEIRO (300ms), antes do auto-aceitar
                 pedidosNovos.forEach(function(o) {
-                    setTimeout(function() { wppEnviarConfirmacao(o); }, 800);
+                    setTimeout(function() { wppEnviarConfirmacao(o); }, 300);
                 });
-                // Auto-aceitar: move direto para preparo se toggle ativo
+                // Auto-aceitar: move para preparo DEPOIS da confirmação ser enviada (1500ms)
                 var cfgAceitar = impGetConfig();
                 var aceitarOn = cfgAceitar.aceitar !== false;
                 if (aceitarOn) {
                     pedidosNovos.forEach(function(o) {
-                        setTimeout(function() { updateOrderStatus(o.id, 'preparo'); }, 600);
+                        setTimeout(function() { updateOrderStatus(o.id, 'preparo'); }, 1500);
                     });
                 }
             }
