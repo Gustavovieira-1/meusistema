@@ -4775,32 +4775,53 @@ function impInicializar() {
     aplicaTog('imp-tog-ativar',  cfg.ativar!==false);
     aplicaTog('imp-tog-auto',    cfg.auto!==false);
     aplicaTog('imp-tog-aceitar', cfg.aceitar!==false);
-    // Também busca do Supabase para garantir que esteja em sinc
+    // Busca configs completas do Supabase via supaReq (usa token correto)
     if (REST_ID) {
-        fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID+'&select=ativar,auto_impressao,auto_aceitar&limit=1', {
-            headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY)}
-        }).then(function(r){ return r.json(); }).then(function(rows) {
-            if (rows && rows[0]) {
-                var row = rows[0];
-                if (row.ativar  !== null && row.ativar  !== undefined) {
-                    tog('imp-ativar', row.ativar);
-                    var d=document.getElementById('imp-tog-ativar'); if(d){ if(row.ativar) d.classList.remove('off'); else d.classList.add('off'); }
-                }
-                if (row.auto_impressao !== null && row.auto_impressao !== undefined) {
-                    tog('imp-auto', row.auto_impressao);
-                    var d=document.getElementById('imp-tog-auto'); if(d){ if(row.auto_impressao) d.classList.remove('off'); else d.classList.add('off'); }
-                }
-                if (row.auto_aceitar  !== null && row.auto_aceitar  !== undefined) {
-                    tog('imp-aceitar', row.auto_aceitar);
-                    var d=document.getElementById('imp-tog-aceitar'); if(d){ if(row.auto_aceitar) d.classList.remove('off'); else d.classList.add('off'); }
-                }
-                // Sincroniza no localStorage também
-                var cfgS = impGetConfig();
-                if (row.ativar  !== null) cfgS.ativar  = row.ativar;
-                if (row.auto_impressao !== null) cfgS.auto    = row.auto_impressao;
-                if (row.auto_aceitar  !== null) cfgS.aceitar = row.auto_aceitar;
-                localStorage.setItem(IMP_KEY, JSON.stringify(cfgS));
+        supaReq('GET', 'assistente_status?restaurante_id=eq.'+REST_ID+'&select=*&limit=1', null)
+        .then(function(rows) {
+            if (!rows || !rows[0]) return;
+            var row = rows[0];
+            var cfgS = impGetConfig();
+            // Toggles de automação
+            function applyToggle(cfgKey, togId, chkHidId, val) {
+                if (val === null || val === undefined) return;
+                cfgS[cfgKey] = val;
+                var d = document.getElementById(togId);
+                if (d) { if(val) d.classList.remove('off'); else d.classList.add('off'); }
+                var c = document.getElementById(chkHidId);
+                if (c) c.checked = val;
             }
+            applyToggle('ativar',  'imp-tog-ativar',  'imp-ativar',  row.ativar);
+            applyToggle('auto',    'imp-tog-auto',    'imp-auto',    row.auto_impressao);
+            applyToggle('aceitar', 'imp-tog-aceitar', 'imp-aceitar', row.auto_aceitar);
+            // Campos de texto
+            function applyField(cfgKey, elId, val) {
+                if (val === null || val === undefined || val === '') return;
+                cfgS[cfgKey] = val;
+                var el = document.getElementById(elId);
+                if (el) el.value = val;
+            }
+            applyField('lojaNome',    'imp-loja-nome',     row.loja_nome);
+            applyField('rodape',      'imp-rodape',        row.rodape_notinha);
+            applyField('fontNome',    'imp-font-nome',     row.font_nome);
+            applyField('fontTamanho', 'imp-font-tamanho',  row.font_tamanho);
+            // Checkboxes de campos da notinha
+            function applyCheck(cfgKey, chkId, val) {
+                if (val === null || val === undefined) return;
+                cfgS[cfgKey] = val;
+                var el = document.getElementById(chkId);
+                if (el) el.checked = val;
+            }
+            applyCheck('showCodigo',   'imp-show-codigo',   row.show_codigo);
+            applyCheck('showData',     'imp-show-data',     row.show_data);
+            applyCheck('showPrevisao', 'imp-show-previsao', row.show_previsao);
+            applyCheck('showTotLoja',  'imp-show-totloja',  row.show_tot_loja);
+            applyCheck('showCelular',  'imp-show-celular',  row.show_celular);
+            applyCheck('showEndereco', 'imp-show-endereco', row.show_endereco);
+            applyCheck('showSubtotal', 'imp-show-subtotal', row.show_subtotal);
+            applyCheck('showPgto',     'imp-show-pgto',     row.show_pgto);
+            localStorage.setItem(IMP_KEY, JSON.stringify(cfgS));
+            impAtualizarPreview();
         }).catch(function(){});
     }
     var setToggle = function(chkId, togId, val) {
@@ -4891,30 +4912,27 @@ function impSalvar() {
     if ((gv = g('imp-font-nome'))     !== null) cfg.fontNome     = gv || 'Courier New';
     if ((gv = g('imp-font-tamanho'))  !== null) cfg.fontTamanho  = gv || '8';
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-    // Salva configs completas no Supabase
+    // Salva configs completas no Supabase via supaReq (usa token correto)
     if (REST_ID) {
-        fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID, {
-            method: 'PATCH',
-            headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
-            body: JSON.stringify({
-                loja_nome:      cfg.lojaNome || '',
-                largura:        parseInt(cfg.largura)||80,
-                ativar:         cfg.ativar !== false,
-                auto_impressao: cfg.auto !== false,
-                auto_aceitar:   cfg.aceitar !== false,
-                rodape_notinha: cfg.rodape      || '',
-                font_nome:      cfg.fontNome    || 'Courier New',
-                font_tamanho:   cfg.fontTamanho || '8',
-                show_codigo:    cfg.showCodigo   !== false,
-                show_data:      cfg.showData     !== false,
-                show_previsao:  cfg.showPrevisao !== false,
-                show_tot_loja:  cfg.showTotLoja  !== false,
-                show_celular:   cfg.showCelular  !== false,
-                show_endereco:  cfg.showEndereco !== false,
-                show_subtotal:  cfg.showSubtotal !== false,
-                show_pgto:      cfg.showPgto     !== false
-            })
-        }).catch(function(){});
+        supaReq('PATCH', 'assistente_status?restaurante_id=eq.'+REST_ID, {
+            loja_nome:      cfg.lojaNome || '',
+            largura:        parseInt(cfg.largura)||80,
+            ativar:         cfg.ativar !== false,
+            auto_impressao: cfg.auto !== false,
+            auto_aceitar:   cfg.aceitar !== false,
+            rodape_notinha: cfg.rodape      || '',
+            font_nome:      cfg.fontNome    || 'Courier New',
+            font_tamanho:   cfg.fontTamanho || '8',
+            show_codigo:    cfg.showCodigo   !== false,
+            show_data:      cfg.showData     !== false,
+            show_previsao:  cfg.showPrevisao !== false,
+            show_tot_loja:  cfg.showTotLoja  !== false,
+            show_celular:   cfg.showCelular  !== false,
+            show_endereco:  cfg.showEndereco !== false,
+            show_subtotal:  cfg.showSubtotal !== false,
+            show_pgto:      cfg.showPgto     !== false
+        }).then(function(){ console.log('[IMP] Config salva no Supabase'); })
+          .catch(function(e){ console.warn('[IMP] Erro ao salvar:', e.message); });
     }
     var btn = document.getElementById('imp-btn-salvar');
     if (btn) {
@@ -4951,17 +4969,11 @@ function impSalvarTogglesSupabase() {
     cfg.auto    = auto;
     cfg.aceitar = aceitar;
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-    // Salva no Supabase
-    fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID, {
-        method: 'PATCH',
-        headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
-        body: JSON.stringify({ ativar: ativar, auto_impressao: auto, auto_aceitar: aceitar })
-    }).then(function(r) {
-        if (r.ok) {
-            impAddLog('✓ Automação salva: ativar='+ativar+' auto='+auto+' aceitar='+aceitar, 'ok');
-        } else {
-            r.text().then(function(t){ impAddLog('⚠ Erro ao salvar automação: '+t.substring(0,80), 'err'); });
-        }
+    // Salva no Supabase via supaReq
+    supaReq('PATCH', 'assistente_status?restaurante_id=eq.'+REST_ID, {
+        ativar: ativar, auto_impressao: auto, auto_aceitar: aceitar
+    }).then(function(){
+        impAddLog('✓ Automação salva: ativar='+ativar+' auto='+auto+' aceitar='+aceitar, 'ok');
     }).catch(function(e){ impAddLog('⚠ Erro ao salvar automação: '+e.message, 'err'); });
 }
 
