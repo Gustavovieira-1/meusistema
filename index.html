@@ -106,6 +106,8 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 /* ── BARRA FECHADA ── */
 .bar-fechada{background:#1a1a1a;color:#facc15;padding:9px 16px;text-align:center;font-size:12px;font-weight:600;display:none;letter-spacing:.2px;border-radius:20px 20px 0 0;}
 .bar-fechada.show{display:block;}
+.bar-fechada.countdown{background:#1a1a1a;color:#facc15;}
+.bar-fechada .bar-timer{font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:.5px;}
 
 /* ── LOADER ── */
 .loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;gap:12px;}
@@ -476,6 +478,7 @@ const SERVIDOR = window.location.hostname==='localhost'||window.location.hostnam
 
 var db={categories:[],prods:[],comps:[],cfg:{},txCfg:{}};
 var carrinho=[],prodAtual=null,qtdAtual=1,compsAtual={},tipoAtual='Entrega',pgtoAtual='Pix',aberta=true;
+var lojaPausada=false,lojaForaHorario=false; // separados para banner diferente
 var REST_SLUG = null;
 var REST_ID   = null;
 
@@ -695,7 +698,8 @@ async function init(){
         }
 
         // Verificar se loja está aberta
-        aberta = !cfg.pausada;
+        lojaPausada = !!cfg.pausada;
+        lojaForaHorario = false;
         if (db.horarios && db.horarios.length) {
             const agora = new Date();
             const dia = db.horarios[agora.getDay()];
@@ -706,11 +710,12 @@ async function init(){
                     const [fh,fm] = (p.fim||'23:59').split(':').map(Number);
                     return min >= ah*60+am && min < fh*60+fm;
                 });
-                if (!dentroHorario) aberta = false;
+                if (!dentroHorario) lojaForaHorario = true;
             } else if (dia && !dia.aberta) {
-                aberta = false;
+                lojaForaHorario = true;
             }
         }
+        aberta = !lojaPausada && !lojaForaHorario;
 
         renderHeader(); renderCardapio();
 
@@ -721,7 +726,8 @@ async function init(){
                 var horRows = await supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1');
                 var cfg2 = (cfgRows && cfgRows[0]) || {};
                 db.horarios = (horRows && horRows[0]) ? (horRows[0].dados || []) : db.horarios;
-                aberta = !cfg2.pausada;
+                lojaPausada = !!cfg2.pausada;
+                lojaForaHorario = false;
                 if (db.horarios && db.horarios.length) {
                     var agora2 = new Date();
                     var dia2 = db.horarios[agora2.getDay()];
@@ -732,11 +738,12 @@ async function init(){
                             var fh = parseInt((p.fim||'23:59').split(':')[0]), fm = parseInt((p.fim||'23:59').split(':')[1]);
                             return min2 >= ah*60+am && min2 < fh*60+fm;
                         });
-                        if (!dentro2) aberta = false;
+                        if (!dentro2) lojaForaHorario = true;
                     } else if (dia2 && !dia2.aberta) {
-                        aberta = false;
+                        lojaForaHorario = true;
                     }
                 }
+                aberta = !lojaPausada && !lojaForaHorario;
                 renderHeader();
             } catch(e) {}
         }, 60000);
@@ -755,6 +762,75 @@ async function init(){
 
 function money(v){return 'R$ '+parseFloat(v||0).toFixed(2).replace('.',',');}
 
+// ── CONTAGEM REGRESSIVA — próxima abertura ──────────────────────────────
+var _contagemInterval = null;
+
+function calcularProximaAbertura() {
+    // Retorna o timestamp (ms) da próxima abertura com base em db.horarios
+    if (!db.horarios || !db.horarios.length) return null;
+    var agora = new Date();
+    var diaIdx = agora.getDay();
+    var minAgora = agora.getHours()*60 + agora.getMinutes()*1 + agora.getSeconds()/60;
+
+    // Verifica os próximos 7 dias
+    for (var d = 0; d < 7; d++) {
+        var idx = (diaIdx + d) % 7;
+        var dia = db.horarios[idx];
+        if (!dia || !dia.aberta || !dia.periodos || !dia.periodos.length) continue;
+        var periodos = dia.periodos.slice().sort(function(a,b){
+            return parseInt(a.ini)*60 - parseInt(b.ini)*60;
+        });
+        for (var p = 0; p < periodos.length; p++) {
+            var per = periodos[p];
+            var ah = parseInt((per.ini||'00:00').split(':')[0]);
+            var am = parseInt((per.ini||'00:00').split(':')[1]);
+            var minAbre = ah*60 + am;
+            if (d === 0 && minAbre <= minAgora) continue; // já passou hoje
+            // Calcula a data real de abertura
+            var dataAbertura = new Date(agora);
+            dataAbertura.setDate(agora.getDate() + d);
+            dataAbertura.setHours(ah, am, 0, 0);
+            return dataAbertura.getTime();
+        }
+    }
+    return null;
+}
+
+function atualizarContagem() {
+    var bar = document.getElementById('bar-fechada');
+    if (!bar) return;
+
+    var alvo = calcularProximaAbertura();
+    if (!alvo) {
+        bar.innerHTML = '⚠️ Abrimos em breve';
+        return;
+    }
+
+    var diff = Math.max(0, alvo - Date.now());
+    var horas = Math.floor(diff / 3600000);
+    var mins  = Math.floor((diff % 3600000) / 60000);
+    var segs  = Math.floor((diff % 60000) / 1000);
+
+    var txt = '🕐 Abrimos em ';
+    if (horas > 0) txt += horas + 'h ';
+    txt += (horas > 0 || mins > 0 ? (String(mins).padStart(2,'0') + 'min ') : '');
+    txt += String(segs).padStart(2,'0') + 's';
+
+    bar.innerHTML = txt;
+
+    // Inicia o interval de 1s se ainda não existe
+    if (!_contagemInterval) {
+        _contagemInterval = setInterval(function() {
+            if (!lojaForaHorario || lojaPausada) {
+                clearInterval(_contagemInterval);
+                _contagemInterval = null;
+                return;
+            }
+            atualizarContagem();
+        }, 1000);
+    }
+}
+
 function renderHeader(){
     var c=db.cfg||{},tx=db.txCfg||{};
     var nome=c.nomeMarca||c.nome||'Restaurante';
@@ -765,8 +841,26 @@ function renderHeader(){
     if(c.logo)document.getElementById('loja-logo').innerHTML='<img src="'+c.logo+'" alt="logo">';
     if(c.capa){document.getElementById('hero-default').style.display='none';document.getElementById('hero-img').style.backgroundImage='url('+c.capa+')';}
     var st=document.getElementById('loja-status');
-    if(aberta){st.className='status-pill status-open';st.innerHTML='<span class="status-dot"></span>Aberta agora';document.getElementById('bar-fechada').classList.remove('show');}
-    else{st.className='status-pill status-closed';st.innerHTML='<span class="status-dot"></span>Fechada no momento';document.getElementById('bar-fechada').classList.add('show');}
+    var bar=document.getElementById('bar-fechada');
+    if(aberta){
+        st.className='status-pill status-open';
+        st.innerHTML='<span class="status-dot"></span>Aberta agora';
+        bar.classList.remove('show');
+        bar.classList.remove('countdown');
+    } else if(lojaPausada) {
+        st.className='status-pill status-closed';
+        st.innerHTML='<span class="status-dot"></span>Fechada no momento';
+        bar.classList.remove('countdown');
+        bar.textContent='⚠️ Estamos fechados — não estamos aceitando pedidos agora';
+        bar.classList.add('show');
+    } else {
+        // Fora do horário — mostra contagem regressiva
+        st.className='status-pill status-closed';
+        st.innerHTML='<span class="status-dot"></span>Fechada no momento';
+        bar.classList.add('show');
+        bar.classList.add('countdown');
+        atualizarContagem();
+    }
     document.getElementById('info-entrega').textContent=(tx.tempoEntrega||40)+' min';
     var taxa=parseFloat(tx.taxaPadrao||0);
     document.getElementById('info-taxa').textContent=taxa>0?money(taxa):'Grátis';
