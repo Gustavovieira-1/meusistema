@@ -622,7 +622,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 
         <div class="nav-section-label">Cardápio</div>
 
-        <button class="nav-btn" id="btn-nav-produtos" onclick="showSec('produtos', this)">
+        <button class="nav-btn active" id="btn-nav-produtos" onclick="showSec('produtos', this)">
             <i class="fas fa-book-open nav-icon"></i> Editor de Cardápio
         </button>
         <button class="nav-btn" onclick="showSec('complementos', this)">
@@ -1160,7 +1160,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
     </div>
 
     <!-- CARDÁPIO -->
-    <div id="sec-produtos" class="section">
+    <div id="sec-produtos" class="section active">
         <div class="header-flex">
             <h1>Cardápio</h1>
             <div style="display:flex;gap:10px;align-items:center;">
@@ -3165,23 +3165,23 @@ function inicializarSistema() {
             if (!pendentes.length) return;
             console.log('[HistPendentes] Reenviando ' + pendentes.length + ' pedidos pendentes...');
             var copiaPendentes = pendentes.slice();
-            localStorage.removeItem('f_hist_pendentes');
+            localStorage.removeItem('f_hist_pendentes'); // limpa antes para não duplicar
             copiaPendentes.forEach(function(p) {
                 supaHistUpsert(p).catch(function(e){ console.warn('[HistPendentes]', e.message); });
             });
         } catch(e) { console.warn('[HistPendentes] Erro:', e.message); }
-    }, 12000);
+    }, 12000); // 12s após login, depois do token já renovado
 
-    // 🔁 Restaurar última seção visitada — imediato, sem flash de outra tela
-    (function() {
+    // 🔁 Restaurar última seção visitada após F5
+    setTimeout(function() {
         try {
-            var lastSec = localStorage.getItem('f_last_sec') || 'gestor';
+            var lastSec = localStorage.getItem('f_last_sec');
+            if (!lastSec || lastSec === 'produtos') return; // produtos é o padrão, não precisa restaurar
+            // Encontra o botão nav correspondente para marcar como ativo
             var navBtn = document.querySelector('[onclick*="showSec(\'' + lastSec + '\'"]');
             showSec(lastSec, navBtn || null);
-        } catch(e) {
-            showSec('gestor', null);
-        }
-    })();
+        } catch(e) {}
+    }, 200);
 }
 
 
@@ -7127,6 +7127,9 @@ async function authLogout() {
     localStorage.removeItem('f_fidelidade_cli');
     localStorage.removeItem('f_cupons');
     localStorage.removeItem('f_integracoes');
+    localStorage.removeItem('f_hist_pedidos');
+    localStorage.removeItem('f_last_sec');
+    localStorage.removeItem('f_rest_id_ativo');
     REST_ID = null; SUPA_TOKEN = null;
     // Resetar nome da sidebar
     var sn = document.getElementById('sidebar-nome-loja');
@@ -7219,6 +7222,23 @@ async function authVerificarSessao() {
             try { const u = await authGetRestaurante(SUPA_TOKEN); REST_ID = u.restaurante_id; authSalvarSessao(SUPA_TOKEN, REST_ID, sess.nomeUsuario, sess.role); } catch(e) { return false; }
         }
         if (!REST_ID) return false;
+
+        // ── CRÍTICO: limpar cache se o restaurante mudou ──────────────
+        // Isso acontece quando o superadmin entra como outro restaurante
+        var restAnterior = localStorage.getItem('f_rest_id_ativo');
+        if (restAnterior && restAnterior !== REST_ID) {
+            // Restaurante diferente — limpar TODOS os dados do anterior
+            ['f_orders','f_cats','f_prods','f_comps','f_cfg_loja',
+             'f_horarios','f_taxas_config','f_fidelidade_cfg','f_fidelidade_cli',
+             'f_cupons','f_integracoes','f_hist_pedidos','f_last_sec'].forEach(function(k) {
+                localStorage.removeItem(k);
+            });
+            orders = [];
+        }
+        // Salva o restaurante atual como ativo
+        localStorage.setItem('f_rest_id_ativo', REST_ID);
+        // ─────────────────────────────────────────────────────────────
+
         impAtualizarChaves();
         var _elNome = document.getElementById('login-usuario-nome');
         if (_elNome) _elNome.textContent = sess.nomeUsuario || 'Admin';
@@ -7271,6 +7291,9 @@ async function authFazerLogin() {
         localStorage.removeItem('f_fidelidade_cli');
         localStorage.removeItem('f_cupons');
         localStorage.removeItem('f_integracoes');
+        localStorage.removeItem('f_hist_pedidos');
+        localStorage.removeItem('f_last_sec');
+        localStorage.setItem('f_rest_id_ativo', REST_ID);
 
         esconderTelaLogin();
         inicializarSistema();
