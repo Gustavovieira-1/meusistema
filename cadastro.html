@@ -614,10 +614,11 @@ async function criarConta() {
 
   try {
     // 1 — Criar restaurante
+    const urlCardapio = BASE_URL + '?r=' + slug;
     const restR = await fetch(SB_URL + '/rest/v1/restaurantes', {
       method: 'POST',
       headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-      body: JSON.stringify({ nome: nomeRest, slug, ativo: true, obs: `${cidade}/${estado} | ${FAT_LABELS[_fat]||_fat} | ${tel}` })
+      body: JSON.stringify({ nome: nomeRest, slug, ativo: true, link_cardapio: urlCardapio, obs: `${cidade}/${estado} | ${FAT_LABELS[_fat]||_fat} | ${tel}` })
     });
     if (!restR.ok) {
       const e = await restR.json();
@@ -660,8 +661,7 @@ async function criarConta() {
 
     // 5 — Enviar e-mail via Resend
     btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Enviando e-mail...';
-    const urlCardapio = BASE_URL + '?r=' + slug;
-    const urlAdmin    = BASE_URL + '/admin.html';
+    const urlAdmin = BASE_URL + '/admin.html';
 
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
