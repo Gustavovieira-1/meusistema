@@ -644,6 +644,10 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             </button>
         </div>
 
+        <button class="nav-btn" onclick="showSec('whatsapp', this)">
+            <i class="fab fa-whatsapp nav-icon" style="color:#25d366;"></i> WhatsApp
+        </button>
+
         <div class="nav-section-label">Loja</div>
 
         <button class="nav-btn" onclick="toggleSubmenu('sub-trafego'); toggleArrow(this)">
@@ -2479,6 +2483,115 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             <strong style="font-size:16px; color:#999;">Em breve</strong>
         </div>
     </div>
+    <div id="sec-whatsapp" class="section">
+        <div class="header-flex">
+            <h1><i class="fab fa-whatsapp" style="color:#25d366; margin-right:10px;"></i>WhatsApp</h1>
+        </div>
+
+        <!-- STATUS CONNECTION -->
+        <div id="wpp-card-conexao" style="background:white; border:1.5px solid #f1f5f9; border-radius:16px; padding:24px 28px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; align-items:center; gap:14px;">
+                    <div style="width:48px; height:48px; background:#e8faf0; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <i class="fab fa-whatsapp" style="color:#25d366; font-size:24px;"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:15px; font-weight:800; color:#1e293b;">Conexão WhatsApp</div>
+                        <div id="wpp-status-txt" style="font-size:12px; color:#94a3b8; margin-top:3px;">Verificando...</div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div id="wpp-status-badge" style="display:flex; align-items:center; gap:6px; background:#f1f5f9; border-radius:20px; padding:5px 14px; font-size:12px; font-weight:700; color:#64748b;">
+                        <span id="wpp-status-dot" style="width:7px; height:7px; border-radius:50%; background:#94a3b8; display:inline-block;"></span>
+                        <span id="wpp-status-label">Desconectado</span>
+                    </div>
+                    <button id="wpp-btn-conectar" onclick="wppConectar()" style="background:#25d366; color:white; border:none; border-radius:10px; padding:9px 20px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:7px; transition:.15s;" onmouseover="this.style.background='#1db954'" onmouseout="this.style.background='#25d366'">
+                        <i class="fas fa-qrcode"></i> Conectar
+                    </button>
+                    <button id="wpp-btn-desconectar" onclick="wppDesconectar()" style="display:none; background:#fee2e2; color:#dc2626; border:none; border-radius:10px; padding:9px 20px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:none; align-items:center; gap:7px; transition:.15s;">
+                        <i class="fas fa-power-off"></i> Desconectar
+                    </button>
+                </div>
+            </div>
+
+            <!-- QR CODE AREA -->
+            <div id="wpp-qr-area" style="display:none; text-align:center; padding:24px; background:#f8fafc; border-radius:12px; border:1.5px dashed #e2e8f0;">
+                <div id="wpp-qr-loading" style="color:#94a3b8; font-size:13px;"><i class="fas fa-circle-notch fa-spin" style="margin-right:8px;"></i>Gerando QR Code...</div>
+                <img id="wpp-qr-img" src="" alt="QR Code" style="display:none; max-width:240px; border-radius:12px; margin:0 auto;">
+                <div style="font-size:12px; color:#64748b; margin-top:12px;">Abra o WhatsApp no celular → <strong>Dispositivos conectados</strong> → <strong>Conectar dispositivo</strong></div>
+                <div style="font-size:11px; color:#94a3b8; margin-top:6px;">O QR Code expira em 60 segundos. Se expirar, clique em Conectar novamente.</div>
+            </div>
+
+            <!-- NUMERO CONECTADO -->
+            <div id="wpp-numero-area" style="display:none; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:12px;">
+                <i class="fas fa-check-circle" style="color:#16a34a; font-size:20px;"></i>
+                <div>
+                    <div style="font-size:13px; font-weight:700; color:#15803d;">WhatsApp conectado</div>
+                    <div id="wpp-numero-txt" style="font-size:12px; color:#16a34a; margin-top:2px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TOGGLE ATIVAR DISPAROS -->
+        <div style="background:white; border:1.5px solid #f1f5f9; border-radius:16px; padding:24px 28px; margin-bottom:20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                    <div style="font-size:14px; font-weight:800; color:#1e293b;">Disparos automáticos</div>
+                    <div style="font-size:12px; color:#94a3b8; margin-top:4px;">Enviar mensagem ao cliente a cada mudança de status do pedido</div>
+                </div>
+                <div class="imp-toggle off" id="wpp-tog-ativar" onclick="wppToggleAtivar(this)"><div class="imp-toggle-thumb"></div></div>
+            </div>
+        </div>
+
+        <!-- MENSAGENS POR STATUS -->
+        <div style="background:white; border:1.5px solid #f1f5f9; border-radius:16px; padding:24px 28px; margin-bottom:20px;">
+            <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:6px;">Mensagens por etapa</div>
+            <div style="font-size:12px; color:#94a3b8; margin-bottom:20px;">Use <strong>{nome}</strong> para o nome do cliente e <strong>{pedido}</strong> para o número do pedido.</div>
+
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <!-- preparo -->
+                <div style="border:1.5px solid #f1f5f9; border-radius:12px; padding:16px 18px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                        <span style="background:#fff7ed; color:#c2410c; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;">Em Preparo</span>
+                    </div>
+                    <textarea id="wpp-msg-preparo" rows="3" style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; resize:vertical; outline:none; transition:.15s;" onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">Olá, {nome}! 👨‍🍳 Seu pedido *{pedido}* está sendo preparado com carinho. Em breve estará pronto!</textarea>
+                </div>
+                <!-- pronto -->
+                <div style="border:1.5px solid #f1f5f9; border-radius:12px; padding:16px 18px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                        <span style="background:#f0fdf4; color:#16a34a; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;">Pronto</span>
+                    </div>
+                    <textarea id="wpp-msg-pronto" rows="3" style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; resize:vertical; outline:none; transition:.15s;" onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">Seu pedido *{pedido}* está pronto! ✅ Já estamos preparando para a entrega.</textarea>
+                </div>
+                <!-- entrega -->
+                <div style="border:1.5px solid #f1f5f9; border-radius:12px; padding:16px 18px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                        <span style="background:#eff6ff; color:#2563eb; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;">Em Entrega</span>
+                    </div>
+                    <textarea id="wpp-msg-entrega" rows="3" style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; resize:vertical; outline:none; transition:.15s;" onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">🛵 Seu pedido *{pedido}* saiu para entrega! Fique de olho, logo chegará até você.</textarea>
+                </div>
+                <!-- finalizado -->
+                <div style="border:1.5px solid #f1f5f9; border-radius:12px; padding:16px 18px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                        <span style="background:#f5f3ff; color:#7c3aed; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;">Finalizado</span>
+                    </div>
+                    <textarea id="wpp-msg-finalizado" rows="3" style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; resize:vertical; outline:none; transition:.15s;" onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">Obrigado, {nome}! 🙏 Seu pedido *{pedido}* foi finalizado. Avalie nosso atendimento e até a próxima!</textarea>
+                </div>
+                <!-- cancelado -->
+                <div style="border:1.5px solid #f1f5f9; border-radius:12px; padding:16px 18px;">
+                    <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                        <span style="background:#fff1f2; color:#e11d48; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;">Cancelado</span>
+                    </div>
+                    <textarea id="wpp-msg-cancelado" rows="3" style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; resize:vertical; outline:none; transition:.15s;" onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">Olá, {nome}. Infelizmente seu pedido *{pedido}* foi cancelado. Entre em contato conosco para mais informações.</textarea>
+                </div>
+            </div>
+
+            <button onclick="wppSalvarMensagens()" style="margin-top:18px; background:#25d366; color:white; border:none; border-radius:10px; padding:11px 28px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:8px; transition:.15s;" onmouseover="this.style.background='#1db954'" onmouseout="this.style.background='#25d366'">
+                <i class="fas fa-save"></i> Salvar mensagens
+            </button>
+        </div>
+    </div>
+
     <div id="sec-integracoes" class="section">
         <div class="header-flex"><h1>Integrações</h1></div>
 
@@ -3409,6 +3522,7 @@ function showSec(id, btn) {
     if (id === 'rel-cardapio')     setTimeout(function(){ relRenderCardapio(); }, 80);
     if (id === 'rel-historico')    setTimeout(function(){ histCarregarDoSupabase().then(function(){ histRender(); }); }, 80);
     if (id === 'impressao')        setTimeout(function(){ impInicializar(); }, 80);
+    if (id === 'whatsapp')         setTimeout(function(){ wppInicializar(); }, 80);
     if (id === 'financeiro')        setTimeout(function(){ finInicializar(); }, 80);
     if (id === 'integracoes')       setTimeout(function(){ intInicializar(); }, 80);
     if (id === 'taxas')            setTimeout(function(){ txInicializar(); }, 80);
@@ -4542,6 +4656,10 @@ function updateOrderStatus(id, newStatus) {
         if (!silencioso && ativarOn && autoOn && newStatus === 'preparo') {
             setTimeout(function(){ imprimirPedido(id); }, 300);
         }
+        // WhatsApp: dispara mensagem ao cliente se ativo (adicionado ao final — não altera lógica anterior)
+        if (!silencioso) {
+            setTimeout(function(){ wppDisparar(order, newStatus); }, 500);
+        }
     }
 }
 
@@ -5331,6 +5449,220 @@ var INT_CONFIG = {
 
 function intGetConfig() {
     try { return JSON.parse(localStorage.getItem(INT_KEY)) || {}; } catch(e) { return {}; }
+}
+
+// ══════════════════════════════════════════════════════════════
+// WHATSAPP — Evolution API
+// ══════════════════════════════════════════════════════════════
+var WPP_API_URL  = 'https://evolution-api-production-fa11.up.railway.app';
+var WPP_API_KEY  = 'zirafood2026';
+var WPP_KEY      = 'f_wpp_cfg'; // localStorage key (sem REST_ID pois impAtualizarChaves já cuida das impressoras)
+var _wppStatusInterval = null;
+
+function wppGetConfig() {
+    try { return JSON.parse(localStorage.getItem(WPP_KEY + '_' + (REST_ID||'x'))) || {}; } catch(e) { return {}; }
+}
+function wppSaveConfig(obj) {
+    localStorage.setItem(WPP_KEY + '_' + (REST_ID||'x'), JSON.stringify(obj));
+}
+
+function wppGetInstancia() {
+    // Cada restaurante tem sua própria instância nomeada pelo REST_ID
+    return 'zira_' + (REST_ID || 'default');
+}
+
+function wppInicializar() {
+    var cfg = wppGetConfig();
+    // Carrega mensagens salvas nos textareas
+    var msgs = cfg.mensagens || {};
+    var set = function(id, val) { var el = document.getElementById(id); if(el && val) el.value = val; };
+    set('wpp-msg-preparo',    msgs.preparo);
+    set('wpp-msg-pronto',     msgs.pronto);
+    set('wpp-msg-entrega',    msgs.entrega);
+    set('wpp-msg-finalizado', msgs.finalizado);
+    set('wpp-msg-cancelado',  msgs.cancelado);
+    // Toggle ativar
+    var tog = document.getElementById('wpp-tog-ativar');
+    if (tog) { if (cfg.ativar) tog.classList.remove('off'); else tog.classList.add('off'); }
+    // Verifica status da conexão
+    wppVerificarStatus();
+}
+
+function wppToggleAtivar(el) {
+    var on = el.classList.contains('off');
+    if (on) el.classList.remove('off'); else el.classList.add('off');
+    var cfg = wppGetConfig(); cfg.ativar = on; wppSaveConfig(cfg);
+    cupToast(on ? 'Disparos WhatsApp ativados!' : 'Disparos WhatsApp desativados.', on ? '#25d366' : '#64748b');
+}
+
+function wppSalvarMensagens() {
+    var cfg = wppGetConfig();
+    cfg.mensagens = {
+        preparo:    document.getElementById('wpp-msg-preparo')?.value    || '',
+        pronto:     document.getElementById('wpp-msg-pronto')?.value     || '',
+        entrega:    document.getElementById('wpp-msg-entrega')?.value    || '',
+        finalizado: document.getElementById('wpp-msg-finalizado')?.value || '',
+        cancelado:  document.getElementById('wpp-msg-cancelado')?.value  || ''
+    };
+    wppSaveConfig(cfg);
+    cupToast('Mensagens salvas!', '#25d366');
+}
+
+async function wppVerificarStatus() {
+    if (!REST_ID) return;
+    var instancia = wppGetInstancia();
+    try {
+        var r = await fetch(WPP_API_URL + '/instance/connectionState/' + instancia, {
+            headers: { 'apikey': WPP_API_KEY }
+        });
+        if (!r.ok) { wppSetStatus('disconnected'); return; }
+        var data = await r.json();
+        var state = (data.instance && data.instance.state) || data.state || 'close';
+        if (state === 'open') {
+            wppSetStatus('connected', data.instance?.profileName || '');
+        } else {
+            wppSetStatus('disconnected');
+        }
+    } catch(e) {
+        wppSetStatus('disconnected');
+    }
+}
+
+function wppSetStatus(estado, nome) {
+    var dot    = document.getElementById('wpp-status-dot');
+    var label  = document.getElementById('wpp-status-label');
+    var txt    = document.getElementById('wpp-status-txt');
+    var btnCon = document.getElementById('wpp-btn-conectar');
+    var btnDes = document.getElementById('wpp-btn-desconectar');
+    var numArea = document.getElementById('wpp-numero-area');
+    var numTxt  = document.getElementById('wpp-numero-txt');
+    if (!dot) return;
+
+    if (estado === 'connected') {
+        dot.style.background   = '#25d366';
+        label.textContent      = 'Conectado';
+        label.style.color      = '#16a34a';
+        txt.textContent        = 'WhatsApp ativo — mensagens serão enviadas automaticamente';
+        if(btnCon) btnCon.style.display  = 'none';
+        if(btnDes) { btnDes.style.display = 'flex'; btnDes.style.background='#fee2e2'; }
+        if(numArea) numArea.style.display = 'flex';
+        if(numTxt && nome) numTxt.textContent = nome;
+        document.getElementById('wpp-qr-area').style.display = 'none';
+        // Salva estado
+        var cfg = wppGetConfig(); cfg.conectado = true; wppSaveConfig(cfg);
+    } else {
+        dot.style.background   = '#94a3b8';
+        label.textContent      = 'Desconectado';
+        label.style.color      = '#64748b';
+        txt.textContent        = 'Escaneie o QR Code para conectar seu WhatsApp';
+        if(btnCon) btnCon.style.display  = 'flex';
+        if(btnDes) btnDes.style.display  = 'none';
+        if(numArea) numArea.style.display = 'none';
+        var cfg = wppGetConfig(); cfg.conectado = false; wppSaveConfig(cfg);
+    }
+}
+
+async function wppConectar() {
+    if (!REST_ID) { cupToast('Faça login primeiro.', '#e30613'); return; }
+    var instancia = wppGetInstancia();
+    var qrArea    = document.getElementById('wpp-qr-area');
+    var qrLoading = document.getElementById('wpp-qr-loading');
+    var qrImg     = document.getElementById('wpp-qr-img');
+    var btnCon    = document.getElementById('wpp-btn-conectar');
+
+    qrArea.style.display    = 'block';
+    qrLoading.style.display = 'block';
+    qrImg.style.display     = 'none';
+    if(btnCon) { btnCon.disabled = true; btnCon.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Conectando...'; }
+
+    try {
+        // Cria ou reconecta a instância
+        await fetch(WPP_API_URL + '/instance/create', {
+            method: 'POST',
+            headers: { 'apikey': WPP_API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ instanceName: instancia, qrcode: true, integration: 'WHATSAPP-BAILEYS' })
+        });
+
+        // Busca o QR Code
+        var qrR = await fetch(WPP_API_URL + '/instance/connect/' + instancia, {
+            headers: { 'apikey': WPP_API_KEY }
+        });
+        var qrData = await qrR.json();
+        var base64 = qrData.base64 || (qrData.qrcode && qrData.qrcode.base64) || '';
+
+        if (base64) {
+            qrLoading.style.display = 'none';
+            qrImg.src = base64.startsWith('data:') ? base64 : 'data:image/png;base64,' + base64;
+            qrImg.style.display = 'block';
+        } else {
+            qrLoading.textContent = '⚠️ Erro ao gerar QR Code. Tente novamente.';
+        }
+
+        // Polling para detectar quando conectar
+        if (_wppStatusInterval) clearInterval(_wppStatusInterval);
+        _wppStatusInterval = setInterval(async function() {
+            await wppVerificarStatus();
+            var cfg = wppGetConfig();
+            if (cfg.conectado) {
+                clearInterval(_wppStatusInterval);
+                _wppStatusInterval = null;
+                qrArea.style.display = 'none';
+            }
+        }, 3000);
+
+    } catch(e) {
+        qrLoading.textContent = '⚠️ Erro: ' + e.message;
+    }
+
+    if(btnCon) { btnCon.disabled = false; btnCon.innerHTML = '<i class="fas fa-qrcode"></i> Conectar'; }
+}
+
+async function wppDesconectar() {
+    if (!REST_ID) return;
+    var instancia = wppGetInstancia();
+    try {
+        await fetch(WPP_API_URL + '/instance/logout/' + instancia, {
+            method: 'DELETE',
+            headers: { 'apikey': WPP_API_KEY }
+        });
+        wppSetStatus('disconnected');
+        cupToast('WhatsApp desconectado.', '#64748b');
+    } catch(e) {
+        cupToast('Erro ao desconectar: ' + e.message, '#e30613');
+    }
+}
+
+function wppDisparar(order, novoStatus) {
+    // Só dispara se WhatsApp ativo e conectado
+    var cfg = wppGetConfig();
+    if (!cfg.ativar || !cfg.conectado) return;
+    if (!order || !order.phone) return;
+
+    var msgs = cfg.mensagens || {};
+    var template = msgs[novoStatus] || '';
+    if (!template) return; // sem mensagem configurada para esse status
+
+    // Substitui variáveis
+    var nome   = (order.client || '').split(' ')[0] || 'Cliente';
+    var pedido = order.id || '';
+    var texto  = template.replace(/\{nome\}/g, nome).replace(/\{pedido\}/g, pedido);
+
+    // Formata número: remove não-dígitos, garante DDI 55
+    var num = (order.phone || '').replace(/\D/g, '');
+    if (num.length === 11 || num.length === 10) num = '55' + num;
+    if (!num) return;
+
+    var instancia = wppGetInstancia();
+    fetch(WPP_API_URL + '/message/sendText/' + instancia, {
+        method: 'POST',
+        headers: { 'apikey': WPP_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number: num, text: texto })
+    }).then(function(r) {
+        if (r.ok) console.log('[WPP] Mensagem enviada para ' + num + ' (' + novoStatus + ')');
+        else r.text().then(function(t){ console.warn('[WPP] Erro:', t); });
+    }).catch(function(e) {
+        console.warn('[WPP] Falha ao enviar:', e.message);
+    });
 }
 
 function intInicializar() {
