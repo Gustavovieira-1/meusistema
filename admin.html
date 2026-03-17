@@ -4891,17 +4891,28 @@ function impSalvar() {
     if ((gv = g('imp-font-nome'))     !== null) cfg.fontNome     = gv || 'Courier New';
     if ((gv = g('imp-font-tamanho'))  !== null) cfg.fontTamanho  = gv || '8';
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-    // Salva lojaNome e largura no Supabase também para persistir entre contas
+    // Salva configs completas no Supabase
     if (REST_ID) {
         fetch(SUPA_URL+'/rest/v1/assistente_status?restaurante_id=eq.'+REST_ID, {
             method: 'PATCH',
             headers: {'apikey':SUPA_KEY,'Authorization':'Bearer '+(SUPA_TOKEN||SUPA_KEY),'Content-Type':'application/json','Prefer':'return=minimal'},
             body: JSON.stringify({
-                loja_nome: cfg.lojaNome || '',
-                largura: parseInt(cfg.largura)||80,
-                ativar: cfg.ativar !== false,
+                loja_nome:      cfg.lojaNome || '',
+                largura:        parseInt(cfg.largura)||80,
+                ativar:         cfg.ativar !== false,
                 auto_impressao: cfg.auto !== false,
-                auto_aceitar: cfg.aceitar !== false
+                auto_aceitar:   cfg.aceitar !== false,
+                rodape_notinha: cfg.rodape      || '',
+                font_nome:      cfg.fontNome    || 'Courier New',
+                font_tamanho:   cfg.fontTamanho || '8',
+                show_codigo:    cfg.showCodigo   !== false,
+                show_data:      cfg.showData     !== false,
+                show_previsao:  cfg.showPrevisao !== false,
+                show_tot_loja:  cfg.showTotLoja  !== false,
+                show_celular:   cfg.showCelular  !== false,
+                show_endereco:  cfg.showEndereco !== false,
+                show_subtotal:  cfg.showSubtotal !== false,
+                show_pgto:      cfg.showPgto     !== false
             })
         }).catch(function(){});
     }
@@ -5018,16 +5029,51 @@ function impVerificarStatus() {
                     b.classList.toggle('active', b.textContent.replace('mm','') === String(parseInt(row.largura)||80));
                 });
             }
-            // Carrega nome da loja do Supabase
-            if(row.loja_nome){
+            // Carrega configs completas do Supabase
+            (function() {
                 var cfg = impGetConfig();
-                if(!cfg.lojaNome) {
-                    cfg.lojaNome = row.loja_nome;
-                    localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-                    var elNome = document.getElementById('imp-loja-nome');
-                    if(elNome && !elNome.value) elNome.value = row.loja_nome;
+                var changed = false;
+                function applyStr(key, val, elId) {
+                    if (val !== undefined && val !== null && val !== '') {
+                        cfg[key] = val; changed = true;
+                        var el = document.getElementById(elId);
+                        if (el) el.value = val;
+                    }
                 }
-            }
+                function applyBool(key, val, chkId, togId) {
+                    if (val !== undefined && val !== null) {
+                        cfg[key] = val; changed = true;
+                        var chk = document.getElementById(chkId);
+                        if (chk) chk.checked = val;
+                        var tog = document.getElementById(togId);
+                        if (tog) { if(val) tog.classList.remove('off'); else tog.classList.add('off'); }
+                    }
+                }
+                applyStr('lojaNome',    row.loja_nome,      'imp-loja-nome');
+                applyStr('rodape',      row.rodape_notinha, 'imp-rodape');
+                applyStr('fontNome',    row.font_nome,      'imp-font-nome');
+                applyStr('fontTamanho', row.font_tamanho,   'imp-font-tamanho');
+                if (row.largura) {
+                    cfg.largura = String(row.largura); changed = true;
+                    var elL = document.getElementById('imp-largura');
+                    if (elL) elL.value = row.largura;
+                    document.querySelectorAll('.imp-largura-btn').forEach(function(b){
+                        b.classList.toggle('active', b.textContent.replace('mm','') === String(row.largura));
+                    });
+                }
+                applyBool('showCodigo',   row.show_codigo,   'imp-show-codigo',   null);
+                applyBool('showData',     row.show_data,     'imp-show-data',     null);
+                applyBool('showPrevisao', row.show_previsao, 'imp-show-previsao', 'imp-tog-previsao');
+                applyBool('showTotLoja',  row.show_tot_loja, 'imp-show-totloja',  null);
+                applyBool('showCelular',  row.show_celular,  'imp-show-celular',  null);
+                applyBool('showEndereco', row.show_endereco, 'imp-show-endereco', null);
+                applyBool('showSubtotal', row.show_subtotal, 'imp-show-subtotal', null);
+                applyBool('showPgto',     row.show_pgto,     'imp-show-pgto',     null);
+                if (changed) {
+                    localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
+                    impAtualizarPreview();
+                }
+            })();
             // Popula select com impressoras detectadas pelo assistente
             var sel=document.getElementById('imp-sel-sistema');
             if(sel && row.impressoras && row.impressoras.length){
