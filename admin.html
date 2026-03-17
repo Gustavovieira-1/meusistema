@@ -4560,7 +4560,7 @@ function renderOrders() {
 
             let textoBotao = 'Avançar';
             if (status === 'analise') textoBotao = 'Aceitar Pedido';
-            if (status === 'pronto')  textoBotao = 'Despachar';
+            if (status === 'pronto')  textoBotao = ((o.tipo||'').toLowerCase()==='retirada'||(o.tipo||'').toLowerCase()==='balcão'||(o.tipo||'').toLowerCase()==='balcao') ? 'Finalizar' : 'Despachar';
             if (status === 'entrega') textoBotao = 'Finalizar';
 
             // Descobre quantos pedidos esse cliente já fez (não cancelados)
@@ -4585,7 +4585,11 @@ function renderOrders() {
             var avancarCor = '#16a34a';
             var avancarIcon = 'fa-arrow-right';
             if (status === 'analise') { avancarCor = '#e30613'; avancarIcon = 'fa-check'; }
-            if (status === 'pronto')  { avancarCor = '#2563eb'; avancarIcon = 'fa-motorcycle'; }
+            if (status === 'pronto') {
+                var _tipoP = (o.tipo||'').toLowerCase();
+                if (_tipoP==='retirada'||_tipoP==='balcão'||_tipoP==='balcao') { avancarCor = '#16a34a'; avancarIcon = 'fa-flag-checkered'; }
+                else { avancarCor = '#2563eb'; avancarIcon = 'fa-motorcycle'; }
+            }
             if (status === 'entrega') { avancarCor = '#16a34a'; avancarIcon = 'fa-flag-checkered'; }
 
             var avancarBtn = (status !== 'finalizado' && status !== 'cancelado')
