@@ -4646,7 +4646,14 @@ function proximoPasso(id) {
     if (!order) return;
     const fluxo = ['analise', 'preparo', 'pronto', 'entrega', 'finalizado'];
     const idx   = fluxo.indexOf(order.status);
-    if (idx < fluxo.length - 1) updateOrderStatus(id, fluxo[idx + 1]);
+    if (idx < 0 || idx >= fluxo.length - 1) return;
+    // Retirada e Balcão pulam "entrega" e vão direto para finalizado
+    var tipo = (order.tipo || '').toLowerCase();
+    if (order.status === 'pronto' && (tipo === 'retirada' || tipo === 'balcão' || tipo === 'balcao')) {
+        updateOrderStatus(id, 'finalizado');
+    } else {
+        updateOrderStatus(id, fluxo[idx + 1]);
+    }
 }
 
 function cancelarPedido(id) {
