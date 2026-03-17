@@ -2543,6 +2543,35 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             </div>
         </div>
 
+        <!-- CONFIRMAÇÃO DE PEDIDO -->
+        <div style="background:white; border:1.5px solid #f1f5f9; border-radius:16px; padding:24px 28px; margin-bottom:20px;">
+            <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:4px;">Confirmação de pedido</div>
+            <div style="font-size:12px; color:#94a3b8; margin-bottom:16px;">Enviada automaticamente quando um novo pedido chega, com o resumo completo.</div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <div>
+                    <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:6px;">Chave PIX (opcional)</label>
+                    <input id="wpp-pix-chave" type="text" placeholder="CPF, CNPJ, e-mail, celular ou chave aleatória"
+                        style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; outline:none; transition:.15s;"
+                        onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:6px;">Nome do titular PIX (opcional)</label>
+                    <input id="wpp-pix-titular" type="text" placeholder="Ex: GUSTAVO ENRIQUE"
+                        style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; outline:none; transition:.15s;"
+                        onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:6px;">Rodapé da mensagem (opcional)</label>
+                    <input id="wpp-rodape" type="text" placeholder="Ex: Obrigado pela preferência! 🙏"
+                        style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; outline:none; transition:.15s;"
+                        onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <button onclick="wppSalvarConfirmacao()" style="width:fit-content; background:#25d366; color:white; border:none; border-radius:10px; padding:10px 22px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:7px; transition:.15s;" onmouseover="this.style.background='#1db954'" onmouseout="this.style.background='#25d366'">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+
         <!-- MENSAGENS POR STATUS -->
         <div style="background:white; border:1.5px solid #f1f5f9; border-radius:16px; padding:24px 28px; margin-bottom:20px;">
             <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:6px;">Mensagens por etapa</div>
@@ -4430,6 +4459,8 @@ function salvarPedidoPDV() {
         
         // 🔊 Tocar som quando novo pedido é criado no PDV
         tocarSomNotificacao();
+        // Envia confirmação WhatsApp
+        setTimeout(function() { wppEnviarConfirmacao(novoPedido); }, 800);
         
         // 💾 Salvar na Supabase
         supaSalvarPedido(novoPedido);
@@ -5481,6 +5512,9 @@ function wppInicializar() {
     set('wpp-msg-entrega',    msgs.entrega);
     set('wpp-msg-finalizado', msgs.finalizado);
     set('wpp-msg-cancelado',  msgs.cancelado);
+    set('wpp-pix-chave',   cfg.pixChave   || '');
+    set('wpp-pix-titular', cfg.pixTitular || '');
+    set('wpp-rodape',      cfg.rodape     || '');
     // Toggle ativar
     var tog = document.getElementById('wpp-tog-ativar');
     if (tog) { if (cfg.ativar) tog.classList.remove('off'); else tog.classList.add('off'); }
@@ -5649,6 +5683,151 @@ async function wppDesconectar() {
     } catch(e) {
         cupToast('Erro ao desconectar: ' + e.message, '#e30613');
     }
+}
+
+function wppSalvarConfirmacao() {
+    var cfg = wppGetConfig();
+    cfg.pixChave   = (document.getElementById('wpp-pix-chave')   ||{}).value || '';
+    cfg.pixTitular = (document.getElementById('wpp-pix-titular') ||{}).value || '';
+    cfg.rodape     = (document.getElementById('wpp-rodape')       ||{}).value || '';
+    wppSaveConfig(cfg);
+    cupToast('Configurações de confirmação salvas!', '#25d366');
+}
+
+function wppEnviarConfirmacao(order) {
+    // Só dispara se WhatsApp ativo
+    var cfg = wppGetConfig();
+    if (!cfg.ativar) return;
+    if (!order || !order.phone) return;
+
+    var impCfg  = impGetConfig();
+    var lojaCfg = cfgGetConfig();
+    var txCfg   = {};
+    try { txCfg = JSON.parse(localStorage.getItem('f_taxas_config') || '{}'); } catch(e) {}
+
+    var nomeLoja = lojaCfg.nomeMarca || impCfg.lojaNome || 'Restaurante';
+    var nomeCliente = (order.client || 'Cliente');
+    var pedidoId = order.id || '';
+
+    // Monta itens
+    var linhasItens = '';
+    var itens = order.items || [];
+    itens.forEach(function(item) {
+        linhasItens += '
+*' + (item.name || item.nome || '') + '*';
+        // Complementos
+        var comps = item.comps || item.complementos || [];
+        if (Array.isArray(comps) && comps.length) {
+            comps.forEach(function(c) {
+                var nomeComp = c.name || c.nome || (typeof c === 'string' ? c : '');
+                var precoComp = c.price || c.preco || 0;
+                if (nomeComp) linhasItens += '
+1x ' + nomeComp + ' - R$' + parseFloat(precoComp).toFixed(2).replace('.', ',');
+            });
+        }
+        var obs = item.obs || item.observacao || '';
+        linhasItens += '
+OBS: ' + (obs || 'Nenhuma');
+        linhasItens += '
+Quantidade: ' + (item.qty || item.quantidade || 1);
+        linhasItens += '
+Valor: R$' + parseFloat((item.price || item.preco || 0) * (item.qty || 1)).toFixed(2).replace('.', ',');
+        linhasItens += '
+------------------------------';
+    });
+
+    // Endereço
+    var endLine = '';
+    if (order.tipo === 'Entrega') {
+        var parts = [order.address, order.numero, order.bairro, order.cidade].filter(Boolean);
+        endLine = parts.join(', ');
+        if (order.complemento) endLine += ', Complemento: ' + order.complemento;
+    } else {
+        endLine = order.tipo || 'Retirada';
+    }
+
+    // Previsão
+    var prevLine = '';
+    if (order.previsao) prevLine = '
+Hora prevista: ' + order.previsao;
+
+    // PIX
+    var pixLine = '';
+    if (cfg.pixChave) {
+        pixLine = '
+Segue PIX para pagamento:
+Chave: ' + cfg.pixChave;
+        if (cfg.pixTitular) pixLine += ' (' + cfg.pixTitular + ')';
+    }
+
+    // Rodapé
+    var rodapeLine = cfg.rodape ? ('
+' + cfg.rodape) : '
+Obrigado!';
+
+    // Monta mensagem
+    var msg = nomeCliente + ' !
+';
+    msg += 'Seu pedido na *' + nomeLoja.toUpperCase() + '* foi recebido. 🎉
+';
+    msg += 'Aqui está o resumo do seu pedido:
+';
+    msg += 'Meu pedido #' + pedidoId + '
+';
+    msg += '------------------------------';
+    msg += linhasItens;
+    msg += '
+Nome: ' + nomeCliente;
+    msg += '
+------------------------------';
+    msg += '
+Celular: ' + (order.phone || '');
+    msg += '
+------------------------------';
+    msg += '
+Forma de Pagamento: ' + (order.pagamento || '');
+    msg += '
+------------------------------';
+    msg += '
+Endereço: ' + endLine;
+    msg += '
+------------------------------';
+    msg += '
+Subtotal: R$' + parseFloat(order.subtotal || order.total || 0).toFixed(2).replace('.', ',');
+    if (parseFloat(order.taxaEntrega || 0) > 0) {
+        msg += '
+Taxa de entrega: R$' + parseFloat(order.taxaEntrega).toFixed(2).replace('.', ',');
+    }
+    if (parseFloat(order.descontoCupom || 0) > 0) {
+        msg += '
+Desconto cupom: -R$' + parseFloat(order.descontoCupom).toFixed(2).replace('.', ',');
+    }
+    msg += '
+Valor Total: R$' + parseFloat(order.total || 0).toFixed(2).replace('.', ',');
+    msg += prevLine;
+    msg += pixLine;
+    msg += rodapeLine;
+
+    // Formata número
+    var num = (order.phone || '').replace(/\D/g, '');
+    if (num.length === 11 || num.length === 10) num = '55' + num;
+    if (!num) return;
+
+    var instancia = wppGetInstancia();
+    fetch(WPP_API_URL + '/instance/connectionState/' + instancia, {
+        headers: { 'apikey': WPP_API_KEY }
+    }).then(function(r){ return r.json(); }).then(function(data) {
+        var state = (data.instance && data.instance.state) || data.state || 'close';
+        if (state !== 'open') return;
+        return fetch(WPP_API_URL + '/message/sendText/' + instancia, {
+            method: 'POST',
+            headers: { 'apikey': WPP_API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ number: num, text: msg })
+        });
+    }).then(function(r) {
+        if (r && r.ok) console.log('[WPP] ✅ Confirmação enviada para ' + num);
+        else if (r) r.text().then(function(t){ console.warn('[WPP] Erro confirmação:', t); });
+    }).catch(function(e) { console.warn('[WPP] Falha confirmação:', e.message); });
 }
 
 // Mensagens padrão por status (usadas se o gestor não salvou mensagens personalizadas)
@@ -7429,8 +7608,11 @@ async function supaCarregarPedidos() {
             // 🔊 Tocar som se chegou novo pedido em análise
             if (pedidosNovos.length > 0) {
                 tocarSomNotificacao();
+                // Envia confirmação WhatsApp para cada pedido novo
+                pedidosNovos.forEach(function(o) {
+                    setTimeout(function() { wppEnviarConfirmacao(o); }, 800);
+                });
                 // Auto-aceitar: move direto para preparo se toggle ativo
-                // Lê do localStorage — fonte de verdade (div pode não existir no DOM)
                 var cfgAceitar = impGetConfig();
                 var aceitarOn = cfgAceitar.aceitar !== false;
                 if (aceitarOn) {
