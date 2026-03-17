@@ -5510,28 +5510,26 @@ function wppSaveConfig(obj) {
 async function wppSalvarSupabase(obj) {
     if (!REST_ID) return;
     var row = {
-        restaurante_id: REST_ID,
-        ativar:        obj.ativar        || false,
-        pix_chave:     obj.pixChave      || '',
-        pix_titular:   obj.pixTitular    || '',
-        rodape:        obj.rodape        || '',
-        msg_preparo:   (obj.mensagens && obj.mensagens.preparo)    || '',
-        msg_pronto:    (obj.mensagens && obj.mensagens.pronto)     || '',
-        msg_entrega:   (obj.mensagens && obj.mensagens.entrega)    || '',
-        msg_finalizado:(obj.mensagens && obj.mensagens.finalizado) || '',
-        msg_cancelado: (obj.mensagens && obj.mensagens.cancelado)  || '',
-        atualizado_em: new Date().toISOString()
+        ativar:         obj.ativar        || false,
+        pix_chave:      obj.pixChave      || '',
+        pix_titular:    obj.pixTitular    || '',
+        rodape:         obj.rodape        || '',
+        msg_preparo:    (obj.mensagens && obj.mensagens.preparo)    || '',
+        msg_pronto:     (obj.mensagens && obj.mensagens.pronto)     || '',
+        msg_entrega:    (obj.mensagens && obj.mensagens.entrega)    || '',
+        msg_finalizado: (obj.mensagens && obj.mensagens.finalizado) || '',
+        msg_cancelado:  (obj.mensagens && obj.mensagens.cancelado)  || '',
+        atualizado_em:  new Date().toISOString()
     };
     try {
-        await supaFetch('whatsapp_config', 'POST', row, {
-            headers: { 'Prefer': 'resolution=merge-duplicates' }
-        });
+        await supaUpsert('whatsapp_config', row, 'restaurante_id');
+        console.log('[WPP] Config salva no Supabase');
     } catch(e) { console.warn('[WPP] Erro ao salvar no Supabase:', e.message); }
 }
 async function wppCarregarSupabase() {
     if (!REST_ID) return;
     try {
-        var rows = await supaGet('whatsapp_config?restaurante_id=eq.' + REST_ID + '&limit=1');
+        var rows = await supaGet('whatsapp_config', 'limit=1');
         if (!rows || !rows.length) return;
         var r = rows[0];
         var cfg = wppGetConfig();
@@ -5547,6 +5545,7 @@ async function wppCarregarSupabase() {
             cancelado:  r.msg_cancelado  || ''
         };
         wppSaveConfig(cfg);
+        console.log('[WPP] Config carregada do Supabase');
     } catch(e) { console.warn('[WPP] Erro ao carregar do Supabase:', e.message); }
 }
 
