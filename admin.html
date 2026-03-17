@@ -5695,45 +5695,34 @@ function wppSalvarConfirmacao() {
 }
 
 function wppEnviarConfirmacao(order) {
-    // Só dispara se WhatsApp ativo
     var cfg = wppGetConfig();
     if (!cfg.ativar) return;
     if (!order || !order.phone) return;
 
     var impCfg  = impGetConfig();
     var lojaCfg = cfgGetConfig();
-    var txCfg   = {};
-    try { txCfg = JSON.parse(localStorage.getItem('f_taxas_config') || '{}'); } catch(e) {}
-
     var nomeLoja = lojaCfg.nomeMarca || impCfg.lojaNome || 'Restaurante';
-    var nomeCliente = (order.client || 'Cliente');
+    var nomeCliente = order.client || 'Cliente';
     var pedidoId = order.id || '';
 
     // Monta itens
     var linhasItens = '';
     var itens = order.items || [];
     itens.forEach(function(item) {
-        linhasItens += '
-*' + (item.name || item.nome || '') + '*';
-        // Complementos
+        linhasItens += '\n*' + (item.name || item.nome || '') + '*';
         var comps = item.comps || item.complementos || [];
         if (Array.isArray(comps) && comps.length) {
             comps.forEach(function(c) {
                 var nomeComp = c.name || c.nome || (typeof c === 'string' ? c : '');
                 var precoComp = c.price || c.preco || 0;
-                if (nomeComp) linhasItens += '
-1x ' + nomeComp + ' - R$' + parseFloat(precoComp).toFixed(2).replace('.', ',');
+                if (nomeComp) linhasItens += '\n1x ' + nomeComp + ' - R$' + parseFloat(precoComp).toFixed(2).replace('.', ',');
             });
         }
         var obs = item.obs || item.observacao || '';
-        linhasItens += '
-OBS: ' + (obs || 'Nenhuma');
-        linhasItens += '
-Quantidade: ' + (item.qty || item.quantidade || 1);
-        linhasItens += '
-Valor: R$' + parseFloat((item.price || item.preco || 0) * (item.qty || 1)).toFixed(2).replace('.', ',');
-        linhasItens += '
-------------------------------';
+        linhasItens += '\nOBS: ' + (obs || 'Nenhuma');
+        linhasItens += '\nQuantidade: ' + (item.qty || item.quantidade || 1);
+        linhasItens += '\nValor: R$' + parseFloat((item.price || item.preco || 0) * (item.qty || 1)).toFixed(2).replace('.', ',');
+        linhasItens += '\n------------------------------';
     });
 
     // Endereço
@@ -5746,69 +5735,42 @@ Valor: R$' + parseFloat((item.price || item.preco || 0) * (item.qty || 1)).toFix
         endLine = order.tipo || 'Retirada';
     }
 
-    // Previsão
-    var prevLine = '';
-    if (order.previsao) prevLine = '
-Hora prevista: ' + order.previsao;
-
     // PIX
     var pixLine = '';
     if (cfg.pixChave) {
-        pixLine = '
-Segue PIX para pagamento:
-Chave: ' + cfg.pixChave;
+        pixLine = '\nSegue PIX para pagamento:\nChave: ' + cfg.pixChave;
         if (cfg.pixTitular) pixLine += ' (' + cfg.pixTitular + ')';
     }
 
-    // Rodapé
-    var rodapeLine = cfg.rodape ? ('
-' + cfg.rodape) : '
-Obrigado!';
+    var rodapeLine = cfg.rodape ? ('\n' + cfg.rodape) : '\nObrigado!';
+    var prevLine = order.previsao ? ('\nHora prevista: ' + order.previsao) : '';
 
-    // Monta mensagem
-    var msg = nomeCliente + ' !
-';
-    msg += 'Seu pedido na *' + nomeLoja.toUpperCase() + '* foi recebido. 🎉
-';
-    msg += 'Aqui está o resumo do seu pedido:
-';
-    msg += 'Meu pedido #' + pedidoId + '
-';
+    var msg = nomeCliente + ' !\n';
+    msg += 'Seu pedido na *' + nomeLoja.toUpperCase() + '* foi recebido. 🎉\n';
+    msg += 'Aqui está o resumo do seu pedido:\n';
+    msg += 'Meu pedido #' + pedidoId + '\n';
     msg += '------------------------------';
     msg += linhasItens;
-    msg += '
-Nome: ' + nomeCliente;
-    msg += '
-------------------------------';
-    msg += '
-Celular: ' + (order.phone || '');
-    msg += '
-------------------------------';
-    msg += '
-Forma de Pagamento: ' + (order.pagamento || '');
-    msg += '
-------------------------------';
-    msg += '
-Endereço: ' + endLine;
-    msg += '
-------------------------------';
-    msg += '
-Subtotal: R$' + parseFloat(order.subtotal || order.total || 0).toFixed(2).replace('.', ',');
+    msg += '\nNome: ' + nomeCliente;
+    msg += '\n------------------------------';
+    msg += '\nCelular: ' + (order.phone || '');
+    msg += '\n------------------------------';
+    msg += '\nForma de Pagamento: ' + (order.pagamento || '');
+    msg += '\n------------------------------';
+    msg += '\nEndereço: ' + endLine;
+    msg += '\n------------------------------';
+    msg += '\nSubtotal: R$' + parseFloat(order.subtotal || order.total || 0).toFixed(2).replace('.', ',');
     if (parseFloat(order.taxaEntrega || 0) > 0) {
-        msg += '
-Taxa de entrega: R$' + parseFloat(order.taxaEntrega).toFixed(2).replace('.', ',');
+        msg += '\nTaxa de entrega: R$' + parseFloat(order.taxaEntrega).toFixed(2).replace('.', ',');
     }
     if (parseFloat(order.descontoCupom || 0) > 0) {
-        msg += '
-Desconto cupom: -R$' + parseFloat(order.descontoCupom).toFixed(2).replace('.', ',');
+        msg += '\nDesconto cupom: -R$' + parseFloat(order.descontoCupom).toFixed(2).replace('.', ',');
     }
-    msg += '
-Valor Total: R$' + parseFloat(order.total || 0).toFixed(2).replace('.', ',');
+    msg += '\nValor Total: R$' + parseFloat(order.total || 0).toFixed(2).replace('.', ',');
     msg += prevLine;
     msg += pixLine;
     msg += rodapeLine;
 
-    // Formata número
     var num = (order.phone || '').replace(/\D/g, '');
     if (num.length === 11 || num.length === 10) num = '55' + num;
     if (!num) return;
@@ -5825,19 +5787,10 @@ Valor Total: R$' + parseFloat(order.total || 0).toFixed(2).replace('.', ',');
             body: JSON.stringify({ number: num, text: msg })
         });
     }).then(function(r) {
-        if (r && r.ok) console.log('[WPP] ✅ Confirmação enviada para ' + num);
-        else if (r) r.text().then(function(t){ console.warn('[WPP] Erro confirmação:', t); });
+        if (r && r.ok) console.log('[WPP] Confirmação enviada para ' + num);
     }).catch(function(e) { console.warn('[WPP] Falha confirmação:', e.message); });
 }
 
-// Mensagens padrão por status (usadas se o gestor não salvou mensagens personalizadas)
-var WPP_MSGS_PADRAO = {
-    preparo:    'Olá, {nome}! 👨‍🍳 Seu pedido *{pedido}* está sendo preparado com carinho. Em breve estará pronto!',
-    pronto:     'Seu pedido *{pedido}* está pronto! ✅ Já estamos preparando para a entrega.',
-    entrega:    '🛵 Seu pedido *{pedido}* saiu para entrega! Fique de olho, logo chegará até você.',
-    finalizado: 'Obrigado, {nome}! 🙏 Seu pedido *{pedido}* foi finalizado. Até a próxima!',
-    cancelado:  'Olá, {nome}. Infelizmente seu pedido *{pedido}* foi cancelado. Entre em contato para mais informações.'
-};
 
 function wppDisparar(order, novoStatus) {
     // Lê sempre do localStorage (toggle pode não estar no DOM se usuário está em outra seção)
