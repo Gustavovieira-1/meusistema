@@ -2590,7 +2590,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
                         <span style="background:#f0fdf4; color:#16a34a; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;">Pronto</span>
                     </div>
-                    <textarea id="wpp-msg-pronto" rows="3" style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; resize:vertical; outline:none; transition:.15s;" onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">Seu pedido *{pedido}* está pronto! ✅ Já estamos preparando para a entrega.</textarea>
+                    <textarea id="wpp-msg-pronto" rows="3" style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; resize:vertical; outline:none; transition:.15s;" onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">Seu pedido *{pedido}* está pronto para retirada! ✅ Pode vir buscar.</textarea>
                 </div>
                 <!-- entrega -->
                 <div style="border:1.5px solid #f1f5f9; border-radius:12px; padding:16px 18px;">
@@ -5792,11 +5792,23 @@ function wppEnviarConfirmacao(order) {
 }
 
 
+// Mensagens padrão por status
+var WPP_MSGS_PADRAO = {
+    preparo:    'Olá, {nome}! 👨\u200d🍳 Seu pedido *{pedido}* está sendo preparado com carinho. Em breve estará pronto!',
+    pronto:     'Seu pedido *{pedido}* está pronto para retirada! ✅ Pode vir buscar.',
+    entrega:    '🛵 Seu pedido *{pedido}* saiu para entrega! Fique de olho, logo chegará até você.',
+    finalizado: 'Obrigado, {nome}! 🙏 Seu pedido *{pedido}* foi finalizado. Até a próxima!',
+    cancelado:  'Olá, {nome}. Infelizmente seu pedido *{pedido}* foi cancelado. Entre em contato para mais informações.'
+};
+
 function wppDisparar(order, novoStatus) {
     // Lê sempre do localStorage (toggle pode não estar no DOM se usuário está em outra seção)
     var cfg = wppGetConfig();
     if (!cfg.ativar) return;
     if (!order || !order.phone) return;
+
+    // "Pronto" só dispara para pedidos de Retirada — entrega não precisa desta etapa
+    if (novoStatus === 'pronto' && (order.tipo || '').toLowerCase() !== 'retirada') return;
 
     // Pega mensagem salva ou usa padrão
     var msgs = cfg.mensagens || {};
