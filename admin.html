@@ -520,6 +520,18 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
     <div class="bloqueio-card">
         <div class="bloqueio-icon">🔒</div>
         <div class="bloqueio-titulo">Seu acesso foi suspenso</div>
+        <p class="bloqueio-sub">Seu período de teste gratuito encerrou ou há uma pendência no seu plano. Assine agora para continuar usando o sistema.</p>
+        <div class="bloqueio-badge">⏰ <span id="bloqueio-msg">Trial encerrado</span></div>
+        <a href="https://zirafood.com.br/cadastro" class="bloqueio-btn" target="_blank">🚀 Assinar agora</a>
+        <button class="bloqueio-btn-sec" onclick="authFazerLogout()">Sair da conta</button>
+    </div>
+</div>
+
+<!-- TELA DE BLOQUEIO TRIAL/INADIMPLENTE -->
+<div id="tela-bloqueio">
+    <div class="bloqueio-card">
+        <div class="bloqueio-icon">🔒</div>
+        <div class="bloqueio-titulo">Seu acesso foi suspenso</div>
         <p class="bloqueio-sub">
             Seu período de teste gratuito encerrou ou há uma pendência no seu plano.<br>
             Assine agora para continuar usando o sistema.
@@ -527,7 +539,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
         <div class="bloqueio-badge">
             <span>⏰</span> <span id="bloqueio-msg">Trial encerrado</span>
         </div>
-        <a href="#" class="bloqueio-btn" onclick="irParaPlanos()">
+        <a href="https://zirafood.com.br/cadastro" class="bloqueio-btn" target="_blank">
             🚀 Assinar agora
         </a>
         <button class="bloqueio-btn-sec" onclick="authFazerLogout()">
@@ -622,7 +634,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 
         <div class="nav-section-label">Cardápio</div>
 
-        <button class="nav-btn" id="btn-nav-produtos" onclick="showSec('produtos', this)">
+        <button class="nav-btn active" id="btn-nav-produtos" onclick="showSec('produtos', this)">
             <i class="fas fa-book-open nav-icon"></i> Editor de Cardápio
         </button>
         <button class="nav-btn" onclick="showSec('complementos', this)">
@@ -1160,7 +1172,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
     </div>
 
     <!-- CARDÁPIO -->
-    <div id="sec-produtos" class="section">
+    <div id="sec-produtos" class="section active">
         <div class="header-flex">
             <h1>Cardápio</h1>
             <div style="display:flex;gap:10px;align-items:center;">
@@ -3139,53 +3151,54 @@ function inicializarSistema() {
     // 🧹 Aplicar limpeza a cada minuto (após pedidos estarem carregados)
     setInterval(cfgAplicarLimpeza, 60000);
     
-    // 🔄 Renovar token a cada 45 minutos (token expira em 1h, margem de segurança)
-    setInterval(authRenovarToken, 45 * 60 * 1000);
+    // 🔄 Renovar token a cada 50 minutos (antes de expirar em 1 hora)
+    setInterval(authRenovarToken, 50 * 60 * 1000);
     // Renova imediatamente ao carregar (caso já esteja próximo de expirar)
     setTimeout(authRenovarToken, 3000);
-    // Verificação extra: a cada 10 minutos checa se o token foi salvo há mais de 50min
-    setInterval(function() {
-        try {
-            var sess = JSON.parse(localStorage.getItem('supa_session') || '{}');
-            var idadeSessao = Date.now() - (sess.salvoEm || 0);
-            // Se token foi salvo há mais de 50 minutos, renova preventivamente
-            if (idadeSessao > 50 * 60 * 1000) {
-                authRenovarToken();
-            }
-        } catch(e) {}
-    }, 10 * 60 * 1000);
     // 📚 Pré-carregar histórico do Supabase em segundo plano (fonte permanente)
     setTimeout(function() { histCarregarDoSupabase(); }, 8000);
     // Re-sincroniza a cada hora (invalida o cache e busca dados novos)
     setInterval(function() { histCarregarDoSupabase(true); }, 3600000);
-    // Reenviar pendentes que falharam em sessões anteriores
-    setTimeout(function() {
-        try {
-            var pendentes = JSON.parse(localStorage.getItem('f_hist_pendentes') || '[]');
-            if (!pendentes.length) return;
-            console.log('[HistPendentes] Reenviando ' + pendentes.length + ' pedidos pendentes...');
-            var copiaPendentes = pendentes.slice();
-            localStorage.removeItem('f_hist_pendentes');
-            copiaPendentes.forEach(function(p) {
-                supaHistUpsert(p).catch(function(e){ console.warn('[HistPendentes]', e.message); });
-            });
-        } catch(e) { console.warn('[HistPendentes] Erro:', e.message); }
-    }, 12000);
-
-    // 🔁 Restaurar última seção visitada — imediato, sem flash de outra tela
-    (function() {
-        try {
-            var lastSec = localStorage.getItem('f_last_sec') || 'gestor';
-            var navBtn = document.querySelector('[onclick*="showSec(\'' + lastSec + '\'"]');
-            showSec(lastSec, navBtn || null);
-        } catch(e) {
-            showSec('gestor', null);
-        }
-    })();
 }
 
 
 // ── VERIFICAÇÃO DE BLOQUEIO TRIAL ──────────────────────────
+async function verificarBloqueio() {
+    if (!REST_ID) return false;
+    try {
+        const r = await fetch(SUPA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + REST_ID + '&select=status_pgto,vencimento&limit=1', {
+            headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_TOKEN }
+        });
+        const data = await r.json();
+        if (!data || data.length === 0) return false;
+
+        const pgto = data[0];
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
+        const status = pgto.status_pgto;
+
+        // Bloqueado se: inadimplente, cancelado, ou trial/trial vencido
+        if (status === 'inadimplente' || status === 'cancelado') {
+            mostrarBloqueio('Pagamento pendente');
+            return true;
+        }
+        if ((status === 'trial') && venc && hoje > venc) {
+            const dias = Math.floor((hoje - venc) / 86400000);
+            mostrarBloqueio('Trial encerrado há ' + dias + ' dia' + (dias > 1 ? 's' : ''));
+            return true;
+        }
+        return false;
+    } catch(e) {
+        console.warn('Erro ao verificar bloqueio:', e);
+        return false;
+    }
+}
+
+function mostrarBloqueio(msg) {
+    document.getElementById('bloqueio-msg').textContent = msg;
+    document.getElementById('tela-bloqueio').classList.add('ativo');
+}
+
 
 // ── VERIFICAÇÃO DE BLOQUEIO TRIAL ──────────────────────────
 async function verificarBloqueio() {
@@ -3376,9 +3389,6 @@ function showSec(id, btn) {
 
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-
-    // Salva a seção atual para restaurar após F5
-    try { localStorage.setItem('f_last_sec', id); } catch(e) {}
 
     if (id === 'gestor')           renderOrders();
     if (id === 'produtos')         { renderCategories(); renderProds(); }
@@ -7136,69 +7146,37 @@ async function authLogout() {
 }
 
 function authSalvarSessao(token, restId, nomeUsuario, role, refreshToken) {
-    // Nunca sobrescreve um refresh_token existente com vazio
-    var existente = '';
-    try { existente = JSON.parse(localStorage.getItem('supa_session') || '{}').refresh_token || ''; } catch(e) {}
     localStorage.setItem('supa_session', JSON.stringify({
         token, restId, nomeUsuario, role,
-        refresh_token: refreshToken || existente || '',
+        refresh_token: refreshToken || '',
         salvoEm: Date.now()
     }));
 }
 
 // 🔄 Renovar token automaticamente a cada 50 minutos
-// 🔄 Renovar token automaticamente a cada 50 minutos
-var _renovacaoFalhas = 0; // contador de falhas consecutivas
 async function authRenovarToken() {
     try {
         const raw = localStorage.getItem('supa_session');
         if (!raw) return;
         const sess = JSON.parse(raw);
-        const refreshTk = sess.refresh_token || '';
-
-        // Sem refresh_token: não consegue renovar silenciosamente
-        if (!refreshTk) {
-            console.warn('[AUTH] Sem refresh_token — sessão não pode ser renovada automaticamente');
-            return;
-        }
-
+        const refreshTk = sess.refresh_token || sess.token;
+        if (!refreshTk) return;
+        console.log('[AUTH] Renovando token...');
         const r = await fetch(SUPA_URL + '/auth/v1/token?grant_type=refresh_token', {
             method: 'POST',
             headers: { 'apikey': SUPA_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ refresh_token: refreshTk })
         });
-
         if (!r.ok) {
-            _renovacaoFalhas++;
-            console.warn('[AUTH] Falha ao renovar token (tentativa ' + _renovacaoFalhas + ')');
-            // Após 3 falhas consecutivas, tenta relogar com as credenciais salvas
-            if (_renovacaoFalhas >= 3) {
-                console.warn('[AUTH] 3 falhas — sessão pode estar comprometida mas sistema continua rodando');
-                _renovacaoFalhas = 0;
-            }
-            return;
+            console.warn('[AUTH] Falha ao renovar — fazendo login novamente em breve');
+            return; // Não faz logout, deixa o usuário continuar
         }
-
         const data = await r.json();
-        if (!data.access_token) {
-            console.warn('[AUTH] Resposta sem access_token');
-            return;
-        }
-
-        // Atualiza token em memória E no localStorage
+        if (!data.access_token) return;
         SUPA_TOKEN = data.access_token;
-        authSalvarSessao(
-            data.access_token,
-            sess.restId,
-            sess.nomeUsuario,
-            sess.role,
-            data.refresh_token || refreshTk  // Supabase pode rotar o refresh_token
-        );
-        _renovacaoFalhas = 0;
+        authSalvarSessao(data.access_token, sess.restId, sess.nomeUsuario, sess.role, data.refresh_token || refreshTk);
         console.log('[AUTH] ✅ Token renovado com sucesso');
-
     } catch(e) {
-        _renovacaoFalhas++;
         console.warn('[AUTH] Erro ao renovar token:', e.message);
     }
 }
@@ -7632,11 +7610,13 @@ function histSalvar(lista) {
  *  Retorna Promise<Array> com todos os pedidos do histórico. */
 async function histCarregarDoSupabase(forcar) {
     if (!REST_ID) return histGetTodos();
+    // Evita recargas desnecessárias (TTL de 5 minutos, a menos que forçado)
     var agora = Date.now();
     if (!forcar && _histCache !== null && (agora - _histCarregadoEm) < 300000) {
         return histGetTodos();
     }
     if (_histCarregando) {
+        // Aguarda o carregamento em curso (poll a cada 200ms, máx 10s)
         return new Promise(function(resolve) {
             var t = 0;
             var iv = setInterval(function() {
@@ -7647,68 +7627,59 @@ async function histCarregarDoSupabase(forcar) {
     }
     _histCarregando = true;
     try {
-        // ── FONTE PRIMÁRIA: tabela pedidos com status=finalizado ──
-        // Esta tabela sempre tem todos os pedidos finalizados e nunca perde dados.
+        // Busca todos os registros do Supabase (sem limite de data)
         var rows = await supaReq('GET',
-            'pedidos?restaurante_id=eq.' + REST_ID +
-            '&status=eq.finalizado' +
-            '&select=*&order=finalizado_em.desc.nullslast&limit=10000',
+            'historico_pedidos?restaurante_id=eq.' + REST_ID +
+            '&select=dados,finalizado_em&order=finalizado_em.desc&limit=10000',
             null
         );
         if (rows && rows.length) {
             var doSupa = rows.map(function(r) {
-                var itens = r.itens || [];
-                if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
-                return {
-                    id:               r.numero || r.id,
-                    _supa_id:         r.id,
-                    client:           r.cliente,
-                    phone:            r.telefone,
-                    address:          r.endereco,
-                    bairro:           r.bairro,
-                    complemento:      r.complemento || '',
-                    cidade:           r.cidade || '',
-                    tipo:             r.tipo,
-                    pagamento:        r.pagamento,
-                    troco:            r.troco,
-                    subtotal:         r.subtotal || r.total,
-                    taxaEntrega:      r.taxa_entrega || 0,
-                    descontoCupom:    r.desconto_cupom || 0,
-                    descontoPontos:   r.desconto_pontos || 0,
-                    cupom:            r.cupom || '',
-                    produtoBrindeNome: r.produto_brinde_nome || '',
-                    produtoBrindeId:   r.produto_brinde_id   || '',
-                    total:            r.total,
-                    status:           r.status,
-                    items:            itens,
-                    timestamp:        r.criado_em,
-                    finalizadoEm:     r.finalizado_em || r.criado_em
-                };
+                var d;
+                if (typeof r.dados === 'string') {
+                    if (!r.dados || r.dados === 'undefined' || r.dados === 'null') return null;
+                    try { d = JSON.parse(r.dados); } catch(e) { return null; }
+                } else {
+                    d = r.dados || null;
+                }
+                if (!d) return null;
+                d.finalizadoEm = d.finalizadoEm || r.finalizado_em;
+                return d;
             }).filter(function(d){ return d && d.id; });
 
-            // Mescla com localStorage: mantém pedidos recém-finalizados ainda não no Supabase
+            // Supabase é fonte de verdade absoluta.
+            // Do localStorage só aproveitamos pedidos que ainda não chegaram ao Supabase
+            // (finalizados nesta sessão mas ainda não sincronizados = mais recentes que tudo no Supabase).
             var mapa = {};
             doSupa.forEach(function(o){ mapa[o.id] = o; });
             var local = [];
             try { local = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
+            // Só adiciona do localStorage IDs que o Supabase não retornou
+            // E que têm timestamp >= ao mais recente do Supabase (recém-finalizados)
+            var ultimoSupa = doSupa.reduce(function(max, o) {
+                var t = o.finalizadoEm || o.timestamp || '';
+                return t > max ? t : max;
+            }, '');
             local.forEach(function(o) {
-                if (!o || !o.id || mapa[o.id]) return;
-                mapa[o.id] = o; // pedido recém-finalizado ainda não chegou ao Supabase
+                if (mapa[o.id]) return;
+                var t = o.finalizadoEm || o.timestamp || '';
+                if (!ultimoSupa || t >= ultimoSupa) mapa[o.id] = o;
             });
-
             _histCache = Object.values(mapa);
             _histCarregadoEm = agora;
+            // Substitui localStorage com exatamente o que veio do Supabase (elimina lixo antigo)
             histSalvar(_histCache);
-            console.log('[Histórico] Carregado de pedidos: ' + doSupa.length + ' finalizados');
+            console.log('[Histórico] Carregado do Supabase: ' + _histCache.length + ' registros');
         } else {
-            // Fallback: localStorage
+            // Supabase vazio ou sem resposta: usa localStorage como cache
             var local2 = [];
             try { local2 = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
             _histCache = local2;
             _histCarregadoEm = agora;
         }
     } catch(e) {
-        console.warn('[Histórico] Erro ao carregar:', e.message);
+        console.warn('[Histórico] Erro ao carregar do Supabase:', e.message);
+        // Em caso de erro, mantém localStorage como cache
         if (_histCache === null) {
             try { _histCache = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e2) { _histCache = []; }
         }
@@ -7745,46 +7716,21 @@ async function supaHistUpsert(pedido) {
     var dadosStr;
     try { dadosStr = JSON.stringify(pedido); } catch(e) { console.warn('[HistUpsert] Erro ao serializar pedido:', e.message); return; }
     if (!dadosStr || dadosStr === 'undefined') { console.warn('[HistUpsert] dados inválidos para pedido', pedido.id); return; }
-
-    // Tenta com SUPA_TOKEN primeiro, fallback para SUPA_KEY
-    var tentativas = [SUPA_TOKEN, SUPA_KEY].filter(Boolean);
-    for (var i = 0; i < tentativas.length; i++) {
-        var tok = tentativas[i];
-        var resp = await fetch(SUPA_URL + '/rest/v1/historico_pedidos?on_conflict=pedido_id,restaurante_id', {
-            method: 'POST',
-            headers: {
-                'apikey':        SUPA_KEY,
-                'Authorization': 'Bearer ' + tok,
-                'Content-Type':  'application/json',
-                'Prefer':        'return=minimal,resolution=merge-duplicates'
-            },
-            body: JSON.stringify({
-                restaurante_id: REST_ID,
-                pedido_id:      pedido.id,
-                dados:          dadosStr,
-                finalizado_em:  pedido.finalizadoEm || nowLocalISO()
-            })
-        });
-        if (resp.ok) {
-            console.log('[HistUpsert] ✅ Salvo no Supabase:', pedido.id);
-            return;
-        }
-        var errTxt = await resp.text().catch(function(){ return ''; });
-        console.warn('[HistUpsert] Tentativa ' + (i+1) + ' falhou (' + resp.status + '):', errTxt);
-        // Se for erro de auth (401/403), tenta renovar token antes da próxima tentativa
-        if ((resp.status === 401 || resp.status === 403) && i === 0) {
-            await authRenovarToken().catch(function(){});
-            tentativas[1] = SUPA_TOKEN || SUPA_KEY; // usa token renovado
-        }
-    }
-    // Salva no localStorage como pendente para reenvio
-    try {
-        var pendentes = JSON.parse(localStorage.getItem('f_hist_pendentes') || '[]');
-        var idx = pendentes.findIndex(function(p){ return p.id === pedido.id; });
-        if (idx >= 0) pendentes[idx] = pedido; else pendentes.push(pedido);
-        localStorage.setItem('f_hist_pendentes', JSON.stringify(pendentes));
-        console.warn('[HistUpsert] ⚠️ Salvo como pendente para reenvio:', pedido.id);
-    } catch(e2) {}
+    await fetch(SUPA_URL + '/rest/v1/historico_pedidos?on_conflict=pedido_id,restaurante_id', {
+        method: 'POST',
+        headers: {
+            'apikey':        SUPA_KEY,
+            'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
+            'Content-Type':  'application/json',
+            'Prefer':        'return=minimal,resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+            restaurante_id: REST_ID,
+            pedido_id:      pedido.id,
+            dados:          dadosStr,
+            finalizado_em:  pedido.finalizadoEm || nowLocalISO()
+        })
+    });
 }
 
 // histGetTodos() já faz merge automático com kanban — migração explícita desnecessária
@@ -9846,34 +9792,6 @@ async function cfgAlterarSenha() {
         document.getElementById('cfg-senha-nova').value     = '';
         document.getElementById('cfg-senha-confirma').value = '';
 
-        // Salva nova senha na coluna senha para o superadmin visualizar
-        if (REST_ID) {
-            fetch(SUPA_URL + '/rest/v1/usuarios?restaurante_id=eq.' + REST_ID, {
-                method: 'PATCH',
-                headers: {
-                    'apikey': SUPA_KEY,
-                    'Authorization': 'Bearer ' + SUPA_TOKEN,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ senha: nova })
-            }).catch(() => {});
-        }
-
-        // Salva nova senha na tabela usuarios para o superadmin
-        if (REST_ID) {
-            fetch(SUPA_URL + '/rest/v1/usuarios?restaurante_id=eq.' + REST_ID, {
-                method: 'PATCH',
-                headers: {
-                    'apikey': SUPA_KEY,
-                    'Authorization': 'Bearer ' + SUPA_TOKEN,
-                    'Content-Type': 'application/json',
-                    'Prefer': 'return=minimal'
-                },
-                body: JSON.stringify({ senha: nova })
-            }).catch(() => {});
-        }
-
     } catch(e) {
         mostrarMsg(e.message || 'Erro ao alterar senha.', false);
     }
@@ -9929,10 +9847,6 @@ async function cfgAlterarSenha() {
 
 </div><!-- /app-wrapper -->
 <script>
-function irParaPlanos() {
-    const rid = REST_ID || '';
-    window.open('https://zirafood.com.br/planos?rid=' + rid, '_blank');
-}
 document.addEventListener("keydown",function(e){if(e.key==="F12"||(e.ctrlKey&&e.shiftKey&&["I","J","C"].includes(e.key))||(e.ctrlKey&&e.key==="u")||(e.ctrlKey&&e.key==="s")){e.preventDefault();return false;}});
 document.addEventListener("contextmenu",function(e){e.preventDefault();});
 document.addEventListener("selectstart",function(e){e.preventDefault();});
