@@ -5660,9 +5660,12 @@ var WPP_MSGS_PADRAO = {
 };
 
 function wppDisparar(order, novoStatus) {
-    // Só dispara se WhatsApp ativo
-    var cfg = wppGetConfig();
-    if (!cfg.ativar) return;
+    // Verifica toggle ativo — lê do DOM se disponível, senão do localStorage
+    var togEl = document.getElementById('wpp-tog-ativar');
+    var ativar = togEl ? !togEl.classList.contains('off') : (wppGetConfig().ativar === true);
+    // DEBUG temporário
+    cupToast('[WPP] disparando: ativar=' + ativar + ' status=' + novoStatus + ' fone=' + (order&&order.phone), ativar);
+    if (!ativar) return;
     if (!order || !order.phone) return;
 
     // Pega mensagem salva ou usa padrão
