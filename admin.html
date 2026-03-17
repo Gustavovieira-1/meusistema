@@ -622,7 +622,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 
         <div class="nav-section-label">Cardápio</div>
 
-        <button class="nav-btn" id="btn-nav-produtos" onclick="showSec('produtos', this)">
+        <button class="nav-btn active" id="btn-nav-produtos" onclick="showSec('produtos', this)">
             <i class="fas fa-book-open nav-icon"></i> Editor de Cardápio
         </button>
         <button class="nav-btn" onclick="showSec('complementos', this)">
@@ -3177,16 +3177,16 @@ function inicializarSistema() {
         } catch(e) { console.warn('[HistPendentes] Erro:', e.message); }
     }, 12000); // 12s após login, depois do token já renovado
 
-    // 🔁 Restaurar última seção visitada após F5 — imediato, sem flash
-    (function() {
+    // 🔁 Restaurar última seção visitada após F5
+    setTimeout(function() {
         try {
-            var lastSec = localStorage.getItem('f_last_sec') || 'gestor';
-            var navBtn = document.querySelector('[onclick*="showSec(\'' + lastSec + '\''"]');
+            var lastSec = localStorage.getItem('f_last_sec');
+            if (!lastSec || lastSec === 'produtos') return; // produtos é o padrão, não precisa restaurar
+            // Encontra o botão nav correspondente para marcar como ativo
+            var navBtn = document.querySelector('[onclick*="showSec(\'' + lastSec + '\'"]');
             showSec(lastSec, navBtn || null);
-        } catch(e) {
-            showSec('gestor', null);
-        }
-    })();
+        } catch(e) {}
+    }, 200);
 }
 
 
