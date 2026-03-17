@@ -4911,8 +4911,11 @@ function impSalvar() {
     if ((gv = c('imp-show-endereco')) !== null) cfg.showEndereco = gv;
     if ((gv = c('imp-show-subtotal')) !== null) cfg.showSubtotal = gv;
     if ((gv = c('imp-show-pgto'))     !== null) cfg.showPgto     = gv;
-    if ((gv = g('imp-font-nome'))     !== null) cfg.fontNome     = gv || 'Courier New';
-    if ((gv = g('imp-font-tamanho'))  !== null) cfg.fontTamanho  = String(gv || '8');
+    // Fonte: lê DIRETAMENTE do DOM (não do localStorage que pode estar desatualizado)
+    var _selFn = document.getElementById('imp-font-nome');
+    var _selFt = document.getElementById('imp-font-tamanho');
+    cfg.fontNome    = (_selFn && _selFn.value) ? _selFn.value : (cfg.fontNome || 'Courier New');
+    cfg.fontTamanho = (_selFt && _selFt.value) ? String(_selFt.value) : String(cfg.fontTamanho || '8');
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
     // Salva configs de impressão no Supabase via configuracoes.dados_extras
     if (REST_ID) {
@@ -5405,6 +5408,15 @@ function impAtualizarPreview() {
     sv('showEndereco', 'imp-show-endereco');
     sv('showSubtotal', 'imp-show-subtotal');
     sv('showPgto',     'imp-show-pgto');
+    // Também salva fonte e rodapé do DOM para não perder o que o Supabase carregou
+    var _fn = document.getElementById('imp-font-nome');
+    var _ft = document.getElementById('imp-font-tamanho');
+    var _rd = document.getElementById('imp-rodape');
+    var _ln = document.getElementById('imp-loja-nome');
+    if (_fn && _fn.value) cfgSave.fontNome    = _fn.value;
+    if (_ft && _ft.value) cfgSave.fontTamanho = String(_ft.value);
+    if (_rd)              cfgSave.rodape      = _rd.value;
+    if (_ln)              cfgSave.lojaNome    = _ln.value;
     localStorage.setItem(IMP_KEY, JSON.stringify(cfgSave));
 }
 
