@@ -5650,15 +5650,25 @@ async function wppDesconectar() {
     }
 }
 
+// Mensagens padrão por status (usadas se o gestor não salvou mensagens personalizadas)
+var WPP_MSGS_PADRAO = {
+    preparo:    'Olá, {nome}! 👨‍🍳 Seu pedido *{pedido}* está sendo preparado com carinho. Em breve estará pronto!',
+    pronto:     'Seu pedido *{pedido}* está pronto! ✅ Já estamos preparando para a entrega.',
+    entrega:    '🛵 Seu pedido *{pedido}* saiu para entrega! Fique de olho, logo chegará até você.',
+    finalizado: 'Obrigado, {nome}! 🙏 Seu pedido *{pedido}* foi finalizado. Até a próxima!',
+    cancelado:  'Olá, {nome}. Infelizmente seu pedido *{pedido}* foi cancelado. Entre em contato para mais informações.'
+};
+
 function wppDisparar(order, novoStatus) {
-    // Só dispara se WhatsApp ativo e conectado
+    // Só dispara se WhatsApp ativo
     var cfg = wppGetConfig();
-    if (!cfg.ativar || !cfg.conectado) return;
+    if (!cfg.ativar) return;
     if (!order || !order.phone) return;
 
+    // Pega mensagem salva ou usa padrão
     var msgs = cfg.mensagens || {};
-    var template = msgs[novoStatus] || '';
-    if (!template) return; // sem mensagem configurada para esse status
+    var template = msgs[novoStatus] || WPP_MSGS_PADRAO[novoStatus] || '';
+    if (!template) return;
 
     // Substitui variáveis
     var nome   = (order.client || '').split(' ')[0] || 'Cliente';
@@ -5671,15 +5681,24 @@ function wppDisparar(order, novoStatus) {
     if (!num) return;
 
     var instancia = wppGetInstancia();
-    fetch(WPP_API_URL + '/message/sendText/' + instancia, {
-        method: 'POST',
-        headers: { 'apikey': WPP_API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ number: num, text: texto })
+
+    // Verifica se está conectado antes de enviar
+    fetch(WPP_API_URL + '/instance/connectionState/' + instancia, {
+        headers: { 'apikey': WPP_API_KEY }
+    }).then(function(r){ return r.json(); }).then(function(data) {
+        var state = (data.instance && data.instance.state) || data.state || 'close';
+        if (state !== 'open') { console.warn('[WPP] Instância não conectada, estado:', state); return; }
+        // Envia a mensagem
+        return fetch(WPP_API_URL + '/message/sendText/' + instancia, {
+            method: 'POST',
+            headers: { 'apikey': WPP_API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ number: num, text: texto })
+        });
     }).then(function(r) {
-        if (r.ok) console.log('[WPP] Mensagem enviada para ' + num + ' (' + novoStatus + ')');
-        else r.text().then(function(t){ console.warn('[WPP] Erro:', t); });
+        if (r && r.ok) console.log('[WPP] ✅ Mensagem enviada para ' + num + ' (' + novoStatus + ')');
+        else if (r) r.text().then(function(t){ console.warn('[WPP] Erro ao enviar:', t); });
     }).catch(function(e) {
-        console.warn('[WPP] Falha ao enviar:', e.message);
+        console.warn('[WPP] Falha:', e.message);
     });
 }
 
