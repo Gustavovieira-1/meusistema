@@ -5493,6 +5493,7 @@ function wppToggleAtivar(el) {
     if (on) el.classList.remove('off'); else el.classList.add('off');
     var cfg = wppGetConfig(); cfg.ativar = on; wppSaveConfig(cfg);
     cupToast(on ? 'Disparos WhatsApp ativados!' : 'Disparos WhatsApp desativados.', on ? '#25d366' : '#64748b');
+    console.log('[WPP] Toggle ativar salvo:', on, 'key:', WPP_KEY + '_' + (REST_ID||'x'));
 }
 
 function wppSalvarMensagens() {
@@ -5660,12 +5661,9 @@ var WPP_MSGS_PADRAO = {
 };
 
 function wppDisparar(order, novoStatus) {
-    // Verifica toggle ativo — lê do DOM se disponível, senão do localStorage
-    var togEl = document.getElementById('wpp-tog-ativar');
-    var ativar = togEl ? !togEl.classList.contains('off') : (wppGetConfig().ativar === true);
-    // DEBUG temporário
-    cupToast('[WPP] disparando: ativar=' + ativar + ' status=' + novoStatus + ' fone=' + (order&&order.phone), ativar);
-    if (!ativar) return;
+    // Lê sempre do localStorage (toggle pode não estar no DOM se usuário está em outra seção)
+    var cfg = wppGetConfig();
+    if (!cfg.ativar) return;
     if (!order || !order.phone) return;
 
     // Pega mensagem salva ou usa padrão
