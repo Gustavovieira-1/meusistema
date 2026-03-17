@@ -1772,15 +1772,20 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             </div>
             <div>
                 <label style="display:block; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.4px; margin-bottom:7px;">
-                    <i class="fas fa-link" style="color:#64748b; margin-right:4px;"></i>Link personalizado do cardápio
+                    <i class="fas fa-link" style="color:#64748b; margin-right:4px;"></i>Link do cardápio
                 </label>
-                <div style="display:flex; align-items:center; border:1.5px solid #e2e8f0; border-radius:10px; overflow:hidden; height:40px; box-sizing:border-box;"
+                <div style="display:flex; align-items:center; border:1.5px solid #e2e8f0; border-radius:10px; overflow:hidden; height:40px; box-sizing:border-box; background:#f8fafc;"
                      id="cfg-link-wrap">
-                    <span style="padding:0 12px; background:#f8fafc; color:#94a3b8; font-size:12px; font-weight:600; white-space:nowrap; border-right:1.5px solid #e2e8f0; line-height:40px;">Link do seu site</span>
-                    <input id="cfg-link-slug" type="text" placeholder="https://seusite.com.br"
-                        style="flex:1; height:40px; padding:0 12px; border:none; outline:none; font-size:13px; color:#1e293b; font-family:inherit; background:white; box-sizing:border-box; line-height:40px; vertical-align:middle;"
-                        onfocus="document.getElementById('cfg-link-wrap').style.borderColor='#e30613'" onblur="document.getElementById('cfg-link-wrap').style.borderColor='#e2e8f0'">
+                    <input id="cfg-link-slug" type="text" readonly placeholder="Carregando..."
+                        style="flex:1; height:40px; padding:0 14px; border:none; outline:none; font-size:13px; color:#475569; font-family:inherit; background:#f8fafc; box-sizing:border-box; cursor:default;">
+                    <button onclick="(function(){ var v=document.getElementById('cfg-link-slug').value; if(!v)return; navigator.clipboard.writeText(v).then(function(){ var b=document.getElementById('cfg-copy-btn'); b.innerHTML='<i class='fas fa-check'></i> Copiado!'; b.style.color='#16a34a'; setTimeout(function(){ b.innerHTML='<i class='fas fa-copy'></i> Copiar'; b.style.color='#e30613'; },2000); }); })()"
+                        id="cfg-copy-btn" type="button"
+                        style="flex-shrink:0; height:40px; padding:0 16px; border:none; border-left:1.5px solid #e2e8f0; background:#fff; color:#e30613; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; white-space:nowrap; transition:.15s;"
+                        onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='#fff'">
+                        <i class="fas fa-copy"></i> Copiar
+                    </button>
                 </div>
+                <div style="font-size:11px; color:#94a3b8; margin-top:5px;"><i class="fas fa-lock" style="font-size:10px; margin-right:3px;"></i>Este link é fixo e não pode ser alterado.</div>
             </div>
         </div>
 
@@ -3348,17 +3353,29 @@ setInterval(aplicarStatusLoja, 60000);
 
 function abrirCardapioOnline(e) {
     e.preventDefault();
+    // Tenta primeiro pelo localStorage (já populado pelo supaCarregarConfigs)
     try {
         var cfg  = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
         var link = (cfg.linkSlug || '').trim();
         if (link) {
             if (!/^https?:\/\//i.test(link)) link = 'https://' + link;
             window.open(link, '_blank');
-        } else {
-            alert('Configure o link do cardápio em Administrar Loja → Configurações.');
+            return;
         }
-    } catch(err) {
-        alert('Configure o link do cardápio em Administrar Loja → Configurações.');
+    } catch(err) {}
+    // Fallback: busca diretamente da tabela restaurantes
+    if (REST_ID) {
+        supaReq('GET', 'restaurantes?id=eq.' + REST_ID + '&select=slug,link_cardapio&limit=1').then(function(rows) {
+            if (rows && rows[0]) {
+                var link = rows[0].link_cardapio || (rows[0].slug ? 'https://zirafood.com.br?r=' + rows[0].slug : '');
+                if (link) { window.open(link, '_blank'); return; }
+            }
+            alert('Nenhum link de cardápio encontrado. Acesse Configurações para verificar.');
+        }).catch(function() {
+            alert('Erro ao buscar o link do cardápio.');
+        });
+    } else {
+        alert('Faça login para acessar o cardápio.');
     }
 }
 
@@ -7315,16 +7332,40 @@ async function supaCarregarConfigs() {
             supaGet('taxas_entrega', ''),
             supaGet('integracoes', '')
         ]);
+        // Busca link_cardapio direto da tabela restaurantes (fonte de verdade)
+        var _linkCardapio = '';
+        if (REST_ID) {
+            try {
+                const _restRow = await supaReq('GET', 'restaurantes?id=eq.' + REST_ID + '&select=slug,nome,link_cardapio&limit=1');
+                if (_restRow && _restRow[0]) {
+                    if (_restRow[0].link_cardapio) {
+                        _linkCardapio = _restRow[0].link_cardapio;
+                    } else if (_restRow[0].slug) {
+                        _linkCardapio = 'https://zirafood.com.br?r=' + _restRow[0].slug;
+                        supaReq('PATCH', 'restaurantes?id=eq.' + REST_ID, { link_cardapio: _linkCardapio }).catch(function(){});
+                    }
+                }
+            } catch(e) {}
+        }
+
         if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
             const atual = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
-            if (!atual.nomeMarca) localStorage.setItem('f_cfg_loja', JSON.stringify(cfgRows[0].dados_extras));
-            // Atualizar nome no sidebar
             var _cfgCarregada = cfgRows[0].dados_extras || {};
+            if (_linkCardapio) _cfgCarregada.linkSlug = _linkCardapio;
+            if (!atual.nomeMarca) localStorage.setItem('f_cfg_loja', JSON.stringify(_cfgCarregada));
             if (_cfgCarregada.nomeMarca) {
                 var _sn = document.getElementById('sidebar-nome-loja');
                 if (_sn) _sn.textContent = _cfgCarregada.nomeMarca;
                 document.title = _cfgCarregada.nomeMarca + ' — Admin';
             }
+        }
+        // Garante que o localStorage sempre tem o link atualizado
+        if (_linkCardapio) {
+            try {
+                var _cfgLocal = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
+                _cfgLocal.linkSlug = _linkCardapio;
+                localStorage.setItem('f_cfg_loja', JSON.stringify(_cfgLocal));
+            } catch(e) {}
         }
         if (horRows && horRows[0] && horRows[0].dados)
             localStorage.setItem('f_horarios', JSON.stringify(horRows[0].dados));
@@ -9233,7 +9274,26 @@ function cfgInicializar() {
     var el = function(id){ return document.getElementById(id); };
     el('cfg-nome-marca').value    = c.nomeMarca    || '';
     el('cfg-nome-unidade').value  = c.nomeUnidade  || '';
-    el('cfg-link-slug').value     = c.linkSlug     || '';
+    // Busca link_cardapio da tabela restaurantes (fonte de verdade)
+    if (REST_ID) {
+        supaReq('GET', 'restaurantes?id=eq.' + REST_ID + '&select=slug,link_cardapio&limit=1').then(function(rows) {
+            if (rows && rows[0]) {
+                var _link = rows[0].link_cardapio || '';
+                if (!_link && rows[0].slug) {
+                    _link = 'https://zirafood.com.br?r=' + rows[0].slug;
+                    supaReq('PATCH', 'restaurantes?id=eq.' + REST_ID, { link_cardapio: _link }).catch(function(){});
+                }
+                if (_link) {
+                    el('cfg-link-slug').value = _link;
+                    var _cfgAtualizado = cfgGetConfig();
+                    _cfgAtualizado.linkSlug = _link;
+                    localStorage.setItem('f_cfg_loja', JSON.stringify(_cfgAtualizado));
+                }
+            }
+        }).catch(function(){});
+    } else {
+        el('cfg-link-slug').value = c.linkSlug || '';
+    }
     cfgAtualizarPreviewLink();
 
     // Switches
@@ -9348,7 +9408,7 @@ function cfgSalvar() {
         capa:            el('cfg-capa-base64').value || '',
         nomeMarca:       el('cfg-nome-marca').value.trim(),
         nomeUnidade:     el('cfg-nome-unidade').value.trim(),
-        linkSlug:        el('cfg-link-slug').value.trim(),
+        linkSlug:        (function(){ var _existing = cfgGetConfig().linkSlug || ''; return _existing; })(),
         aceitaDelivery:  el('cfg-sw-delivery').dataset.on === '1',
         deliveryMinimo:  parseFloat(el('cfg-delivery-minimo').value||0),
         freteGratis:     el('cfg-sw-frete-gratis').dataset.on === '1',
