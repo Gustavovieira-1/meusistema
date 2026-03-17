@@ -3181,7 +3181,7 @@ function inicializarSistema() {
     (function() {
         try {
             var lastSec = localStorage.getItem('f_last_sec') || 'gestor';
-            var navBtn = document.querySelector('[onclick*="showSec(\'' + lastSec + '\''"]');
+            var navBtn = document.querySelector('[onclick*="' + lastSec + '"]');
             showSec(lastSec, navBtn || null);
         } catch(e) {
             showSec('gestor', null);
