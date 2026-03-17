@@ -5051,8 +5051,7 @@ function impVerificarStatus() {
                 }
                 applyStr('lojaNome',    row.loja_nome,      'imp-loja-nome');
                 applyStr('rodape',      row.rodape_notinha, 'imp-rodape');
-                applyStr('fontNome',    row.font_nome,      'imp-font-nome');
-                applyStr('fontTamanho', row.font_tamanho,   'imp-font-tamanho');
+                // fontNome e fontTamanho são gerenciados pela configuracoes.imp_config — não sobrescrever aqui
                 if (row.largura) {
                     cfg.largura = String(row.largura); changed = true;
                     var elL = document.getElementById('imp-largura');
