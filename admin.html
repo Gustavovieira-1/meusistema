@@ -5576,36 +5576,19 @@ async function wppConectar() {
     if(btnCon) { btnCon.disabled = true; btnCon.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Conectando...'; }
 
     try {
-        // Deleta instância anterior se existir (evita conflito)
-        await fetch(WPP_API_URL + '/instance/delete/' + instancia, {
-            method: 'DELETE',
-            headers: { 'apikey': WPP_API_KEY }
-        }).catch(function(){});
-
-        // Aguarda 1s para garantir que a instância anterior foi removida
-        await new Promise(function(r){ setTimeout(r, 1000); });
-
-        // Cria a instância — a resposta já contém o QR Code
-        var createR = await fetch(WPP_API_URL + '/instance/create', {
+        // Cria ou reconecta a instância
+        await fetch(WPP_API_URL + '/instance/create', {
             method: 'POST',
             headers: { 'apikey': WPP_API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ instanceName: instancia, qrcode: true, integration: 'WHATSAPP-BAILEYS' })
         });
-        var createData = await createR.json();
 
-        // Tenta pegar o base64 da resposta do create
-        var base64 = (createData.qrcode && createData.qrcode.base64) ||
-                     createData.base64 || '';
-
-        // Se não veio no create, aguarda 2s e busca no connect
-        if (!base64) {
-            await new Promise(function(r){ setTimeout(r, 2000); });
-            var qrR = await fetch(WPP_API_URL + '/instance/connect/' + instancia, {
-                headers: { 'apikey': WPP_API_KEY }
-            });
-            var qrData = await qrR.json();
-            base64 = qrData.base64 || (qrData.qrcode && qrData.qrcode.base64) || '';
-        }
+        // Busca o QR Code
+        var qrR = await fetch(WPP_API_URL + '/instance/connect/' + instancia, {
+            headers: { 'apikey': WPP_API_KEY }
+        });
+        var qrData = await qrR.json();
+        var base64 = qrData.base64 || (qrData.qrcode && qrData.qrcode.base64) || '';
 
         if (base64) {
             qrLoading.style.display = 'none';
@@ -5615,8 +5598,9 @@ async function wppConectar() {
             qrLoading.textContent = '⚠️ Erro ao gerar QR Code. Tente novamente.';
         }
 
-        // Polling para detectar quando conectar
+        // Polling 1s para detectar conexão + auto-refresh do QR a cada 25s
         if (_wppStatusInterval) clearInterval(_wppStatusInterval);
+        var _wppQrRefreshAt = Date.now() + 25000; // renova QR após 25s
         _wppStatusInterval = setInterval(async function() {
             await wppVerificarStatus();
             var cfg = wppGetConfig();
@@ -5624,8 +5608,25 @@ async function wppConectar() {
                 clearInterval(_wppStatusInterval);
                 _wppStatusInterval = null;
                 qrArea.style.display = 'none';
+                return;
             }
-        }, 3000);
+            // Renova o QR automaticamente antes de expirar
+            if (Date.now() >= _wppQrRefreshAt) {
+                _wppQrRefreshAt = Date.now() + 25000;
+                try {
+                    var qrR2 = await fetch(WPP_API_URL + '/instance/connect/' + instancia, {
+                        headers: { 'apikey': WPP_API_KEY }
+                    });
+                    var qrD2 = await qrR2.json();
+                    var b64 = qrD2.base64 || (qrD2.qrcode && qrD2.qrcode.base64) || '';
+                    if (b64) {
+                        qrImg.src = b64.startsWith('data:') ? b64 : 'data:image/png;base64,' + b64;
+                        qrImg.style.display = 'block';
+                        qrLoading.style.display = 'none';
+                    }
+                } catch(e2) {}
+            }
+        }, 1000);
 
     } catch(e) {
         qrLoading.textContent = '⚠️ Erro: ' + e.message;
