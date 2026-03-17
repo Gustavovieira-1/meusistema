@@ -4913,7 +4913,7 @@ function impSalvar() {
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
     // Salva configs de impressão no Supabase via configuracoes.dados_extras
     if (REST_ID) {
-        supaUpsert('assistente_status', {
+        var _impCfgBody = {
             loja_nome:       cfg.lojaNome    || '',
             largura:         parseInt(cfg.largura)||80,
             ativar:          cfg.ativar      !== false,
@@ -4930,9 +4930,29 @@ function impSalvar() {
             show_endereco:   cfg.showEndereco !== false,
             show_subtotal:   cfg.showSubtotal !== false,
             show_pgto:       cfg.showPgto     !== false
-        }, 'restaurante_id')
-        .then(function(){ cupToast('✓ Configurações salvas!', '#16a34a'); })
-        .catch(function(e){ cupToast('⚠ Erro: ' + e.message.substring(0,60), '#e30613'); });
+        };
+        var _impHdrs = {
+            'apikey': SUPA_KEY,
+            'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+        };
+        fetch(SUPA_URL + '/rest/v1/assistente_status?restaurante_id=eq.' + REST_ID, {
+            method: 'PATCH', headers: _impHdrs, body: JSON.stringify(_impCfgBody)
+        }).then(function(r) {
+            if (r.status === 204 || r.ok) {
+                cupToast('✓ Configurações salvas!', '#16a34a');
+                return;
+            }
+            // Linha não existe — faz INSERT
+            _impCfgBody.restaurante_id = REST_ID;
+            return fetch(SUPA_URL + '/rest/v1/assistente_status', {
+                method: 'POST', headers: _impHdrs, body: JSON.stringify(_impCfgBody)
+            }).then(function(r2) {
+                if (r2.ok || r2.status === 201) cupToast('✓ Configurações salvas!', '#16a34a');
+                else r2.text().then(function(t){ cupToast('⚠ Erro: ' + t.substring(0,60), '#e30613'); });
+            });
+        }).catch(function(e){ cupToast('⚠ Erro: ' + e.message.substring(0,60), '#e30613'); });
     }
     var btn = document.getElementById('imp-btn-salvar');
     if (btn) {
