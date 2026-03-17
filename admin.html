@@ -4778,8 +4778,8 @@ function impInicializar() {
     // Carrega configs de impressão do Supabase via configuracoes.dados_extras
     if (REST_ID) {
         supaGet('configuracoes', 'limit=1').then(function(rows) {
-            if (!rows || !rows[0] || !rows[0].dados_extras) return;
-            var ic = rows[0].dados_extras.impCfg;
+            if (!rows || !rows[0] || !rows[0].imp_config) return;
+            var ic = rows[0].imp_config;
             if (!ic) return;
             var cfgS = impGetConfig();
             function applyToggle(cfgKey, togId, chkId, val) {
@@ -4916,26 +4916,26 @@ function impSalvar() {
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
     // Salva configs de impressão no Supabase via configuracoes.dados_extras
     if (REST_ID) {
-        var cfgAtual = cfgGetConfig() || {};
-        cfgAtual.impCfg = {
-            lojaNome:    cfg.lojaNome    || '',
-            largura:     parseInt(cfg.largura)||80,
-            ativar:      cfg.ativar      !== false,
-            auto:        cfg.auto        !== false,
-            aceitar:     cfg.aceitar     !== false,
-            rodape:      cfg.rodape      || '',
-            fontNome:    cfg.fontNome    || 'Courier New',
-            fontTamanho: cfg.fontTamanho || '8',
-            showCodigo:   cfg.showCodigo   !== false,
-            showData:     cfg.showData     !== false,
-            showPrevisao: cfg.showPrevisao !== false,
-            showTotLoja:  cfg.showTotLoja  !== false,
-            showCelular:  cfg.showCelular  !== false,
-            showEndereco: cfg.showEndereco !== false,
-            showSubtotal: cfg.showSubtotal !== false,
-            showPgto:     cfg.showPgto     !== false
-        };
-        supaUpsert('configuracoes', { dados_extras: cfgAtual }, 'restaurante_id')
+        supaUpsert('configuracoes', {
+            imp_config: {
+                lojaNome:    cfg.lojaNome    || '',
+                largura:     parseInt(cfg.largura)||80,
+                ativar:      cfg.ativar      !== false,
+                auto:        cfg.auto        !== false,
+                aceitar:     cfg.aceitar     !== false,
+                rodape:      cfg.rodape      || '',
+                fontNome:    cfg.fontNome    || 'Courier New',
+                fontTamanho: String(cfg.fontTamanho || '8'),
+                showCodigo:   cfg.showCodigo   !== false,
+                showData:     cfg.showData     !== false,
+                showPrevisao: cfg.showPrevisao !== false,
+                showTotLoja:  cfg.showTotLoja  !== false,
+                showCelular:  cfg.showCelular  !== false,
+                showEndereco: cfg.showEndereco !== false,
+                showSubtotal: cfg.showSubtotal !== false,
+                showPgto:     cfg.showPgto     !== false
+            }
+        }, 'restaurante_id')
         .then(function(){ cupToast('✓ Configurações salvas!', '#16a34a'); })
         .catch(function(e){ cupToast('⚠ Erro: ' + e.message.substring(0,60), '#e30613'); });
     }
