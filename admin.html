@@ -3231,7 +3231,7 @@ async function iniciarApp() {
             inicializarSistema();
             supaCarregarCardapio();
             supaCarregarConfigs();
-            supaCarregarPedidos().then(function(){ supaCarregarFinalizadosKanban(); });
+            supaCarregarPedidos().then(function(){ return supaCarregarConfigs(); }).then(function(){ supaCarregarFinalizadosKanban(); });
         }
     } else {
         mostrarTelaLogin();
@@ -6921,7 +6921,19 @@ async function supaCarregarFinalizadosKanban() {
     // Busca finalizados e cancelados de hoje para repovoar o kanban após login/F5
     // Respeita a regra de limpeza: só mostra os que ainda NÃO deveriam ter sumido
     try {
+        // Garante que as configs de limpeza já foram carregadas antes de calcular o limiar
+        // Se limparAtivado não estiver definido no localStorage, busca do Supabase
         var cfg = cfgGetConfig() || {};
+        if (cfg.limparAtivado === undefined && REST_ID) {
+            try {
+                var cfgRows = await supaReq('GET', 'configuracoes?restaurante_id=eq.' + REST_ID + '&select=dados_extras&limit=1');
+                if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
+                    cfg = cfgRows[0].dados_extras;
+                    localStorage.setItem('f_cfg_loja', JSON.stringify(cfg));
+                }
+            } catch(e) {}
+        }
+
         var agora = new Date();
 
         // Calcula o limiar de limpeza (se ativo)
@@ -7387,7 +7399,7 @@ async function authFazerLogin() {
         inicializarSistema();
         supaCarregarCardapio();
         supaCarregarConfigs();
-        supaCarregarPedidos().then(function(){ supaCarregarFinalizadosKanban(); });
+        supaCarregarPedidos().then(function(){ return supaCarregarConfigs(); }).then(function(){ supaCarregarFinalizadosKanban(); });
     } catch(e) {
         erro.textContent = e.message;
         erro.style.display = 'block';
