@@ -3231,7 +3231,7 @@ async function iniciarApp() {
             inicializarSistema();
             supaCarregarCardapio();
             supaCarregarConfigs();
-            supaCarregarPedidos();
+            supaCarregarPedidos().then(function(){ supaCarregarFinalizadosKanban(); });
         }
     } else {
         mostrarTelaLogin();
@@ -6917,6 +6917,86 @@ async function supaCarregarCardapio() {
     }
 }
 
+async function supaCarregarFinalizadosKanban() {
+    // Busca finalizados e cancelados de hoje para repovoar o kanban após login/F5
+    // Respeita a regra de limpeza: só mostra os que ainda NÃO deveriam ter sumido
+    try {
+        var cfg = cfgGetConfig() || {};
+        var agora = new Date();
+
+        // Calcula o limiar de limpeza (se ativo)
+        var limiarMs = 0;
+        if (cfg.limparAtivado) {
+            var partes = (cfg.limparHorario || '00:00').split(':');
+            var hLimpar = parseInt(partes[0]) * 60 + parseInt(partes[1] || 0);
+            var hAgora  = agora.getHours() * 60 + agora.getMinutes();
+            if (hAgora >= hLimpar) {
+                limiarMs = new Date(
+                    agora.getFullYear(), agora.getMonth(), agora.getDate(),
+                    parseInt(partes[0]), parseInt(partes[1] || 0), 0, 0
+                ).getTime();
+            }
+        }
+
+        // Início do dia de hoje em ISO para filtrar no Supabase
+        var inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0, 0).toISOString();
+
+        const rows = await supaReq('GET',
+            'pedidos?restaurante_id=eq.' + REST_ID +
+            '&status=in.(finalizado,cancelado)' +
+            '&criado_em=gte.' + inicioDia +
+            '&order=criado_em.desc&select=*&limit=200'
+        );
+        if (!rows || !rows.length) return;
+
+        var idsEmMemoria = new Set(orders.map(function(o){ return o.id; }));
+        var adicionados = 0;
+
+        rows.forEach(function(r) {
+            var idPedido = r.numero || r.id;
+            if (idsEmMemoria.has(idPedido)) return; // já está em memória
+
+            // Verifica regra de limpeza: se já passou o limiar, não mostra
+            if (limiarMs > 0) {
+                var finTs = r.finalizado_em ? parseDateUTC(r.finalizado_em) : parseDateUTC(r.criado_em);
+                var finMs = finTs ? finTs.getTime() : 0;
+                if (finMs > 0 && finMs < limiarMs) return; // seria removido pela limpeza
+            }
+
+            var itens = r.itens || [];
+            if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
+
+            orders.push({
+                id: idPedido,
+                _supa_id: r.id,
+                client: r.cliente, phone: r.telefone,
+                address: r.endereco, bairro: r.bairro,
+                complemento: r.complemento || '', cidade: r.cidade || '',
+                tipo: r.tipo, pagamento: r.pagamento, troco: r.troco,
+                subtotal: r.subtotal || r.total,
+                taxaEntrega: r.taxa_entrega || 0,
+                descontoCupom: r.desconto_cupom || 0,
+                descontoPontos: r.desconto_pontos || 0,
+                cupom: r.cupom || '',
+                produtoBrindeNome: r.produto_brinde_nome || '',
+                produtoBrindeId:   r.produto_brinde_id   || '',
+                total: r.total, status: r.status,
+                items: itens, timestamp: r.criado_em,
+                finalizadoEm: r.finalizado_em || (r.status === 'finalizado' ? r.criado_em : null)
+            });
+            adicionados++;
+        });
+
+        if (adicionados > 0) {
+            localStorage.setItem('f_orders', JSON.stringify(orders));
+            renderOrders();
+            console.log('[Kanban] ' + adicionados + ' finalizado(s)/cancelado(s) de hoje restaurados.');
+        }
+    } catch(e) {
+        console.warn('[supaCarregarFinalizadosKanban]', e.message);
+    }
+}
+
 async function supaCarregarPedidos() {
     try {
         const rows = await supaGet('pedidos', 'status=neq.finalizado&status=neq.cancelado&order=criado_em.desc');
@@ -7307,7 +7387,7 @@ async function authFazerLogin() {
         inicializarSistema();
         supaCarregarCardapio();
         supaCarregarConfigs();
-        supaCarregarPedidos();
+        supaCarregarPedidos().then(function(){ supaCarregarFinalizadosKanban(); });
     } catch(e) {
         erro.textContent = e.message;
         erro.style.display = 'block';
