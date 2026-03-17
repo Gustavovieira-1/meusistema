@@ -4912,9 +4912,9 @@ function impSalvar() {
     if ((gv = g('imp-font-nome'))     !== null) cfg.fontNome     = gv || 'Courier New';
     if ((gv = g('imp-font-tamanho'))  !== null) cfg.fontTamanho  = gv || '8';
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-    // Salva configs completas no Supabase
+    // Salva configs completas no Supabase via upsert
     if (REST_ID && (SUPA_TOKEN || SUPA_KEY)) {
-        supaReq('PATCH', 'assistente_status?restaurante_id=eq.'+REST_ID, {
+        supaUpsert('assistente_status', {
             loja_nome:      cfg.lojaNome || '',
             largura:        parseInt(cfg.largura)||80,
             ativar:         cfg.ativar !== false,
@@ -4931,12 +4931,10 @@ function impSalvar() {
             show_endereco:  cfg.showEndereco !== false,
             show_subtotal:  cfg.showSubtotal !== false,
             show_pgto:      cfg.showPgto     !== false
-        }).then(function(){
-            console.log('[IMP] Config salva no Supabase');
+        }, 'restaurante_id').then(function(){
             cupToast('✓ Configurações salvas!', '#16a34a');
         }).catch(function(e){
-            console.warn('[IMP] Erro ao salvar:', e.message);
-            cupToast('⚠ Erro ao salvar no servidor: ' + e.message.substring(0,60), '#e30613');
+            cupToast('⚠ Erro: ' + e.message.substring(0,60), '#e30613');
         });
     }
     var btn = document.getElementById('imp-btn-salvar');
@@ -4974,11 +4972,11 @@ function impSalvarTogglesSupabase() {
     cfg.auto    = auto;
     cfg.aceitar = aceitar;
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-    // Salva no Supabase via supaReq
-    supaReq('PATCH', 'assistente_status?restaurante_id=eq.'+REST_ID, {
+    // Salva no Supabase via upsert
+    supaUpsert('assistente_status', {
         ativar: ativar, auto_impressao: auto, auto_aceitar: aceitar
-    }).then(function(){
-        impAddLog('✓ Automação salva: ativar='+ativar+' auto='+auto+' aceitar='+aceitar, 'ok');
+    }, 'restaurante_id').then(function(){
+        impAddLog('✓ Automação salva', 'ok');
     }).catch(function(e){ impAddLog('⚠ Erro ao salvar automação: '+e.message, 'err'); });
 }
 
