@@ -4750,59 +4750,53 @@ function impSalvarLista(lista) {
 }
 
 async function impInicializar() {
-    // ── PASSO 1: Busca da assistente_status PRIMEIRO (fonte de verdade das configs) ──
+    // ── PASSO 1: busca Supabase PRIMEIRO (await) — elimina a race condition ──
     if (REST_ID) {
         try {
-            var rows = await fetch(
-                SUPA_URL + '/rest/v1/assistente_status?restaurante_id=eq.' + REST_ID + '&select=*&limit=1',
-                { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY) } }
-            ).then(function(r){ return r.json(); });
-            var row = Array.isArray(rows) ? rows[0] : null;
-            if (row) {
-                var cfgRemoto = impGetConfig();
-                if (row.font_nome     && row.font_nome !== '')     cfgRemoto.fontNome    = row.font_nome;
-                if (row.font_tamanho  && row.font_tamanho !== '')  cfgRemoto.fontTamanho = String(row.font_tamanho);
-                if (row.loja_nome     !== undefined && row.loja_nome !== null)   cfgRemoto.lojaNome    = row.loja_nome;
-                if (row.rodape_notinha !== undefined && row.rodape_notinha !== null) cfgRemoto.rodape   = row.rodape_notinha;
-                if (row.largura       !== undefined && row.largura !== null)     cfgRemoto.largura     = String(row.largura);
-                if (row.ativar        !== undefined && row.ativar !== null)      cfgRemoto.ativar      = row.ativar;
-                if (row.auto_impressao !== undefined && row.auto_impressao !== null) cfgRemoto.auto    = row.auto_impressao;
-                if (row.auto_aceitar  !== undefined && row.auto_aceitar !== null) cfgRemoto.aceitar    = row.auto_aceitar;
-                if (row.show_codigo   !== undefined && row.show_codigo !== null)   cfgRemoto.showCodigo   = row.show_codigo;
-                if (row.show_data     !== undefined && row.show_data !== null)     cfgRemoto.showData     = row.show_data;
-                if (row.show_previsao !== undefined && row.show_previsao !== null) cfgRemoto.showPrevisao = row.show_previsao;
-                if (row.show_tot_loja !== undefined && row.show_tot_loja !== null) cfgRemoto.showTotLoja  = row.show_tot_loja;
-                if (row.show_celular  !== undefined && row.show_celular !== null)  cfgRemoto.showCelular  = row.show_celular;
-                if (row.show_endereco !== undefined && row.show_endereco !== null) cfgRemoto.showEndereco = row.show_endereco;
-                if (row.show_subtotal !== undefined && row.show_subtotal !== null) cfgRemoto.showSubtotal = row.show_subtotal;
-                if (row.show_pgto     !== undefined && row.show_pgto !== null)     cfgRemoto.showPgto     = row.show_pgto;
-                localStorage.setItem(IMP_KEY, JSON.stringify(cfgRemoto));
+            var _rows = await supaGet('configuracoes', 'limit=1');
+            if (_rows && _rows[0] && _rows[0].imp_config) {
+                var ic = _rows[0].imp_config;
+                var cfgS = impGetConfig();
+                if (ic.fontNome)              cfgS.fontNome    = ic.fontNome;
+                if (ic.fontTamanho)           cfgS.fontTamanho = String(ic.fontTamanho);
+                if (ic.lojaNome  !== undefined) cfgS.lojaNome  = ic.lojaNome;
+                if (ic.rodape    !== undefined) cfgS.rodape    = ic.rodape;
+                if (ic.largura   !== undefined) cfgS.largura   = String(ic.largura);
+                if (ic.ativar    !== undefined) cfgS.ativar    = ic.ativar;
+                if (ic.auto      !== undefined) cfgS.auto      = ic.auto;
+                if (ic.aceitar   !== undefined) cfgS.aceitar   = ic.aceitar;
+                if (ic.showCodigo   !== undefined) cfgS.showCodigo   = ic.showCodigo;
+                if (ic.showData     !== undefined) cfgS.showData     = ic.showData;
+                if (ic.showPrevisao !== undefined) cfgS.showPrevisao = ic.showPrevisao;
+                if (ic.showTotLoja  !== undefined) cfgS.showTotLoja  = ic.showTotLoja;
+                if (ic.showCelular  !== undefined) cfgS.showCelular  = ic.showCelular;
+                if (ic.showEndereco !== undefined) cfgS.showEndereco = ic.showEndereco;
+                if (ic.showSubtotal !== undefined) cfgS.showSubtotal = ic.showSubtotal;
+                if (ic.showPgto     !== undefined) cfgS.showPgto     = ic.showPgto;
+                localStorage.setItem(IMP_KEY, JSON.stringify(cfgS));
             }
         } catch(e) { /* offline: usa localStorage como está */ }
     }
 
-    // ── PASSO 2: Agora lê do localStorage (já mesclado com Supabase) e aplica no DOM ──
+    // ── PASSO 2: lê localStorage (já mesclado com Supabase) e aplica no DOM ──
     var cfg = impGetConfig();
-
-    // Campos de texto
+    // Preenche campos
     var set = function(id,v){ var e=document.getElementById(id); if(e&&v!==undefined) e.value=v; };
     set('imp-loja-nome', cfg.lojaNome||'');
     set('imp-largura',   cfg.largura||'80');
     set('imp-rodape',    cfg.rodape||'');
-
     // Toggles de notinha
     var chk = function(id,v){ var e=document.getElementById(id); if(e) e.checked=(v!==false); };
     chk('imp-cnpj', cfg.cnpj); chk('imp-cat', cfg.cat); chk('imp-desc', cfg.desc);
     var tog = function(id,on){
-        var e=document.querySelector('[onclick*="\''+id+'\'"]');
+        var e=document.querySelector('[onclick*="\''+id+'\'"' + ']');
         if(e){ if(on) e.classList.remove('off'); else e.classList.add('off'); }
     };
     tog('imp-cnpj', cfg.cnpj); tog('imp-cat', cfg.cat); tog('imp-desc', cfg.desc);
     tog('imp-ativar',  cfg.ativar!==false);
     tog('imp-auto',    cfg.auto!==false);
     tog('imp-aceitar', cfg.aceitar!==false);
-
-    // Aplica toggles por ID
+    // Aplica diretamente nos divs com ID
     var aplicaTog = function(divId, on) {
         var d = document.getElementById(divId);
         if (d) { if(on) d.classList.remove('off'); else d.classList.add('off'); }
@@ -4810,14 +4804,12 @@ async function impInicializar() {
     aplicaTog('imp-tog-ativar',  cfg.ativar!==false);
     aplicaTog('imp-tog-auto',    cfg.auto!==false);
     aplicaTog('imp-tog-aceitar', cfg.aceitar!==false);
-
-    // Toggles da notinha (show*)
     var setToggle = function(chkId, togId, val) {
-        var chkEl = document.getElementById(chkId);
-        var togEl = document.getElementById(togId);
-        var on    = (val !== false);
-        if (chkEl) chkEl.checked = on;
-        if (togEl) { if (on) togEl.classList.remove('off'); else togEl.classList.add('off'); }
+        var chk = document.getElementById(chkId);
+        var tog = document.getElementById(togId);
+        var on  = (val !== false);
+        if (chk) chk.checked = on;
+        if (tog) { if (on) tog.classList.remove('off'); else tog.classList.add('off'); }
     };
     setToggle('imp-show-codigo',   'imp-tog-codigo',   cfg.showCodigo);
     setToggle('imp-show-data',     'imp-tog-data',     cfg.showData);
@@ -4827,8 +4819,7 @@ async function impInicializar() {
     setToggle('imp-show-endereco', 'imp-tog-endereco', cfg.showEndereco);
     setToggle('imp-show-subtotal', 'imp-tog-subtotal', cfg.showSubtotal);
     setToggle('imp-show-pgto',     'imp-tog-pgto',     cfg.showPgto);
-
-    // Fonte — já vem correta do Supabase, sem race condition
+    // Fonte — agora vem correta do Supabase (sem race condition)
     var fnEl = document.getElementById('imp-font-nome');
     if (fnEl) {
         fnEl.value = cfg.fontNome || 'Courier New';
@@ -4836,29 +4827,24 @@ async function impInicializar() {
     }
     var ftEl = document.getElementById('imp-font-tamanho');
     if (ftEl) ftEl.value = String(cfg.fontTamanho || '8');
-
     // Botão largura
     var larg = cfg.largura||'80';
     document.querySelectorAll('.imp-largura-btn').forEach(function(b){
         b.classList.toggle('active', b.textContent.replace('mm','')===larg);
     });
-
     // Modo
     var modo = cfg.modo||'pc';
     document.querySelectorAll('.imp-modo-btn').forEach(function(b){
         b.classList.toggle('active', b.id==='imp-modo-'+modo);
     });
-
     impRenderLista();
     impAtualizarPreview();
-
     // Verifica status do assistente ao abrir a aba
     setTimeout(impVerificarStatus, 300);
     // Reverifica a cada 30s
     clearInterval(_impStatusTimer);
     _impStatusTimer = setInterval(impVerificarStatus, 30000);
 }
-
 function impSalvarComValidacao() {
     var fnEl = document.getElementById('imp-font-nome');
     var ftEl = document.getElementById('imp-font-tamanho');
@@ -4913,46 +4899,28 @@ function impSalvar() {
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
     // Salva configs de impressão no Supabase via configuracoes.dados_extras
     if (REST_ID) {
-        var _impCfgBody = {
-            loja_nome:       cfg.lojaNome    || '',
-            largura:         parseInt(cfg.largura)||80,
-            ativar:          cfg.ativar      !== false,
-            auto_impressao:  cfg.auto        !== false,
-            auto_aceitar:    cfg.aceitar     !== false,
-            rodape_notinha:  cfg.rodape      || '',
-            font_nome:       cfg.fontNome    || 'Courier New',
-            font_tamanho:    String(cfg.fontTamanho || '8'),
-            show_codigo:     cfg.showCodigo   !== false,
-            show_data:       cfg.showData     !== false,
-            show_previsao:   cfg.showPrevisao !== false,
-            show_tot_loja:   cfg.showTotLoja  !== false,
-            show_celular:    cfg.showCelular  !== false,
-            show_endereco:   cfg.showEndereco !== false,
-            show_subtotal:   cfg.showSubtotal !== false,
-            show_pgto:       cfg.showPgto     !== false
-        };
-        var _impHdrs = {
-            'apikey': SUPA_KEY,
-            'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
-            'Content-Type': 'application/json',
-            'Prefer': 'return=minimal'
-        };
-        fetch(SUPA_URL + '/rest/v1/assistente_status?restaurante_id=eq.' + REST_ID, {
-            method: 'PATCH', headers: _impHdrs, body: JSON.stringify(_impCfgBody)
-        }).then(function(r) {
-            if (r.status === 204 || r.ok) {
-                cupToast('✓ Configurações salvas!', '#16a34a');
-                return;
+        supaUpsert('configuracoes', {
+            imp_config: {
+                lojaNome:    cfg.lojaNome    || '',
+                largura:     parseInt(cfg.largura)||80,
+                ativar:      cfg.ativar      !== false,
+                auto:        cfg.auto        !== false,
+                aceitar:     cfg.aceitar     !== false,
+                rodape:      cfg.rodape      || '',
+                fontNome:    cfg.fontNome    || 'Courier New',
+                fontTamanho: String(cfg.fontTamanho || '8'),
+                showCodigo:   cfg.showCodigo   !== false,
+                showData:     cfg.showData     !== false,
+                showPrevisao: cfg.showPrevisao !== false,
+                showTotLoja:  cfg.showTotLoja  !== false,
+                showCelular:  cfg.showCelular  !== false,
+                showEndereco: cfg.showEndereco !== false,
+                showSubtotal: cfg.showSubtotal !== false,
+                showPgto:     cfg.showPgto     !== false
             }
-            // Linha não existe — faz INSERT
-            _impCfgBody.restaurante_id = REST_ID;
-            return fetch(SUPA_URL + '/rest/v1/assistente_status', {
-                method: 'POST', headers: _impHdrs, body: JSON.stringify(_impCfgBody)
-            }).then(function(r2) {
-                if (r2.ok || r2.status === 201) cupToast('✓ Configurações salvas!', '#16a34a');
-                else r2.text().then(function(t){ cupToast('⚠ Erro: ' + t.substring(0,60), '#e30613'); });
-            });
-        }).catch(function(e){ cupToast('⚠ Erro: ' + e.message.substring(0,60), '#e30613'); });
+        }, 'restaurante_id')
+        .then(function(){ cupToast('✓ Configurações salvas!', '#16a34a'); })
+        .catch(function(e){ cupToast('⚠ Erro: ' + e.message.substring(0,60), '#e30613'); });
     }
     var btn = document.getElementById('imp-btn-salvar');
     if (btn) {
