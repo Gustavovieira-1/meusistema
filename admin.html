@@ -4775,51 +4775,44 @@ function impInicializar() {
     aplicaTog('imp-tog-ativar',  cfg.ativar!==false);
     aplicaTog('imp-tog-auto',    cfg.auto!==false);
     aplicaTog('imp-tog-aceitar', cfg.aceitar!==false);
-    // Busca configs completas do Supabase via supaReq (usa token correto)
+    // Carrega configs de impressão do Supabase via configuracoes.dados_extras
     if (REST_ID) {
-        supaReq('GET', 'assistente_status?restaurante_id=eq.'+REST_ID+'&select=*&limit=1', null)
-        .then(function(rows) {
-            if (!rows || !rows[0]) return;
-            var row = rows[0];
+        supaGet('configuracoes', 'limit=1').then(function(rows) {
+            if (!rows || !rows[0] || !rows[0].dados_extras) return;
+            var ic = rows[0].dados_extras.impCfg;
+            if (!ic) return;
             var cfgS = impGetConfig();
-            // Toggles de automação
-            function applyToggle(cfgKey, togId, chkHidId, val) {
+            function applyToggle(cfgKey, togId, chkId, val) {
                 if (val === null || val === undefined) return;
                 cfgS[cfgKey] = val;
-                var d = document.getElementById(togId);
-                if (d) { if(val) d.classList.remove('off'); else d.classList.add('off'); }
-                var c = document.getElementById(chkHidId);
-                if (c) c.checked = val;
+                var d = document.getElementById(togId); if (d) { if(val) d.classList.remove('off'); else d.classList.add('off'); }
+                var c = document.getElementById(chkId); if (c) c.checked = val;
             }
-            applyToggle('ativar',  'imp-tog-ativar',  'imp-ativar',  row.ativar);
-            applyToggle('auto',    'imp-tog-auto',    'imp-auto',    row.auto_impressao);
-            applyToggle('aceitar', 'imp-tog-aceitar', 'imp-aceitar', row.auto_aceitar);
-            // Campos de texto
             function applyField(cfgKey, elId, val) {
-                if (val === null || val === undefined || val === '') return;
+                if (!val && val !== false) return;
                 cfgS[cfgKey] = val;
-                var el = document.getElementById(elId);
-                if (el) el.value = val;
+                var el = document.getElementById(elId); if (el) el.value = val;
             }
-            applyField('lojaNome',    'imp-loja-nome',     row.loja_nome);
-            applyField('rodape',      'imp-rodape',        row.rodape_notinha);
-            applyField('fontNome',    'imp-font-nome',     row.font_nome);
-            applyField('fontTamanho', 'imp-font-tamanho',  row.font_tamanho);
-            // Checkboxes de campos da notinha
             function applyCheck(cfgKey, chkId, val) {
                 if (val === null || val === undefined) return;
                 cfgS[cfgKey] = val;
-                var el = document.getElementById(chkId);
-                if (el) el.checked = val;
+                var el = document.getElementById(chkId); if (el) el.checked = val;
             }
-            applyCheck('showCodigo',   'imp-show-codigo',   row.show_codigo);
-            applyCheck('showData',     'imp-show-data',     row.show_data);
-            applyCheck('showPrevisao', 'imp-show-previsao', row.show_previsao);
-            applyCheck('showTotLoja',  'imp-show-totloja',  row.show_tot_loja);
-            applyCheck('showCelular',  'imp-show-celular',  row.show_celular);
-            applyCheck('showEndereco', 'imp-show-endereco', row.show_endereco);
-            applyCheck('showSubtotal', 'imp-show-subtotal', row.show_subtotal);
-            applyCheck('showPgto',     'imp-show-pgto',     row.show_pgto);
+            applyToggle('ativar',  'imp-tog-ativar',  'imp-ativar',  ic.ativar);
+            applyToggle('auto',    'imp-tog-auto',    'imp-auto',    ic.auto);
+            applyToggle('aceitar', 'imp-tog-aceitar', 'imp-aceitar', ic.aceitar);
+            applyField('lojaNome',    'imp-loja-nome',    ic.lojaNome);
+            applyField('rodape',      'imp-rodape',       ic.rodape);
+            applyField('fontNome',    'imp-font-nome',    ic.fontNome);
+            applyField('fontTamanho', 'imp-font-tamanho', ic.fontTamanho);
+            applyCheck('showCodigo',   'imp-show-codigo',   ic.showCodigo);
+            applyCheck('showData',     'imp-show-data',     ic.showData);
+            applyCheck('showPrevisao', 'imp-show-previsao', ic.showPrevisao);
+            applyCheck('showTotLoja',  'imp-show-totloja',  ic.showTotLoja);
+            applyCheck('showCelular',  'imp-show-celular',  ic.showCelular);
+            applyCheck('showEndereco', 'imp-show-endereco', ic.showEndereco);
+            applyCheck('showSubtotal', 'imp-show-subtotal', ic.showSubtotal);
+            applyCheck('showPgto',     'imp-show-pgto',     ic.showPgto);
             localStorage.setItem(IMP_KEY, JSON.stringify(cfgS));
             impAtualizarPreview();
         }).catch(function(){});
@@ -4912,30 +4905,30 @@ function impSalvar() {
     if ((gv = g('imp-font-nome'))     !== null) cfg.fontNome     = gv || 'Courier New';
     if ((gv = g('imp-font-tamanho'))  !== null) cfg.fontTamanho  = gv || '8';
     localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-    // Salva configs completas no Supabase via upsert
-    if (REST_ID && (SUPA_TOKEN || SUPA_KEY)) {
-        supaUpsert('assistente_status', {
-            loja_nome:      cfg.lojaNome || '',
-            largura:        parseInt(cfg.largura)||80,
-            ativar:         cfg.ativar !== false,
-            auto_impressao: cfg.auto !== false,
-            auto_aceitar:   cfg.aceitar !== false,
-            rodape_notinha: cfg.rodape      || '',
-            font_nome:      cfg.fontNome    || 'Courier New',
-            font_tamanho:   cfg.fontTamanho || '8',
-            show_codigo:    cfg.showCodigo   !== false,
-            show_data:      cfg.showData     !== false,
-            show_previsao:  cfg.showPrevisao !== false,
-            show_tot_loja:  cfg.showTotLoja  !== false,
-            show_celular:   cfg.showCelular  !== false,
-            show_endereco:  cfg.showEndereco !== false,
-            show_subtotal:  cfg.showSubtotal !== false,
-            show_pgto:      cfg.showPgto     !== false
-        }, 'restaurante_id').then(function(){
-            cupToast('✓ Configurações salvas!', '#16a34a');
-        }).catch(function(e){
-            cupToast('⚠ Erro: ' + e.message.substring(0,60), '#e30613');
-        });
+    // Salva configs de impressão no Supabase via configuracoes.dados_extras
+    if (REST_ID) {
+        var cfgAtual = cfgGetConfig() || {};
+        cfgAtual.impCfg = {
+            lojaNome:    cfg.lojaNome    || '',
+            largura:     parseInt(cfg.largura)||80,
+            ativar:      cfg.ativar      !== false,
+            auto:        cfg.auto        !== false,
+            aceitar:     cfg.aceitar     !== false,
+            rodape:      cfg.rodape      || '',
+            fontNome:    cfg.fontNome    || 'Courier New',
+            fontTamanho: cfg.fontTamanho || '8',
+            showCodigo:   cfg.showCodigo   !== false,
+            showData:     cfg.showData     !== false,
+            showPrevisao: cfg.showPrevisao !== false,
+            showTotLoja:  cfg.showTotLoja  !== false,
+            showCelular:  cfg.showCelular  !== false,
+            showEndereco: cfg.showEndereco !== false,
+            showSubtotal: cfg.showSubtotal !== false,
+            showPgto:     cfg.showPgto     !== false
+        };
+        supaUpsert('configuracoes', { dados_extras: cfgAtual }, 'restaurante_id')
+        .then(function(){ cupToast('✓ Configurações salvas!', '#16a34a'); })
+        .catch(function(e){ cupToast('⚠ Erro: ' + e.message.substring(0,60), '#e30613'); });
     }
     var btn = document.getElementById('imp-btn-salvar');
     if (btn) {
