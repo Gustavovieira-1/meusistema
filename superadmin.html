@@ -1142,6 +1142,102 @@ tr:hover td { background: rgba(255,255,255,.015); }
           </div>
         </div>
 
+
+<!-- ══ ABA RASTREAMENTO ══ -->
+        <div class="secao" id="sec-rastreamento">
+          <div class="sec-header">
+            <div>
+              <div class="sec-titulo">Rastreamento</div>
+              <div class="sec-sub">Pixels e links de checkout — altere aqui, aplica em todas as páginas automaticamente</div>
+            </div>
+            <button class="btn-primary" onclick="trSalvar()"><i class="fas fa-save"></i> Salvar tudo</button>
+          </div>
+
+          <!-- META PIXEL -->
+          <div class="tr-card">
+            <div class="tr-card-header">
+              <div class="tr-icon-wrap" style="background:rgba(24,119,242,.15);border:1px solid rgba(24,119,242,.25);">
+                <i class="fab fa-facebook-f" style="color:#4e9eff;font-size:15px;"></i>
+              </div>
+              <div>
+                <div class="tr-card-title">Meta Pixel <span class="tr-badge tr-badge-blue">Facebook / Instagram Ads</span></div>
+                <div class="tr-card-sub">Troque o ID aqui e todas as páginas passam a usar o novo pixel automaticamente</div>
+              </div>
+            </div>
+            <div class="tr-grid-2">
+              <div>
+                <label class="tr-label">
+                  <i class="fas fa-user-plus tr-label-icon" style="color:var(--green);"></i>
+                  Pixel — Página de Cadastro
+                </label>
+                <input id="tr-pixel-cadastro" class="tr-input" placeholder="Ex: 1234567890123456">
+                <div class="tr-hint"><i class="fas fa-bolt" style="opacity:.5;"></i> Eventos: PageView · ViewContent · Lead · CompleteRegistration</div>
+              </div>
+              <div>
+                <label class="tr-label">
+                  <i class="fas fa-credit-card tr-label-icon" style="color:var(--blue);"></i>
+                  Pixel — Página de Planos
+                </label>
+                <input id="tr-pixel-planos" class="tr-input" placeholder="Ex: 9876543210987654">
+                <div class="tr-hint"><i class="fas fa-bolt" style="opacity:.5;"></i> Eventos: PageView · ViewContent · InitiateCheckout</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LINKS MERCADO PAGO -->
+          <div class="tr-card">
+            <div class="tr-card-header">
+              <div class="tr-icon-wrap" style="background:rgba(0,158,227,.12);border:1px solid rgba(0,158,227,.25);">
+                <i class="fas fa-shopping-cart" style="color:#00c4ff;font-size:14px;"></i>
+              </div>
+              <div>
+                <div class="tr-card-title">Links do Mercado Pago <span class="tr-badge tr-badge-cyan">Checkout</span></div>
+                <div class="tr-card-sub">URLs dos planos de assinatura — altere aqui sem tocar no código da página de planos</div>
+              </div>
+            </div>
+            <div class="tr-stack">
+              <div>
+                <label class="tr-label">
+                  <i class="fas fa-calendar-day tr-label-icon" style="color:var(--yellow);"></i>
+                  Plano Mensal
+                </label>
+                <input id="tr-mp-mensal" class="tr-input tr-input-mono" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=...">
+              </div>
+              <div>
+                <label class="tr-label">
+                  <i class="fas fa-calendar-week tr-label-icon" style="color:var(--purple);"></i>
+                  Plano Trimestral
+                </label>
+                <input id="tr-mp-trimestral" class="tr-input tr-input-mono" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=...">
+              </div>
+              <div>
+                <label class="tr-label">
+                  <i class="fas fa-calendar tr-label-icon" style="color:var(--green);"></i>
+                  Plano Anual
+                </label>
+                <input id="tr-mp-anual" class="tr-input tr-input-mono" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=...">
+              </div>
+            </div>
+          </div>
+
+          <!-- URL OBRIGADO -->
+          <div class="tr-card">
+            <div class="tr-card-header">
+              <div class="tr-icon-wrap" style="background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.25);">
+                <i class="fas fa-check" style="color:var(--green);font-size:15px;"></i>
+              </div>
+              <div>
+                <div class="tr-card-title">URL de Obrigado <span class="tr-badge tr-badge-green">Pós-pagamento</span></div>
+                <div class="tr-card-sub">Configure também no Mercado Pago como "URL de retorno" — o evento <code class="tr-code">Purchase</code> será disparado nessa página</div>
+              </div>
+            </div>
+            <input id="tr-url-obrigado" class="tr-input tr-input-mono" placeholder="https://zirafood.com.br/obrigado">
+            <div class="tr-hint" style="margin-top:8px;"><i class="fas fa-info-circle" style="opacity:.5;"></i> Nesta página será disparado <code class="tr-code">fbq('track','Purchase')</code> automaticamente ao carregar.</div>
+          </div>
+
+          <div id="tr-status" style="display:none;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:4px;"></div>
+        </div><!-- /sec-rastreamento -->
+
       </div><!-- /page -->
     </div><!-- /main-content -->
   </div><!-- /app-layout -->
@@ -2557,100 +2653,9 @@ async function saAutomatizarPagamentos() {
     }
 })();
 </script>
+    </div><!-- /main-content -->
+  </div><!-- /app-layout -->
+</div><!-- /app -->
+
 </body>
-</html        <!-- ══ ABA RASTREAMENTO ══ -->
-        <div class="secao" id="sec-rastreamento">
-          <div class="sec-header">
-            <div>
-              <div class="sec-titulo">Rastreamento</div>
-              <div class="sec-sub">Pixels e links de checkout — altere aqui, aplica em todas as páginas automaticamente</div>
-            </div>
-            <button class="btn-primary" onclick="trSalvar()"><i class="fas fa-save"></i> Salvar tudo</button>
-          </div>
-
-          <!-- META PIXEL -->
-          <div class="tr-card">
-            <div class="tr-card-header">
-              <div class="tr-icon-wrap" style="background:rgba(24,119,242,.15);border:1px solid rgba(24,119,242,.25);">
-                <i class="fab fa-facebook-f" style="color:#4e9eff;font-size:15px;"></i>
-              </div>
-              <div>
-                <div class="tr-card-title">Meta Pixel <span class="tr-badge tr-badge-blue">Facebook / Instagram Ads</span></div>
-                <div class="tr-card-sub">Troque o ID aqui e todas as páginas passam a usar o novo pixel automaticamente</div>
-              </div>
-            </div>
-            <div class="tr-grid-2">
-              <div>
-                <label class="tr-label">
-                  <i class="fas fa-user-plus tr-label-icon" style="color:var(--green);"></i>
-                  Pixel — Página de Cadastro
-                </label>
-                <input id="tr-pixel-cadastro" class="tr-input" placeholder="Ex: 1234567890123456">
-                <div class="tr-hint"><i class="fas fa-bolt" style="opacity:.5;"></i> Eventos: PageView · ViewContent · Lead · CompleteRegistration</div>
-              </div>
-              <div>
-                <label class="tr-label">
-                  <i class="fas fa-credit-card tr-label-icon" style="color:var(--blue);"></i>
-                  Pixel — Página de Planos
-                </label>
-                <input id="tr-pixel-planos" class="tr-input" placeholder="Ex: 9876543210987654">
-                <div class="tr-hint"><i class="fas fa-bolt" style="opacity:.5;"></i> Eventos: PageView · ViewContent · InitiateCheckout</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- LINKS MERCADO PAGO -->
-          <div class="tr-card">
-            <div class="tr-card-header">
-              <div class="tr-icon-wrap" style="background:rgba(0,158,227,.12);border:1px solid rgba(0,158,227,.25);">
-                <i class="fas fa-shopping-cart" style="color:#00c4ff;font-size:14px;"></i>
-              </div>
-              <div>
-                <div class="tr-card-title">Links do Mercado Pago <span class="tr-badge tr-badge-cyan">Checkout</span></div>
-                <div class="tr-card-sub">URLs dos planos de assinatura — altere aqui sem tocar no código da página de planos</div>
-              </div>
-            </div>
-            <div class="tr-stack">
-              <div>
-                <label class="tr-label">
-                  <i class="fas fa-calendar-day tr-label-icon" style="color:var(--yellow);"></i>
-                  Plano Mensal
-                </label>
-                <input id="tr-mp-mensal" class="tr-input tr-input-mono" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=...">
-              </div>
-              <div>
-                <label class="tr-label">
-                  <i class="fas fa-calendar-week tr-label-icon" style="color:var(--purple);"></i>
-                  Plano Trimestral
-                </label>
-                <input id="tr-mp-trimestral" class="tr-input tr-input-mono" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=...">
-              </div>
-              <div>
-                <label class="tr-label">
-                  <i class="fas fa-calendar tr-label-icon" style="color:var(--green);"></i>
-                  Plano Anual
-                </label>
-                <input id="tr-mp-anual" class="tr-input tr-input-mono" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=...">
-              </div>
-            </div>
-          </div>
-
-          <!-- URL OBRIGADO -->
-          <div class="tr-card">
-            <div class="tr-card-header">
-              <div class="tr-icon-wrap" style="background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.25);">
-                <i class="fas fa-check" style="color:var(--green);font-size:15px;"></i>
-              </div>
-              <div>
-                <div class="tr-card-title">URL de Obrigado <span class="tr-badge tr-badge-green">Pós-pagamento</span></div>
-                <div class="tr-card-sub">Configure também no Mercado Pago como "URL de retorno" — o evento <code class="tr-code">Purchase</code> será disparado nessa página</div>
-              </div>
-            </div>
-            <input id="tr-url-obrigado" class="tr-input tr-input-mono" placeholder="https://zirafood.com.br/obrigado">
-            <div class="tr-hint" style="margin-top:8px;"><i class="fas fa-info-circle" style="opacity:.5;"></i> Nesta página será disparado <code class="tr-code">fbq('track','Purchase')</code> automaticamente ao carregar.</div>
-          </div>
-
-          <div id="tr-status" style="display:none;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:4px;"></div>
-        </div><!-- /sec-rastreamento -->
-
->
+</html>
