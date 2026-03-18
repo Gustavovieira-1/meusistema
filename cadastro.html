@@ -275,6 +275,14 @@ body {
   .step-tab span { display: none; }
 }
 </style>
+  <!-- Meta Pixel Base — ID carregado do Supabase -->
+  <script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+  (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  </script>
 </head>
 <body>
 
@@ -498,6 +506,37 @@ const SB_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmF
 const RESEND_KEY     = 're_TETXg5yb_QEKaZ8i5U515QwmJDgYxb6WY';
 const BASE_URL       = 'https://zirafood.com.br';
 
+// ══════════════════════════════════════
+// META PIXEL — dinâmico via Supabase
+// ══════════════════════════════════════
+var _cadPixelId = null;
+
+async function cadInicializarPixel() {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/tracking_config?id=eq.sistema&select=pixel_cadastro&limit=1', {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
+    const rows = await r.json();
+    const pid  = rows && rows[0] && rows[0].pixel_cadastro ? rows[0].pixel_cadastro.trim() : '';
+    if (!pid) return;
+    _cadPixelId = pid;
+    window.fbq('init', pid);
+    window.fbq('track', 'PageView');
+  } catch(e) {}
+}
+
+function cadPixelTrack(event, params) {
+  if (!_cadPixelId || typeof fbq === 'undefined') return;
+  try { fbq('track', event, params || {}); } catch(e) {}
+}
+
+// Inicializa pixel ao carregar e dispara ViewContent
+document.addEventListener('DOMContentLoaded', function() {
+  cadInicializarPixel().then(function() {
+    cadPixelTrack('ViewContent', { content_name: 'Página de Cadastro Zira', content_category: 'Registro' });
+  });
+});
+
 const FAT_LABELS = {
   ate10k:     'Até R$ 10.000/mês',
   '10k_50k':  'R$ 10k – R$ 50k/mês',
@@ -572,6 +611,8 @@ function irEtapa2() {
   if (!cidade) return mostrarErro(1, 'Informe a cidade.');
   if (!estado) return mostrarErro(1, 'Selecione o estado.');
   if (!fat)    return mostrarErro(1, 'Selecione a faixa de faturamento.');
+  // Pixel: Lead — visitante iniciou o cadastro
+  cadPixelTrack('Lead', { content_name: 'Etapa 1 Concluída', content_category: 'Cadastro' });
   irEtapa(2);
 }
 
@@ -736,6 +777,15 @@ async function criarConta() {
 </td></tr></table>
 </body></html>`
       })
+    });
+
+    // Pixel: CompleteRegistration — conta criada com sucesso
+    cadPixelTrack('CompleteRegistration', {
+      content_name:     'Cadastro Concluído',
+      content_category: 'Trial',
+      value:            0,
+      currency:         'BRL',
+      status:           'trial'
     });
 
     // SUCESSO — mostrar tela
