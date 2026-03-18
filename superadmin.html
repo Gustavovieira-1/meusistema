@@ -1235,7 +1235,44 @@ tr:hover td { background: rgba(255,255,255,.015); }
             <div class="tr-hint" style="margin-top:8px;"><i class="fas fa-info-circle" style="opacity:.5;"></i> Nesta página será disparado <code class="tr-code">fbq('track','Purchase')</code> automaticamente ao carregar.</div>
           </div>
 
-          <div id="tr-status" style="display:none;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:4px;"></div>
+          <div id="tr-status" style="display:none;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:8px;"></div>
+
+          <!-- SQL para criar tabela -->
+          <div id="tr-sql-box" style="display:none;margin-top:16px;background:var(--surface);border:1px solid rgba(201,168,76,.3);border-radius:16px;padding:22px 24px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+              <i class="fas fa-database" style="color:var(--gold);font-size:16px;"></i>
+              <div>
+                <div style="font-weight:700;color:var(--text);font-size:14px;">Tabela não encontrada no Supabase</div>
+                <div style="font-size:12px;color:var(--muted2);margin-top:2px;">Execute este SQL no <strong>Supabase → SQL Editor</strong> para criar a tabela e depois salve novamente:</div>
+              </div>
+            </div>
+            <pre id="tr-sql-code" style="background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:16px;font-size:12px;font-family:'Courier New',monospace;color:var(--gold);overflow-x:auto;white-space:pre-wrap;line-height:1.6;">CREATE TABLE IF NOT EXISTS tracking_config (
+  id                 TEXT PRIMARY KEY DEFAULT 'sistema',
+  pixel_cadastro     TEXT DEFAULT '',
+  pixel_planos       TEXT DEFAULT '',
+  mp_link_mensal     TEXT DEFAULT '',
+  mp_link_trimestral TEXT DEFAULT '',
+  mp_link_anual      TEXT DEFAULT '',
+  url_obrigado       TEXT DEFAULT '',
+  atualizado_em      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Permissões para leitura pública (anon) e escrita autenticada
+ALTER TABLE tracking_config ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "leitura_publica" ON tracking_config
+  FOR SELECT USING (true);
+
+CREATE POLICY "escrita_service" ON tracking_config
+  FOR ALL USING (true) WITH CHECK (true);
+
+-- Insere linha inicial
+INSERT INTO tracking_config (id) VALUES ('sistema')
+ON CONFLICT (id) DO NOTHING;</pre>
+            <button onclick="trCopiarSQL()" style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:linear-gradient(135deg,var(--gold),#a07828);color:#0f0a00;border:none;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">
+              <i class="fas fa-copy"></i> Copiar SQL
+            </button>
+          </div>
         </div><!-- /sec-rastreamento -->
 
       </div><!-- /page -->
@@ -2521,14 +2558,51 @@ async function trSalvar() {
         atualizado_em:      new Date().toISOString()
     };
     try {
-        const hdrs = { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
-        const patch = await fetch(SA_URL + '/rest/v1/tracking_config?id=eq.sistema', { method: 'PATCH', headers: hdrs, body: JSON.stringify(body) });
-        if (patch.status === 204 || patch.ok) { trStatus('✓ Configurações de rastreamento salvas!', true); return; }
-        await fetch(SA_URL + '/rest/v1/tracking_config', { method: 'POST', headers: hdrs, body: JSON.stringify(body) });
-        trStatus('✓ Configurações de rastreamento salvas!', true);
-    } catch(e) { trStatus('Erro ao salvar: ' + e.message, false); }
+        // Usa service key para ter permissão total na tabela
+        const tok  = SA_SERVICE_KEY || SA_TOKEN || SA_KEY;
+        const hdrs = {
+            'apikey':        SA_KEY,
+            'Authorization': 'Bearer ' + tok,
+            'Content-Type':  'application/json',
+            'Prefer':        'return=minimal,resolution=merge-duplicates'
+        };
+        // Upsert via POST com on_conflict=id
+        const r = await fetch(SA_URL + '/rest/v1/tracking_config?on_conflict=id', {
+            method: 'POST', headers: hdrs, body: JSON.stringify(body)
+        });
+        if (r.ok || r.status === 200 || r.status === 201 || r.status === 204) {
+            trStatus('✓ Configurações de rastreamento salvas!', true);
+            return;
+        }
+        const err = await r.text();
+        // Se tabela não existe, mostra instrução SQL
+        if (err.includes('does not exist') || err.includes('relation') || r.status === 404) {
+            trStatus('⚠ Tabela não encontrada. Execute o SQL abaixo no Supabase para criá-la.', false);
+            document.getElementById('tr-sql-box').style.display = 'block';
+            return;
+        }
+        trStatus('Erro ao salvar: ' + err.substring(0, 80), false);
+    } catch(e) { trStatus('Erro: ' + e.message, false); }
 }
 
+
+function trCopiarSQL() {
+    const el = document.getElementById('tr-sql-code');
+    if (!el) return;
+    navigator.clipboard.writeText(el.textContent).then(function() {
+        const btn = event.target.closest('button');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+        setTimeout(() => btn.innerHTML = orig, 2000);
+    }).catch(function() {
+        const ta = document.createElement('textarea');
+        ta.value = el.textContent;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+    });
+}
 function trStatus(msg, ok) {
     const el = document.getElementById('tr-status');
     if (!el) return;
