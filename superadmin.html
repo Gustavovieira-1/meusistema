@@ -788,6 +788,97 @@ tr:hover td { background: rgba(255,255,255,.015); }
   .login-wrap { grid-template-columns: 1fr; }
   .login-left { display: none; }
 }
+
+/* ──────────────────────────────────────────────
+   RASTREAMENTO
+────────────────────────────────────────────── */
+.tr-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 26px 28px;
+  margin-bottom: 18px;
+  transition: border-color .2s;
+}
+.tr-card:hover { border-color: rgba(201,168,76,.2); }
+
+.tr-card-header {
+  display: flex; align-items: flex-start; gap: 16px;
+  margin-bottom: 22px;
+}
+
+.tr-icon-wrap {
+  width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.tr-card-title {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+
+.tr-card-sub {
+  font-size: 12px; color: var(--muted2); margin-top: 4px; line-height: 1.5;
+}
+
+.tr-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 10px; border-radius: 20px;
+  font-size: 10px; font-weight: 700; letter-spacing: .3px;
+}
+.tr-badge-blue   { background: rgba(37,99,235,.1);  color: #60a5fa; border: 1px solid rgba(37,99,235,.25); }
+.tr-badge-cyan   { background: rgba(0,158,227,.1);  color: #22d3ee; border: 1px solid rgba(0,158,227,.25); }
+.tr-badge-green  { background: rgba(22,163,74,.1);  color: #4ade80; border: 1px solid rgba(22,163,74,.25); }
+
+[data-theme="light"] .tr-badge-blue  { background: rgba(37,99,235,.08);  color: #1d4ed8; border-color: rgba(37,99,235,.2); }
+[data-theme="light"] .tr-badge-cyan  { background: rgba(0,158,227,.08);  color: #0369a1; border-color: rgba(0,158,227,.2); }
+[data-theme="light"] .tr-badge-green { background: rgba(22,163,74,.08);  color: #15803d; border-color: rgba(22,163,74,.2); }
+
+.tr-grid-2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+}
+
+.tr-stack { display: flex; flex-direction: column; gap: 16px; }
+
+.tr-label {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 10px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.tr-label-icon { font-size: 10px; }
+
+.tr-input {
+  width: 100%; padding: 11px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 11px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+  box-sizing: border-box;
+}
+.tr-input:focus {
+  border-color: rgba(201,168,76,.45);
+  box-shadow: 0 0 0 3px rgba(201,168,76,.07);
+}
+.tr-input::placeholder { color: var(--muted); }
+.tr-input-mono { font-family: 'Courier New', monospace; font-size: 12px; }
+
+.tr-hint {
+  font-size: 11px; color: var(--muted); margin-top: 6px;
+  display: flex; align-items: center; gap: 5px; line-height: 1.4;
+}
+
+.tr-code {
+  font-family: 'Courier New', monospace; font-size: 11px;
+  background: var(--surface3); color: var(--gold);
+  padding: 1px 6px; border-radius: 5px;
+  border: 1px solid var(--border2);
+}
+
 </style>
 </head>
 <body>
@@ -870,9 +961,6 @@ tr:hover td { background: rgba(255,255,255,.015); }
         </button>
         <button class="nav-item" id="nav-pagamentos" onclick="saAba('pagamentos',this)">
           <i class="fas fa-credit-card"></i> Pagamentos
-        </button>
-        <button class="nav-item" id="nav-rastreamento" onclick="saAba('rastreamento',this)">
-          <i class="fas fa-satellite-dish"></i> Rastreamento
         </button>
       </nav>
 
@@ -1051,102 +1139,6 @@ tr:hover td { background: rgba(255,255,255,.015); }
           </div>
         </div>
 
-
-        <!-- ══ ABA RASTREAMENTO ══ -->
-        <div class="secao" id="sec-rastreamento">
-          <div class="sec-header">
-            <div>
-              <div class="sec-titulo">Rastreamento</div>
-              <div class="sec-sub">Pixels e links de checkout — altere aqui, aplica em todas as páginas</div>
-            </div>
-            <button class="btn-primary" onclick="trSalvar()"><i class="fas fa-save"></i> Salvar tudo</button>
-          </div>
-
-          <!-- META PIXEL -->
-          <div style="background:white;border:1.5px solid var(--border);border-radius:16px;padding:24px 28px;margin-bottom:20px;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-              <div style="width:40px;height:40px;background:#1877F2;border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                <i class="fab fa-facebook-f" style="color:white;font-size:16px;"></i>
-              </div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:15px;">Meta Pixel (Facebook / Instagram Ads)</div>
-                <div style="font-size:12px;color:var(--muted);">Troque o ID aqui e todas as páginas passam a usar o novo pixel automaticamente</div>
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-              <div>
-                <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">
-                  <i class="fas fa-user-plus" style="color:#16a34a;margin-right:4px;"></i>Pixel — Página de Cadastro
-                </label>
-                <input id="tr-pixel-cadastro" placeholder="Ex: 1234567890123456"
-                  style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text);box-sizing:border-box;">
-                <div style="font-size:11px;color:var(--muted);margin-top:5px;">Eventos disparados: PageView · ViewContent · Lead · CompleteRegistration</div>
-              </div>
-              <div>
-                <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">
-                  <i class="fas fa-credit-card" style="color:#2563eb;margin-right:4px;"></i>Pixel — Página de Planos
-                </label>
-                <input id="tr-pixel-planos" placeholder="Ex: 9876543210987654"
-                  style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--bg);color:var(--text);box-sizing:border-box;">
-                <div style="font-size:11px;color:var(--muted);margin-top:5px;">Eventos disparados: PageView · ViewContent · InitiateCheckout</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- LINKS MERCADO PAGO -->
-          <div style="background:white;border:1.5px solid var(--border);border-radius:16px;padding:24px 28px;margin-bottom:20px;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-              <div style="width:40px;height:40px;background:#009EE3;border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                <i class="fas fa-shopping-cart" style="color:white;font-size:16px;"></i>
-              </div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:15px;">Links do Mercado Pago</div>
-                <div style="font-size:12px;color:var(--muted);">URLs dos planos de assinatura — altere aqui sem tocar no código da página de planos</div>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:14px;">
-              <div>
-                <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">
-                  <i class="fas fa-calendar-day" style="color:#d97706;margin-right:4px;"></i>Plano Mensal
-                </label>
-                <input id="tr-mp-mensal" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=..."
-                  style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;background:var(--bg);color:var(--text);box-sizing:border-box;font-family:monospace;">
-              </div>
-              <div>
-                <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">
-                  <i class="fas fa-calendar-week" style="color:#7c3aed;margin-right:4px;"></i>Plano Trimestral
-                </label>
-                <input id="tr-mp-trimestral" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=..."
-                  style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;background:var(--bg);color:var(--text);box-sizing:border-box;font-family:monospace;">
-              </div>
-              <div>
-                <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px;">
-                  <i class="fas fa-calendar" style="color:#16a34a;margin-right:4px;"></i>Plano Anual
-                </label>
-                <input id="tr-mp-anual" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=..."
-                  style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;background:var(--bg);color:var(--text);box-sizing:border-box;font-family:monospace;">
-              </div>
-            </div>
-          </div>
-
-          <!-- URL OBRIGADO -->
-          <div style="background:white;border:1.5px solid var(--border);border-radius:16px;padding:24px 28px;margin-bottom:20px;">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-              <div style="width:40px;height:40px;background:#16a34a;border-radius:10px;display:flex;align-items:center;justify-content:center;">
-                <i class="fas fa-check" style="color:white;font-size:16px;"></i>
-              </div>
-              <div>
-                <div style="font-weight:700;color:var(--text);font-size:15px;">URL de Obrigado (pós-pagamento)</div>
-                <div style="font-size:12px;color:var(--muted);">Configure também no Mercado Pago como "URL de retorno" — o evento Purchase será disparado nessa página</div>
-              </div>
-            </div>
-            <input id="tr-url-obrigado" placeholder="https://zirafood.com.br/obrigado"
-              style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:var(--bg);color:var(--text);box-sizing:border-box;font-family:monospace;">
-            <div style="font-size:11px;color:var(--muted);margin-top:5px;">Nesta página será disparado fbq('track','Purchase') automaticamente ao carregar.</div>
-          </div>
-
-          <div id="tr-status" style="display:none;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:4px;"></div>
-        </div><!-- /sec-rastreamento -->
       </div><!-- /page -->
     </div><!-- /main-content -->
   </div><!-- /app-layout -->
@@ -2379,8 +2371,7 @@ const tabTitles = {
     restaurantes: 'Restaurantes',
     usuarios: 'Usuários',
     pedidos: 'Pedidos',
-    pagamentos: 'Pagamentos',
-    rastreamento: 'Rastreamento'
+    pagamentos: 'Pagamentos'
 };
 
 function saAba(id, btn) {
@@ -2392,62 +2383,8 @@ function saAba(id, btn) {
     // Salva a aba atual para restaurar após F5
     try { localStorage.setItem('sa_last_sec', id); } catch(e) {}
     if (id === 'pedidos')    saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value);
-    if (id === 'pagamentos')   saCarregarPagamentos();
-    if (id === 'usuarios')     saCarregarUsuarios();
-    if (id === 'rastreamento') trCarregar();
-}
-
-// ══════════════════════════════════════════════════════════════
-// RASTREAMENTO — Pixel & Links MP
-// ══════════════════════════════════════════════════════════════
-async function trCarregar() {
-    try {
-        const r = await fetch(SA_URL + '/rest/v1/tracking_config?id=eq.sistema&select=*&limit=1', {
-            headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY) }
-        });
-        const rows = await r.json();
-        const cfg  = (rows && rows[0]) ? rows[0] : {};
-        const set  = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
-        set('tr-pixel-cadastro',  cfg.pixel_cadastro);
-        set('tr-pixel-planos',    cfg.pixel_planos);
-        set('tr-mp-mensal',       cfg.mp_link_mensal);
-        set('tr-mp-trimestral',   cfg.mp_link_trimestral);
-        set('tr-mp-anual',        cfg.mp_link_anual);
-        set('tr-url-obrigado',    cfg.url_obrigado);
-    } catch(e) { trStatus('Erro ao carregar: ' + e.message, false); }
-}
-
-async function trSalvar() {
-    const g = id => (document.getElementById(id) || {}).value || '';
-    const body = {
-        id:                 'sistema',
-        pixel_cadastro:     g('tr-pixel-cadastro').trim(),
-        pixel_planos:       g('tr-pixel-planos').trim(),
-        mp_link_mensal:     g('tr-mp-mensal').trim(),
-        mp_link_trimestral: g('tr-mp-trimestral').trim(),
-        mp_link_anual:      g('tr-mp-anual').trim(),
-        url_obrigado:       g('tr-url-obrigado').trim(),
-        atualizado_em:      new Date().toISOString()
-    };
-    try {
-        const hdrs = { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
-        const patch = await fetch(SA_URL + '/rest/v1/tracking_config?id=eq.sistema', { method: 'PATCH', headers: hdrs, body: JSON.stringify(body) });
-        if (patch.status === 204 || patch.ok) { trStatus('✓ Configurações de rastreamento salvas!', true); return; }
-        // Linha não existe ainda — INSERT
-        await fetch(SA_URL + '/rest/v1/tracking_config', { method: 'POST', headers: hdrs, body: JSON.stringify(body) });
-        trStatus('✓ Configurações de rastreamento salvas!', true);
-    } catch(e) { trStatus('Erro ao salvar: ' + e.message, false); }
-}
-
-function trStatus(msg, ok) {
-    const el = document.getElementById('tr-status');
-    if (!el) return;
-    el.style.display    = 'block';
-    el.style.background = ok ? '#f0fdf4' : '#fff0f0';
-    el.style.border     = '1px solid ' + (ok ? '#86efac' : '#fca5a5');
-    el.style.color      = ok ? '#15803d' : '#dc2626';
-    el.textContent      = msg;
-    if (ok) setTimeout(() => { el.style.display = 'none'; }, 3000);
+    if (id === 'pagamentos') saCarregarPagamentos();
+    if (id === 'usuarios')   saCarregarUsuarios();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2564,4 +2501,99 @@ async function saAutomatizarPagamentos() {
 })();
 </script>
 </body>
-</html>
+</html        <!-- ══ ABA RASTREAMENTO ══ -->
+        <div class="secao" id="sec-rastreamento">
+          <div class="sec-header">
+            <div>
+              <div class="sec-titulo">Rastreamento</div>
+              <div class="sec-sub">Pixels e links de checkout — altere aqui, aplica em todas as páginas automaticamente</div>
+            </div>
+            <button class="btn-primary" onclick="trSalvar()"><i class="fas fa-save"></i> Salvar tudo</button>
+          </div>
+
+          <!-- META PIXEL -->
+          <div class="tr-card">
+            <div class="tr-card-header">
+              <div class="tr-icon-wrap" style="background:rgba(24,119,242,.15);border:1px solid rgba(24,119,242,.25);">
+                <i class="fab fa-facebook-f" style="color:#4e9eff;font-size:15px;"></i>
+              </div>
+              <div>
+                <div class="tr-card-title">Meta Pixel <span class="tr-badge tr-badge-blue">Facebook / Instagram Ads</span></div>
+                <div class="tr-card-sub">Troque o ID aqui e todas as páginas passam a usar o novo pixel automaticamente</div>
+              </div>
+            </div>
+            <div class="tr-grid-2">
+              <div>
+                <label class="tr-label">
+                  <i class="fas fa-user-plus tr-label-icon" style="color:var(--green);"></i>
+                  Pixel — Página de Cadastro
+                </label>
+                <input id="tr-pixel-cadastro" class="tr-input" placeholder="Ex: 1234567890123456">
+                <div class="tr-hint"><i class="fas fa-bolt" style="opacity:.5;"></i> Eventos: PageView · ViewContent · Lead · CompleteRegistration</div>
+              </div>
+              <div>
+                <label class="tr-label">
+                  <i class="fas fa-credit-card tr-label-icon" style="color:var(--blue);"></i>
+                  Pixel — Página de Planos
+                </label>
+                <input id="tr-pixel-planos" class="tr-input" placeholder="Ex: 9876543210987654">
+                <div class="tr-hint"><i class="fas fa-bolt" style="opacity:.5;"></i> Eventos: PageView · ViewContent · InitiateCheckout</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LINKS MERCADO PAGO -->
+          <div class="tr-card">
+            <div class="tr-card-header">
+              <div class="tr-icon-wrap" style="background:rgba(0,158,227,.12);border:1px solid rgba(0,158,227,.25);">
+                <i class="fas fa-shopping-cart" style="color:#00c4ff;font-size:14px;"></i>
+              </div>
+              <div>
+                <div class="tr-card-title">Links do Mercado Pago <span class="tr-badge tr-badge-cyan">Checkout</span></div>
+                <div class="tr-card-sub">URLs dos planos de assinatura — altere aqui sem tocar no código da página de planos</div>
+              </div>
+            </div>
+            <div class="tr-stack">
+              <div>
+                <label class="tr-label">
+                  <i class="fas fa-calendar-day tr-label-icon" style="color:var(--yellow);"></i>
+                  Plano Mensal
+                </label>
+                <input id="tr-mp-mensal" class="tr-input tr-input-mono" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=...">
+              </div>
+              <div>
+                <label class="tr-label">
+                  <i class="fas fa-calendar-week tr-label-icon" style="color:var(--purple);"></i>
+                  Plano Trimestral
+                </label>
+                <input id="tr-mp-trimestral" class="tr-input tr-input-mono" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=...">
+              </div>
+              <div>
+                <label class="tr-label">
+                  <i class="fas fa-calendar tr-label-icon" style="color:var(--green);"></i>
+                  Plano Anual
+                </label>
+                <input id="tr-mp-anual" class="tr-input tr-input-mono" placeholder="https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=...">
+              </div>
+            </div>
+          </div>
+
+          <!-- URL OBRIGADO -->
+          <div class="tr-card">
+            <div class="tr-card-header">
+              <div class="tr-icon-wrap" style="background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.25);">
+                <i class="fas fa-check" style="color:var(--green);font-size:15px;"></i>
+              </div>
+              <div>
+                <div class="tr-card-title">URL de Obrigado <span class="tr-badge tr-badge-green">Pós-pagamento</span></div>
+                <div class="tr-card-sub">Configure também no Mercado Pago como "URL de retorno" — o evento <code class="tr-code">Purchase</code> será disparado nessa página</div>
+              </div>
+            </div>
+            <input id="tr-url-obrigado" class="tr-input tr-input-mono" placeholder="https://zirafood.com.br/obrigado">
+            <div class="tr-hint" style="margin-top:8px;"><i class="fas fa-info-circle" style="opacity:.5;"></i> Nesta página será disparado <code class="tr-code">fbq('track','Purchase')</code> automaticamente ao carregar.</div>
+          </div>
+
+          <div id="tr-status" style="display:none;padding:12px 16px;border-radius:10px;font-size:13px;font-weight:600;margin-top:4px;"></div>
+        </div><!-- /sec-rastreamento -->
+
+>
