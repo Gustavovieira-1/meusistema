@@ -962,6 +962,9 @@ tr:hover td { background: rgba(255,255,255,.015); }
         <button class="nav-item" id="nav-pagamentos" onclick="saAba('pagamentos',this)">
           <i class="fas fa-credit-card"></i> Pagamentos
         </button>
+        <button class="nav-item" id="nav-rastreamento" onclick="saAba('rastreamento',this)">
+          <i class="fas fa-satellite-dish"></i> Rastreamento
+        </button>
       </nav>
 
       <div class="sidebar-bottom">
@@ -2371,7 +2374,8 @@ const tabTitles = {
     restaurantes: 'Restaurantes',
     usuarios: 'Usuários',
     pedidos: 'Pedidos',
-    pagamentos: 'Pagamentos'
+    pagamentos: 'Pagamentos',
+    rastreamento: 'Rastreamento'
 };
 
 function saAba(id, btn) {
@@ -2382,9 +2386,62 @@ function saAba(id, btn) {
     document.getElementById('topbar-titulo').textContent = tabTitles[id] || id;
     // Salva a aba atual para restaurar após F5
     try { localStorage.setItem('sa_last_sec', id); } catch(e) {}
-    if (id === 'pedidos')    saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value);
-    if (id === 'pagamentos') saCarregarPagamentos();
-    if (id === 'usuarios')   saCarregarUsuarios();
+    if (id === 'pedidos')      saCarregarPedidos(document.getElementById('filtro-rest-pedidos').value);
+    if (id === 'pagamentos')   saCarregarPagamentos();
+    if (id === 'usuarios')     saCarregarUsuarios();
+    if (id === 'rastreamento') trCarregar();
+}
+
+// ══════════════════════════════════════════════════════════════
+// RASTREAMENTO — Pixel & Links MP
+// ══════════════════════════════════════════════════════════════
+async function trCarregar() {
+    try {
+        const r = await fetch(SA_URL + '/rest/v1/tracking_config?id=eq.sistema&select=*&limit=1', {
+            headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY) }
+        });
+        const rows = await r.json();
+        const cfg  = (rows && rows[0]) ? rows[0] : {};
+        const set  = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+        set('tr-pixel-cadastro',  cfg.pixel_cadastro);
+        set('tr-pixel-planos',    cfg.pixel_planos);
+        set('tr-mp-mensal',       cfg.mp_link_mensal);
+        set('tr-mp-trimestral',   cfg.mp_link_trimestral);
+        set('tr-mp-anual',        cfg.mp_link_anual);
+        set('tr-url-obrigado',    cfg.url_obrigado);
+    } catch(e) { trStatus('Erro ao carregar: ' + e.message, false); }
+}
+
+async function trSalvar() {
+    const g = id => (document.getElementById(id) || {}).value || '';
+    const body = {
+        id:                 'sistema',
+        pixel_cadastro:     g('tr-pixel-cadastro').trim(),
+        pixel_planos:       g('tr-pixel-planos').trim(),
+        mp_link_mensal:     g('tr-mp-mensal').trim(),
+        mp_link_trimestral: g('tr-mp-trimestral').trim(),
+        mp_link_anual:      g('tr-mp-anual').trim(),
+        url_obrigado:       g('tr-url-obrigado').trim(),
+        atualizado_em:      new Date().toISOString()
+    };
+    try {
+        const hdrs = { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=minimal' };
+        const patch = await fetch(SA_URL + '/rest/v1/tracking_config?id=eq.sistema', { method: 'PATCH', headers: hdrs, body: JSON.stringify(body) });
+        if (patch.status === 204 || patch.ok) { trStatus('✓ Configurações de rastreamento salvas!', true); return; }
+        await fetch(SA_URL + '/rest/v1/tracking_config', { method: 'POST', headers: hdrs, body: JSON.stringify(body) });
+        trStatus('✓ Configurações de rastreamento salvas!', true);
+    } catch(e) { trStatus('Erro ao salvar: ' + e.message, false); }
+}
+
+function trStatus(msg, ok) {
+    const el = document.getElementById('tr-status');
+    if (!el) return;
+    el.style.display    = 'block';
+    el.style.background = ok ? 'rgba(22,163,74,.1)' : 'rgba(220,38,38,.1)';
+    el.style.border     = '1px solid ' + (ok ? 'rgba(22,163,74,.3)' : 'rgba(220,38,38,.3)');
+    el.style.color      = ok ? 'var(--green)' : 'var(--red)';
+    el.textContent      = msg;
+    if (ok) setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
 
 // ══════════════════════════════════════════════════════════════
