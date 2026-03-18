@@ -276,6 +276,14 @@ body {
   .hero { padding: 40px 16px 32px; }
 }
 </style>
+  <!-- Meta Pixel Base — ID carregado do Supabase -->
+  <script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+  (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  </script>
 </head>
 <body>
 
@@ -438,13 +446,59 @@ body {
 </footer>
 
 <script>
-// Links do Mercado Pago — substitua pelos links reais quando criar os planos lá
-const LINKS_MP = {
-  mensal:      'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=1b96348f2aa54127b50af2e180302692',
-  trimestral:  'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=dc5ff25b9fa14bc59fd81b8a8e2cc5a6',
-  anual:       'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=bb02bc088dc941b0a91ddc28490aff16'
+// ══════════════════════════════════════
+// CONFIG SUPABASE
+// ══════════════════════════════════════
+const PL_SB_URL = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
+const PL_SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE0NzcsImV4cCI6MjA4ODMxNzQ3N30.URV7NROQ0wAGG_GzrS2yn2Kksxaefy4v4JJ49yRW51A';
+
+// Links fallback — usados se o Supabase não responder
+const LINKS_MP_FALLBACK = {
+  mensal:     'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=1b96348f2aa54127b50af2e180302692',
+  trimestral: 'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=dc5ff25b9fa14bc59fd81b8a8e2cc5a6',
+  anual:      'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=bb02bc088dc941b0a91ddc28490aff16'
 };
 
+// Links carregados do Supabase (substituem o fallback quando disponíveis)
+let LINKS_MP = { ...LINKS_MP_FALLBACK };
+
+// ══════════════════════════════════════
+// META PIXEL — dinâmico via Supabase
+// ══════════════════════════════════════
+var _plPixelId = null;
+
+async function plCarregarConfig() {
+  try {
+    const r = await fetch(PL_SB_URL + '/rest/v1/tracking_config?id=eq.sistema&select=pixel_planos,mp_link_mensal,mp_link_trimestral,mp_link_anual&limit=1', {
+      headers: { 'apikey': PL_SB_KEY, 'Authorization': 'Bearer ' + PL_SB_KEY }
+    });
+    const rows = await r.json();
+    const cfg  = (rows && rows[0]) ? rows[0] : {};
+
+    // Inicializa pixel se configurado
+    if (cfg.pixel_planos && cfg.pixel_planos.trim()) {
+      _plPixelId = cfg.pixel_planos.trim();
+      window.fbq('init', _plPixelId);
+      window.fbq('track', 'PageView');
+      plPixelTrack('ViewContent', { content_name: 'Página de Planos Zira', content_category: 'Assinatura' });
+    }
+
+    // Atualiza links do MP se configurados
+    if (cfg.mp_link_mensal     && cfg.mp_link_mensal.trim())     LINKS_MP.mensal     = cfg.mp_link_mensal.trim();
+    if (cfg.mp_link_trimestral && cfg.mp_link_trimestral.trim()) LINKS_MP.trimestral = cfg.mp_link_trimestral.trim();
+    if (cfg.mp_link_anual      && cfg.mp_link_anual.trim())      LINKS_MP.anual      = cfg.mp_link_anual.trim();
+
+  } catch(e) { /* fallback silencioso — usa links hardcoded */ }
+}
+
+function plPixelTrack(event, params) {
+  if (!_plPixelId || typeof fbq === 'undefined') return;
+  try { fbq('track', event, params || {}); } catch(e) {}
+}
+
+// ══════════════════════════════════════
+// CARDS / PERÍODO
+// ══════════════════════════════════════
 let periodoAtual = 'mensal';
 
 function setPeriodo(p) {
@@ -452,52 +506,54 @@ function setPeriodo(p) {
   ['mensal','trimestral','anual'].forEach(x => {
     document.getElementById('btn-' + x).classList.toggle('active', x === p);
   });
-
-  // Mostrar/esconder cards conforme período
   const cardMensal     = document.getElementById('card-mensal');
   const cardTrimestral = document.getElementById('card-trimestral');
   const cardAnual      = document.getElementById('card-anual');
-
   if (p === 'mensal') {
-    cardMensal.style.display     = 'block';
-    cardTrimestral.style.display = 'none';
-    cardAnual.style.display      = 'none';
+    cardMensal.style.display = 'block'; cardTrimestral.style.display = 'none'; cardAnual.style.display = 'none';
     cardMensal.classList.remove('destaque');
   } else if (p === 'trimestral') {
-    cardMensal.style.display     = 'block';
-    cardTrimestral.style.display = 'block';
-    cardAnual.style.display      = 'none';
-    cardMensal.classList.remove('destaque');
-    cardTrimestral.classList.add('destaque');
+    cardMensal.style.display = 'block'; cardTrimestral.style.display = 'block'; cardAnual.style.display = 'none';
+    cardMensal.classList.remove('destaque'); cardTrimestral.classList.add('destaque');
   } else {
-    cardMensal.style.display     = 'block';
-    cardTrimestral.style.display = 'none';
-    cardAnual.style.display      = 'block';
-    cardMensal.classList.remove('destaque');
-    cardAnual.classList.add('destaque');
+    cardMensal.style.display = 'block'; cardTrimestral.style.display = 'none'; cardAnual.style.display = 'block';
+    cardMensal.classList.remove('destaque'); cardAnual.classList.add('destaque');
   }
 }
 
-// Inicializar mostrando todos os 3 de uma vez
 function initCards() {
   document.getElementById('card-mensal').style.display     = 'block';
   document.getElementById('card-trimestral').style.display = 'block';
   document.getElementById('card-anual').style.display      = 'block';
-
-  // Remover toggle e mostrar todos juntos
-  document.querySelector('.toggle-wrap').style.display = 'none';
+  document.querySelector('.toggle-wrap').style.display     = 'none';
 }
 
+// ══════════════════════════════════════
+// CHECKOUT
+// ══════════════════════════════════════
 function irCheckout(plano) {
   const link = LINKS_MP[plano];
-  if (link.startsWith('#')) {
-    alert('Link do Mercado Pago ainda não configurado para o plano ' + plano + '. Configure em LINKS_MP no código.');
+  if (!link || link.startsWith('#')) {
+    alert('Link do Mercado Pago ainda não configurado para o plano ' + plano + '. Configure no Superadmin > Rastreamento.');
     return;
   }
+
+  // Pixel: InitiateCheckout
+  const precos = { mensal: 97, trimestral: 247, anual: 797 };
+  plPixelTrack('InitiateCheckout', {
+    content_name:     'Plano ' + plano.charAt(0).toUpperCase() + plano.slice(1),
+    content_category: 'Assinatura',
+    value:            precos[plano] || 0,
+    currency:         'BRL',
+    num_items:        1
+  });
+
   const params = new URLSearchParams(window.location.search);
   const rid = params.get('rid') || '';
   const url = link + (rid ? '&external_reference=' + rid : '');
-  window.location.href = url;
+
+  // Pequeno delay para garantir que o pixel enviou antes de redirecionar
+  setTimeout(function() { window.location.href = url; }, 300);
 }
 
 function toggleFaq(el) {
@@ -505,8 +561,13 @@ function toggleFaq(el) {
   item.classList.toggle('open');
 }
 
-// Mostrar todos os 3 cards por padrão
-initCards();
+// ══════════════════════════════════════
+// INICIALIZAÇÃO
+// ══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+  initCards();
+  plCarregarConfig(); // carrega pixel + links do Supabase
+});
 </script>
 </body>
 </html>
