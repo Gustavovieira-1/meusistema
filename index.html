@@ -21,8 +21,10 @@ t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
 (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
 // ID preenchido dinamicamente — não chama init aqui
 </script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -623,31 +625,55 @@ async function supaFetch(path) {
 }
 
 async function init(){
-    console.log('[INIT] Iniciando carregamento de dados...');
-    // Pegar slug da URL: /?r=fogueiro-burguer  OU  /fogueiro-burguer
+    // Pegar slug da URL
     const params = new URLSearchParams(window.location.search);
     REST_SLUG = params.get('r') || window.location.pathname.replace('/','').split('/')[0] || null;
-    console.log('[INIT] REST_SLUG:', REST_SLUG);
+
+    // ── CACHE INSTANTÂNEO ────────────────────────────────────────
+    // Se já visitou antes, renderiza do cache imediatamente enquanto
+    // busca dados frescos em background (estratégia stale-while-revalidate)
+    const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+    try {
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+        if (cached && cached.ts && (Date.now() - cached.ts) < CACHE_TTL && cached.db) {
+            // Renderiza instantâneo do cache
+            REST_ID = cached.restId;
+            db.categories  = cached.db.categories;
+            db.prods       = cached.db.prods;
+            db.comps       = cached.db.comps;
+            db.cfg         = cached.db.cfg;
+            db.txCfg       = cached.db.txCfg;
+            db.horarios    = cached.db.horarios;
+            db.integracoes = cached.db.integracoes;
+            lojaPausada    = !!cached.db.lojaPausada;
+            lojaForaHorario = !!cached.db.lojaForaHorario;
+            aberta         = !lojaPausada && !lojaForaHorario;
+            renderHeader();
+            renderCardapio();
+            pixelInicializar(db.integracoes);
+            // Atualiza em background silenciosamente
+            _initBackground(CACHE_KEY);
+            return;
+        }
+    } catch(e) {}
+    // ── SEM CACHE: carregamento normal ───────────────────────────
 
     try{
         // Buscar restaurante pelo slug
         let restRows;
         if (REST_SLUG) {
-            console.log('[INIT] Buscando restaurante por slug...');
             restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
         } else {
-            // fallback: pega o primeiro restaurante (útil em desenvolvimento)
-            console.log('[INIT] Buscando primeiro restaurante (fallback)...');
             restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1&order=id.asc');
         }
         if (!restRows || !restRows[0]) throw new Error('Restaurante não encontrado');
         const rest = restRows[0];
         REST_ID = rest.id;
-        console.log('[INIT] ✅ REST_ID carregado:', REST_ID);
-        await verificarPagamentoCardapio(REST_ID);
 
-        // Buscar cardápio, configs e taxas em paralelo
-        const [cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
+        // Verificação de pagamento + cardápio em paralelo (não mais sequencial)
+        const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
+            supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
             supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=*'),
@@ -657,6 +683,19 @@ async function init(){
             supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
             supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
         ]);
+
+        // Verifica pagamento com os dados que já vieram no Promise.all
+        if (pgtoRows && pgtoRows[0]) {
+            const pgto = pgtoRows[0];
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
+            const status = pgto.status_pgto;
+            if (status === 'inadimplente' || status === 'cancelado' ||
+                (status === 'trial' && venc && hoje > venc)) {
+                document.getElementById('cardapio-bloqueio').style.display = 'flex';
+                return;
+            }
+        }
 
         db.categories = (cats||[]).map(c => ({id: c.id, name: c.nome, active: true}));
         db.prods      = (prods||[]).map(p => {
@@ -719,6 +758,26 @@ async function init(){
 
         renderHeader(); renderCardapio();
 
+        // Salva cache para próxima visita instantânea
+        try {
+            const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
+            localStorage.setItem(_cacheKey2, JSON.stringify({
+                ts: Date.now(),
+                restId: REST_ID,
+                db: {
+                    categories: db.categories,
+                    prods: db.prods,
+                    comps: db.comps,
+                    cfg: db.cfg,
+                    txCfg: db.txCfg,
+                    horarios: db.horarios,
+                    integracoes: db.integracoes,
+                    lojaPausada: lojaPausada,
+                    lojaForaHorario: lojaForaHorario
+                }
+            }));
+        } catch(e) {}
+
         // Polling leve a cada 60s para atualizar status da loja em tempo real
         setInterval(async function() {
             try {
@@ -758,6 +817,98 @@ async function init(){
     }catch(e){
         document.getElementById('content').innerHTML='<div class="loader"><div style="font-size:44px">😕</div><div class="loader-txt"><b>Cardápio indisponível</b><br>'+e.message+'</div></div>';
     }
+}
+
+// Atualização em background — roda após renderizar do cache
+async function _initBackground(cacheKey) {
+    try {
+        let restRows;
+        if (REST_SLUG) {
+            restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
+        } else {
+            restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1&order=id.asc');
+        }
+        if (!restRows || !restRows[0]) return;
+        REST_ID = restRows[0].id;
+
+        const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
+            supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
+            supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
+            supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
+            supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=*'),
+            supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
+            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
+        ]);
+
+        // Verifica bloqueio
+        if (pgtoRows && pgtoRows[0]) {
+            const pgto = pgtoRows[0];
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
+            const status = pgto.status_pgto;
+            if (status === 'inadimplente' || status === 'cancelado' ||
+                (status === 'trial' && venc && hoje > venc)) {
+                document.getElementById('cardapio-bloqueio').style.display = 'flex';
+                return;
+            }
+        }
+
+        // Atualiza db e re-renderiza se houve mudança
+        const rest = restRows[0];
+        const cfg  = (cfgRows && cfgRows[0]) || {};
+        db.categories  = (cats||[]).map(c => ({id: c.id, name: c.nome, active: true}));
+        db.prods       = (prods||[]).map(p => {
+            const priceVal = typeof p.preco === 'string' ? parseFloat(p.preco.replace(',','.')) : parseFloat(p.preco);
+            return { id: p.id, name: p.nome, price: isNaN(priceVal) ? 0 : priceVal, category: p.categoria_nome,
+                     desc: p.descricao||'', img: p.imagem||'', comps: p.complementos||[], active: true };
+        });
+        db.comps       = (comps||[]).map(c => ({id: c.id, title: c.titulo||c.nome||'', type: c.tipo||'check', options: c.opcoes||[]}));
+        db.cfg         = { nomeMarca: cfg.nome_marca||rest.nome, nomeUnidade: cfg.nome_unidade||rest.nome,
+                           cidade: cfg.cidade||'', logo: cfg.logo||'', capa: cfg.capa||'',
+                           minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0,
+                           taxaEntrega: parseFloat(cfg.taxa_entrega)||0 };
+        db.txCfg       = (txRows&&txRows[0]) ? { tempoEntrega: txRows[0].tempo_entrega||40,
+                           tempoRetirada: txRows[0].tempo_retirada||20, taxaPadrao: parseFloat(txRows[0].taxa_padrao)||0 } : {};
+        db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados||[]) : [];
+        db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados||{}) : {};
+        pixelInicializar(db.integracoes);
+        if (fidRows && fidRows[0]) {
+            const fr = fidRows[0];
+            localStorage.setItem('f_fidelidade_cfg', JSON.stringify({
+                ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
+                descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
+                produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
+            }));
+        }
+        // Recalcula status da loja
+        lojaPausada = !!cfg.pausada;
+        lojaForaHorario = false;
+        if (db.horarios && db.horarios.length) {
+            var agora = new Date(), dia = db.horarios[agora.getDay()];
+            if (dia && dia.aberta && dia.periodos && dia.periodos.length) {
+                var min = agora.getHours()*60+agora.getMinutes();
+                if (!dia.periodos.some(function(p){
+                    var ah=parseInt((p.ini||'00:00').split(':')[0]),am=parseInt((p.ini||'00:00').split(':')[1]);
+                    var fh=parseInt((p.fim||'23:59').split(':')[0]),fm=parseInt((p.fim||'23:59').split(':')[1]);
+                    return min>=ah*60+am && min<fh*60+fm;
+                })) lojaForaHorario = true;
+            } else if (dia && !dia.aberta) { lojaForaHorario = true; }
+        }
+        aberta = !lojaPausada && !lojaForaHorario;
+        renderHeader(); renderCardapio();
+        // Salva cache atualizado
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify({
+                ts: Date.now(), restId: REST_ID,
+                db: { categories: db.categories, prods: db.prods, comps: db.comps,
+                      cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
+                      integracoes: db.integracoes, lojaPausada, lojaForaHorario }
+            }));
+        } catch(e) {}
+    } catch(e) { console.warn('[BG] Erro na atualização em background:', e.message); }
 }
 
 function money(v){return 'R$ '+parseFloat(v||0).toFixed(2).replace('.',',');}
