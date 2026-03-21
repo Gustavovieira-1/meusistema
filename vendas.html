@@ -215,7 +215,7 @@ body {
 }
 
 .hero-left {
-  padding: 48px 0 48px 88px;
+  padding: 48px 0 48px 120px;
 }
 
 .laptop {
@@ -257,12 +257,7 @@ body {
 }
 
 /* Base */
-.lap-base {
-  background: linear-gradient(180deg, #2e2e32 0%, #1e1e22 100%);
-  height: 20px; border-radius: 0 0 4px 4px;
-  position: relative;
-  box-shadow: 0 4px 0 #0c0c0e;
-}
+.lap-base { display: none; }
 .lap-base::before { /* trackpad notch */
   content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
   width: 48px; height: 5px; background: #141416; border-radius: 3px;
@@ -362,10 +357,7 @@ body {
 
 /* ─── TRUST BAR ─── */
 .trust {
-  background: var(--bg-soft);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  padding: 0 40px;
+  display: none;
 }
 .trust-inner {
   max-width: 1200px; margin: 0 auto;
