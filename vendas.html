@@ -995,7 +995,7 @@ footer {
   <div class="how-inner">
 
     <!-- Esquerda: texto + steps -->
-    <div class="how-left reveal">
+    <div class="how-left">
       <div class="sec-tag">Como funciona</div>
       <h2 class="sec-h">Configure em minutos.<br>Receba pedidos hoje.</h2>
       <p class="sec-sub">Sem precisar de técnico. Sem contrato de fidelidade. Sem complicação.</p>
@@ -1026,7 +1026,7 @@ footer {
     </div>
 
     <!-- Direita: celular com o cardápio real -->
-    <div class="how-right reveal">
+    <div class="how-right">
       <div class="phone-mockup">
         <div class="phone-frame">
           <div class="phone-notch-bar">
@@ -1402,6 +1402,13 @@ window.addEventListener('scroll', () => {
 // Reveal
 const ro = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); ro.unobserve(e.target); } }), { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(r => ro.observe(r));
+
+// Fallback: garantir que reveals ficam visíveis após 500ms
+setTimeout(() => {
+  document.querySelectorAll('.reveal').forEach(r => {
+    r.classList.add('in');
+  });
+}, 500);
 
 // Features
 const fdMap = { kb:'fd-kb', wpp:'fd-wpp', imp:'fd-imp', fid:'fd-fid', rel:'fd-rel', pix:'fd-pix' };
