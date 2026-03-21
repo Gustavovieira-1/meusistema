@@ -77,7 +77,7 @@ body {
 
 .hero-inner {
   max-width: 100%; width: 100%;
-  display: grid; grid-template-columns: 5fr 7fr;
+  display: grid; grid-template-columns: 1fr 1fr;
   gap: 0; align-items: flex-end;
   position: relative; z-index: 2;
 }
@@ -161,7 +161,7 @@ body {
 .hero-card {
   background: var(--red);
   border-radius: 24px;
-  padding: 56px 0 0 52px;
+  padding: 56px 52px 0 52px;
   position: relative;
   overflow: visible;
   isolation: isolate;
@@ -207,18 +207,18 @@ body {
 
 .hero-visual {
   position: relative;
-  display: flex; justify-content: flex-end; align-items: flex-end;
+  display: flex; justify-content: center; align-items: flex-end;
   padding: 32px 0 0 0;
   animation: fadeIn .8s .2s ease both;
   overflow: visible;
 }
 
 .hero-left {
-  padding: 0 0 60px 48px;
+  padding: 0 0 60px 0;
 }
 
 .laptop {
-  width: 100%; max-width: 100%;
+  width: 100%; max-width: 580px;
   position: relative;
   filter: drop-shadow(0 -4px 0 rgba(0,0,0,.08)) drop-shadow(0 40px 80px rgba(0,0,0,.28));
 }
@@ -278,29 +278,29 @@ body {
   position: absolute; z-index: 30;
   background: #fff;
   border: 1px solid rgba(255,255,255,.9);
-  border-radius: 16px;
-  padding: 14px 18px;
-  box-shadow: 0 12px 48px rgba(0,0,0,.18), 0 2px 8px rgba(0,0,0,.08);
-  min-width: 168px;
+  border-radius: 18px;
+  padding: 18px 22px;
+  box-shadow: 0 16px 56px rgba(0,0,0,.2), 0 3px 10px rgba(0,0,0,.09);
+  min-width: 200px;
 }
-.lap-card-1 { top: 16px; right: 10px; animation: fc1 5s ease-in-out infinite; }
-.lap-card-2 { bottom: 80px; left: -30px; min-width: 210px; animation: fc2 5s 1.8s ease-in-out infinite; }
+.lap-card-1 { top: 16px; right: -24px; animation: fc1 5s ease-in-out infinite; }
+.lap-card-2 { bottom: 60px; left: -24px; min-width: 210px; animation: fc2 5s 1.8s ease-in-out infinite; }
 
 @keyframes fc1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
 @keyframes fc2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(7px)} }
 
-.lc-label { font-size: 10px; color: var(--text-3); font-weight: 500; margin-bottom: 5px; letter-spacing: .03em; }
-.lc-value { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -1px; line-height: 1; }
-.lc-sub { font-size: 12px; color: var(--green); font-weight: 600; margin-top: 4px; }
+.lc-label { font-size: 11px; color: var(--text-3); font-weight: 500; margin-bottom: 6px; letter-spacing: .03em; }
+.lc-value { font-size: 26px; font-weight: 800; color: var(--text); letter-spacing: -1px; line-height: 1; }
+.lc-sub { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 6px; }
 
 .lc-wpp { display: flex; align-items: center; gap: 11px; }
 .lc-wpp-ico {
-  width: 36px; height: 36px; border-radius: 10px;
+  width: 42px; height: 42px; border-radius: 12px;
   background: #25D366; display: flex; align-items: center; justify-content: center;
-  font-size: 18px; flex-shrink: 0;
+  font-size: 22px; flex-shrink: 0;
 }
-.lc-wpp-text strong { display: block; font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
-.lc-wpp-text span { font-size: 11px; color: var(--text-3); }
+.lc-wpp-text strong { display: block; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.lc-wpp-text span { font-size: 12px; color: var(--text-3); }
 
 /* Dashboard inside screen */
 .db { display: flex; height: 100%; font-size: 10px; }
@@ -650,7 +650,7 @@ footer {
 .hero-card {
   background: var(--red);
   border-radius: 24px;
-  padding: 56px 0 0 52px;
+  padding: 56px 52px 0 52px;
   position: relative;
   overflow: visible;
   isolation: isolate;
