@@ -1116,6 +1116,226 @@ footer {
   border: 1px solid;
 }
 
+
+/* ── CTA QUALIFICADOR ── */
+.cta-qual {
+  padding: 120px 40px;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Linha decorativa no topo */
+.cta-qual::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 40px; right: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--line-2) 20%, var(--line-2) 80%, transparent);
+}
+
+.cta-qual-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+/* Esquerda */
+.cta-qual-left {}
+
+.cta-qual-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #fef2f2; border: 1px solid #fecaca;
+  padding: 5px 14px; border-radius: 100px;
+  font-size: 11px; font-weight: 600; color: var(--red);
+  letter-spacing: .06em; text-transform: uppercase;
+  margin-bottom: 28px;
+}
+
+.cta-qual-h {
+  font-size: clamp(36px, 4vw, 54px);
+  font-weight: 800; letter-spacing: -2px;
+  line-height: 1.07; color: var(--text);
+  margin-bottom: 24px;
+}
+
+.cta-qual-sub {
+  font-size: 16px; font-weight: 300;
+  color: var(--text-2); line-height: 1.8;
+  margin-bottom: 40px;
+  max-width: 440px;
+}
+
+.cta-qual-criteria {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 44px;
+}
+
+.cta-crit {
+  display: flex; align-items: flex-start; gap: 14px;
+}
+
+.crit-check {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.crit-text {
+  font-size: 14px; font-weight: 400;
+  color: var(--text-2); line-height: 1.6;
+}
+
+.crit-text strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* CTA button grande */
+.cta-qual-btn {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: var(--red); color: #fff;
+  padding: 0 36px; height: 60px;
+  border-radius: 100px; border: none;
+  font-size: 16px; font-weight: 700; font-family: inherit;
+  text-decoration: none; cursor: pointer;
+  transition: background .2s, transform .2s, box-shadow .2s;
+  box-shadow: 0 6px 28px rgba(232,39,26,.3);
+}
+
+.cta-qual-btn:hover {
+  background: var(--red-h);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(232,39,26,.4);
+}
+
+.cta-qual-btn-arrow {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  transition: transform .2s;
+}
+
+.cta-qual-btn:hover .cta-qual-btn-arrow {
+  transform: translateX(4px);
+}
+
+.cta-qual-fine {
+  margin-top: 16px;
+  font-size: 12px; color: var(--text-3);
+}
+
+/* Direita: card de avaliação */
+.cta-qual-right {}
+
+.eval-card {
+  background: var(--text);
+  border-radius: 24px;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.eval-card::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  background: rgba(232,39,26,.15);
+  pointer-events: none;
+}
+
+.eval-card-label {
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em;
+  color: rgba(255,255,255,.4);
+  margin-bottom: 8px;
+}
+
+.eval-card-title {
+  font-size: 20px; font-weight: 800;
+  color: #fff; letter-spacing: -.5px;
+  margin-bottom: 32px; line-height: 1.3;
+}
+
+.eval-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.eval-step {
+  display: flex; align-items: flex-start; gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  position: relative;
+}
+
+.eval-step:last-child { border-bottom: none; }
+
+.eval-step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+  color: rgba(255,255,255,.5);
+  flex-shrink: 0;
+}
+
+.eval-step.done .eval-step-num {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.eval-step-body {}
+.eval-step-title {
+  font-size: 14px; font-weight: 700;
+  color: #fff; margin-bottom: 3px;
+}
+.eval-step.done .eval-step-title { color: rgba(255,255,255,.5); }
+.eval-step-desc {
+  font-size: 12px; font-weight: 300;
+  color: rgba(255,255,255,.4); line-height: 1.6;
+}
+
+.eval-cta-mini {
+  margin-top: 32px;
+  background: var(--red);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .2s;
+}
+.eval-cta-mini:hover { background: var(--red-h); }
+.eval-cta-mini span {
+  font-size: 14px; font-weight: 700; color: #fff;
+}
+.eval-cta-mini-arrow {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,.2);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: #fff;
+}
+
 </style>
 </head>
 <body>
@@ -1675,15 +1895,93 @@ footer {
 </section>
 
 <!-- CTA FINAL -->
-<section class="cta-sec">
-  <div class="cta-inner reveal">
-    <h2>Pronto para sair<br>do <i>iFood?</i></h2>
-    <p>Comece hoje por R$27. Configure em menos de 30 minutos e receba o primeiro pedido ainda hoje.</p>
-    <div class="cta-btns">
-      <a href="https://zirafood.com.br/cadastro" class="btn-white">Começar por R$27 →</a>
-      <a href="https://wa.me/5518997260619" class="btn-ghost-w">💬 Falar no WhatsApp</a>
+<section class="cta-qual" id="avaliar">
+  <div class="cta-qual-inner">
+
+    <!-- Esquerda: copy qualificadora -->
+    <div class="cta-qual-left">
+      <div class="cta-qual-eyebrow">⚡ Vagas limitadas</div>
+
+      <h2 class="cta-qual-h">Seu delivery<br>está pronto<br>para escalar?</h2>
+
+      <p class="cta-qual-sub">
+        A Zira não é para todo mundo. Antes de liberar o acesso, queremos entender se o seu negócio está no momento certo para crescer com a gente.
+      </p>
+
+      <div class="cta-qual-criteria">
+        <div class="cta-crit">
+          <div class="crit-check">✓</div>
+          <div class="crit-text"><strong>Você quer parar de depender do iFood</strong> e construir seu próprio canal de vendas.</div>
+        </div>
+        <div class="cta-crit">
+          <div class="crit-check">✓</div>
+          <div class="crit-text"><strong>Você já recebe pedidos</strong> — seja por WhatsApp, telefone ou plataforma — e quer organizar a operação.</div>
+        </div>
+        <div class="cta-crit">
+          <div class="crit-check">✓</div>
+          <div class="crit-text"><strong>Você quer dados reais</strong> sobre seus clientes, vendas e horários de pico.</div>
+        </div>
+        <div class="cta-crit">
+          <div class="crit-check">✓</div>
+          <div class="crit-text"><strong>Você está disposto a agir agora</strong> — não daqui a três meses.</div>
+        </div>
+      </div>
+
+      <a href="https://zirafood.com.br/cadastro" class="cta-qual-btn">
+        Verificar se meu delivery se qualifica
+        <div class="cta-qual-btn-arrow">→</div>
+      </a>
+
+      <p class="cta-qual-fine">Processo leva menos de 2 minutos · Sem compromisso</p>
     </div>
-    <p class="cta-fine">Sem fidelidade · Cancele quando quiser · 0% de comissão</p>
+
+    <!-- Direita: card mostrando o processo -->
+    <div class="cta-qual-right">
+      <div class="eval-card">
+        <div class="eval-card-label">O que acontece depois</div>
+        <div class="eval-card-title">Seu acesso em<br>4 etapas simples.</div>
+
+        <div class="eval-steps">
+          <div class="eval-step done">
+            <div class="eval-step-num">✓</div>
+            <div class="eval-step-body">
+              <div class="eval-step-title">Você viu a Zira funcionando</div>
+              <div class="eval-step-desc">Dashboard real, kanban ao vivo, WhatsApp automático.</div>
+            </div>
+          </div>
+
+          <div class="eval-step done">
+            <div class="eval-step-num">✓</div>
+            <div class="eval-step-body">
+              <div class="eval-step-title">Entendeu o que é possível</div>
+              <div class="eval-step-desc">Cardápio próprio, fidelidade, cupons, impressão automática.</div>
+            </div>
+          </div>
+
+          <div class="eval-step">
+            <div class="eval-step-num">3</div>
+            <div class="eval-step-body">
+              <div class="eval-step-title">Verificação do seu negócio</div>
+              <div class="eval-step-desc">Você responde algumas perguntas rápidas. Avaliamos se o momento é ideal.</div>
+            </div>
+          </div>
+
+          <div class="eval-step">
+            <div class="eval-step-num">4</div>
+            <div class="eval-step-body">
+              <div class="eval-step-title">Acesso liberado + onboarding</div>
+              <div class="eval-step-desc">Se qualificado, você acessa por R$27 no 1º mês com suporte direto na configuração.</div>
+            </div>
+          </div>
+        </div>
+
+        <a href="https://zirafood.com.br/cadastro" class="eval-cta-mini">
+          <span>Iniciar verificação agora</span>
+          <div class="eval-cta-mini-arrow">→</div>
+        </a>
+      </div>
+    </div>
+
   </div>
 </section>
 
