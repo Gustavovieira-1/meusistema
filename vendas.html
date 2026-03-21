@@ -70,13 +70,13 @@ body {
 
 /* ─── HERO ─── */
 .hero {
-  padding: 100px 40px 0;
-  background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
+  padding: 96px 48px 0;
+  background: #fff;
   position: relative; overflow: hidden;
 }
 
 .hero-inner {
-  max-width: 1200px; margin: 0 auto; width: 100%;
+  max-width: 100%; width: 100%;
   display: grid; grid-template-columns: 1fr 1fr;
   gap: 0; align-items: flex-end;
   position: relative; z-index: 2;
@@ -156,16 +156,62 @@ body {
 .hero-trust-text strong { color: #fff; font-weight: 600; display: block; }
 
 /* RIGHT – LAPTOP */
+
+/* ── HERO CARD ── */
+.hero-card {
+  background: var(--red);
+  border-radius: 24px;
+  padding: 56px 52px 0 52px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Textura grain sobre o card */
+.hero-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: overlay;
+  opacity: .5;
+}
+
+/* Círculo decorativo no canto superior direito (igual à Loovi) */
+.hero-card::after {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-card-inner {
+  position: relative; z-index: 1;
+}
+
+/* Wrapper que envolve card + notebook que sai por cima */
+.hero-card-wrap {
+  position: relative;
+  padding-right: 0;
+}
+
 .hero-visual {
   position: relative;
   display: flex; justify-content: center; align-items: flex-end;
-  padding: 40px 0px 0px;
+  padding: 32px 0 0 0;
   animation: fadeIn .8s .2s ease both;
 }
 
-/* hero left content needs padding */
 .hero-left {
-  padding: 0 0 80px 0;
+  padding: 0 0 60px 0;
 }
 
 .laptop {
@@ -600,7 +646,54 @@ footer {
   .trust { padding: 0 20px; }
   .hero-inner { grid-template-columns: 1fr; gap: 0; }
   .hero-left { padding-bottom: 40px; }
-  .hero-visual { display: none; }
+  
+/* ── HERO CARD ── */
+.hero-card {
+  background: var(--red);
+  border-radius: 24px;
+  padding: 56px 52px 0 52px;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Textura grain sobre o card */
+.hero-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 0;
+  mix-blend-mode: overlay;
+  opacity: .5;
+}
+
+/* Círculo decorativo no canto superior direito (igual à Loovi) */
+.hero-card::after {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.06);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-card-inner {
+  position: relative; z-index: 1;
+}
+
+/* Wrapper que envolve card + notebook que sai por cima */
+.hero-card-wrap {
+  position: relative;
+  padding-right: 0;
+}
+
+.hero-visual { display: none; }
   .steps { grid-template-columns: 1fr; }
   .feat-layout { grid-template-columns: 1fr; }
   .feat-display { position: static; }
@@ -608,6 +701,18 @@ footer {
   .test-grid { grid-template-columns: 1fr; }
   .foot-top { grid-template-columns: 1fr 1fr; gap: 36px; }
 }
+
+
+.btn-red-inv {
+  height: 52px; padding: 0 30px;
+  background: #22C55E; color: #fff;
+  border: none; border-radius: 100px;
+  font-size: 15px; font-weight: 700; font-family: inherit;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  cursor: pointer; transition: background .2s, transform .15s, box-shadow .2s;
+  box-shadow: 0 4px 20px rgba(34,197,94,.4);
+}
+.btn-red-inv:hover { background: #16A34A; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(34,197,94,.5); }
 
 </style>
 </head>
@@ -629,33 +734,36 @@ footer {
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-inner">
+  <!-- Hero card envolve tudo -->
+  <div class="hero-card">
+    <div class="hero-card-inner">
+      <div class="hero-inner">
 
-    <!-- Left -->
-    <div class="hero-left">
-      <div class="hero-eyebrow"><div class="eyebrow-dot"></div>Oferta de lançamento 2025</div>
+        <!-- Left -->
+        <div class="hero-left">
+          <div class="hero-eyebrow"><div class="eyebrow-dot"></div>Oferta de lançamento 2025</div>
 
-      <h1>O sistema de delivery<br>mais completo<br>do Brasil.</h1>
+          <h1>O sistema de delivery<br>mais completo<br>do Brasil.</h1>
 
-      <p class="hero-desc">Plantão de pedidos 24h por dia.</p>
-      <p class="hero-desc-sub">Cardápio digital próprio, gestão em tempo real, WhatsApp automático e impressão térmica — tudo em um único lugar.</p>
+          <p class="hero-desc">Plantão de pedidos 24h por dia.</p>
+          <p class="hero-desc-sub">Cardápio digital próprio, gestão em tempo real, WhatsApp automático e impressão térmica — tudo em um único lugar.</p>
 
-      <div class="hero-btns">
-        <a href="https://zirafood.com.br/cadastro" class="btn-red">Testar por R$27 no 1º mês →</a>
-        <a href="https://wa.me/5518997260619" class="btn-outline">💬 Testar pelo WhatsApp →</a>
-      </div>
+          <div class="hero-btns">
+            <a href="https://zirafood.com.br/cadastro" class="btn-red-inv">Testar por R$27 no 1º mês →</a>
+            <a href="https://wa.me/5518997260619" class="btn-outline">💬 Testar pelo WhatsApp →</a>
+          </div>
 
-      <div class="hero-trust">
-        <div class="hero-trust-ico">🔒</div>
-        <div class="hero-trust-text">
-          <strong>Sem comissão por pedido</strong>
-          Cancele quando quiser. Sem fidelidade.
+          <div class="hero-trust">
+            <div class="hero-trust-ico">🔒</div>
+            <div class="hero-trust-text">
+              <strong>Sem comissão por pedido</strong>
+              Cancele quando quiser. Sem fidelidade.
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Right – Laptop -->
-    <div class="hero-visual">
+        <!-- Right – Laptop -->
+        <div class="hero-visual">
       <div class="laptop">
 
         <!-- Card 1 – Faturamento -->
@@ -756,9 +864,11 @@ footer {
         <div class="lap-hinge"></div>
         <div class="lap-base"></div>
         <div class="lap-foot"></div>
-      </div>
-    </div>
-  </div>
+        </div><!-- /laptop -->
+        </div><!-- /hero-visual -->
+      </div><!-- /hero-inner -->
+    </div><!-- /hero-card-inner -->
+  </div><!-- /hero-card -->
 </section>
 
 <!-- TRUST BAR -->
