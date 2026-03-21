@@ -6,1638 +6,767 @@
 <title>Zira — Cardápio Digital para Delivery</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --red: #E8271A;
-    --red-dark: #c01f14;
-    --red-light: #ff3d30;
-    --black: #0f0f0f;
-    --text: #1a1a1a;
-    --text-mid: #555;
-    --text-light: #999;
-    --bg: #ffffff;
-    --bg-2: #f7f7f5;
-    --bg-3: #f0f0ed;
-    --border: #e8e8e4;
-    --border-dark: #d0d0cc;
-    --font-display: 'Plus Jakarta Sans', sans-serif;
-    --font-body: 'Plus Jakarta Sans', sans-serif;
-    --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
-    --shadow-md: 0 8px 32px rgba(0,0,0,0.10);
-    --shadow-lg: 0 24px 80px rgba(0,0,0,0.14);
-    --shadow-xl: 0 48px 120px rgba(0,0,0,0.18);
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-
-  body {
-    font-family: var(--font-body);
-    background: var(--bg);
-    color: var(--text);
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ── NAV ── */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    height: 68px;
-    padding: 0 48px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    transition: box-shadow .3s;
-  }
-
-  nav.scrolled { box-shadow: var(--shadow-sm); }
-
-  .nav-logo {
-    font-family: var(--font-display);
-    font-size: 26px;
-    font-weight: 700;
-    color: var(--text);
-    text-decoration: none;
-    letter-spacing: -0.5px;
-  }
-
-  .nav-logo span { color: var(--red); }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    list-style: none;
-  }
-
-  .nav-links a {
-    color: var(--text-mid);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 400;
-    transition: color .2s;
-  }
-
-  .nav-links a:hover { color: var(--text); }
-
-  .nav-cta {
-    background: var(--red) !important;
-    color: #fff !important;
-    padding: 10px 22px;
-    border-radius: 8px;
-    font-weight: 500 !important;
-    font-size: 14px !important;
-    transition: background .2s, transform .2s !important;
-  }
-
-  .nav-cta:hover {
-    background: var(--red-light) !important;
-    transform: translateY(-1px);
-  }
-
-  /* ── HERO ── */
-  .hero {
-    min-height: 100vh;
-    padding: 130px 48px 100px;
-    display: flex;
-    align-items: center;
-    background: var(--bg);
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: -200px; right: -200px;
-    width: 700px; height: 700px;
-    background: radial-gradient(circle, rgba(232,39,26,0.05) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .hero-inner {
-    max-width: 1240px;
-    margin: 0 auto;
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1.1fr;
-    gap: 80px;
-    align-items: center;
-  }
-
-  .hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid var(--border-dark);
-    padding: 6px 14px;
-    border-radius: 100px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-mid);
-    letter-spacing: 0.04em;
-    margin-bottom: 28px;
-    background: var(--bg-2);
-    animation: fadeUp .5s ease both;
-  }
-
-  .eyebrow-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--red);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%,100%{ opacity:1; transform:scale(1); }
-    50%{ opacity:.4; transform:scale(1.6); }
-  }
-
-  .hero h1 {
-    font-family: var(--font-display);
-    font-size: clamp(44px, 5.5vw, 76px);
-    font-weight: 800;
-    line-height: 1.06;
-    letter-spacing: -2.5px;
-    color: var(--text);
-    margin-bottom: 24px;
-    animation: fadeUp .6s .08s ease both;
-  }
-
-  .hero h1 em {
-    font-style: italic;
-    color: var(--red);
-  }
-
-  .hero-sub {
-    font-size: 17px;
-    font-weight: 300;
-    color: var(--text-mid);
-    line-height: 1.75;
-    max-width: 440px;
-    margin-bottom: 44px;
-    animation: fadeUp .6s .16s ease both;
-  }
-
-  .hero-actions {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    animation: fadeUp .6s .24s ease both;
-  }
-
-  .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: var(--red);
-    color: #fff;
-    padding: 15px 30px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 500;
-    text-decoration: none;
-    border: none;
-    cursor: pointer;
-    font-family: var(--font-body);
-    transition: all .25s;
-  }
-
-  .btn-primary:hover {
-    background: var(--red-light);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 36px rgba(232,39,26,0.28);
-  }
-
-  .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    color: var(--text);
-    padding: 15px 26px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 400;
-    text-decoration: none;
-    border: 1px solid var(--border-dark);
-    cursor: pointer;
-    font-family: var(--font-body);
-    transition: all .25s;
-  }
-
-  .btn-ghost:hover {
-    background: var(--bg-2);
-    border-color: var(--text-mid);
-    transform: translateY(-2px);
-  }
-
-  .hero-proof {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    margin-top: 48px;
-    padding-top: 32px;
-    border-top: 1px solid var(--border);
-    animation: fadeUp .6s .32s ease both;
-  }
-
-  .proof-stat {}
-  .proof-num {
-    font-family: var(--font-display);
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -1px;
-  }
-  .proof-label {
-    font-size: 12px;
-    color: var(--text-light);
-    margin-top: 2px;
-    font-weight: 400;
-  }
-
-  .proof-divider {
-    width: 1px;
-    height: 36px;
-    background: var(--border-dark);
-  }
-
-  /* NOTEBOOK MOCKUP */
-  .hero-visual {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    animation: fadeIn .8s .2s ease both;
-    padding: 30px 70px 20px;
-  }
-
-  .notebook-wrap {
-    position: relative;
-    width: 100%;
-    max-width: 580px;
-  }
-
-  .notebook-lid {
-    background: linear-gradient(160deg, #2e2e32 0%, #1c1c1f 100%);
-    border-radius: 14px 14px 0 0;
-    padding: 10px 10px 0;
-    box-shadow: 0 0 0 1px #111 inset, var(--shadow-xl);
-  }
-
-  .notebook-camera-bar {
-    height: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 5px;
-  }
-
-  .notebook-camera {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: #3c3c40;
-    box-shadow: 0 0 0 1px #4a4a4e;
-  }
-
-  .notebook-screen {
-    background: #fff;
-    border-radius: 6px 6px 0 0;
-    overflow: hidden;
-    aspect-ratio: 16/10;
-    position: relative;
-    border: 1px solid #111;
-  }
-
-  /* Dashboard inside screen */
-  .db-layout {
-    display: flex;
-    height: 100%;
-    font-family: var(--font-body);
-  }
-
-  .db-sidebar {
-    width: 140px;
-    background: #fff;
-    border-right: 1px solid #e5e5e5;
-    padding: 12px 0;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .db-logo {
-    padding: 0 12px 12px;
-    border-bottom: 1px solid #f0f0f0;
-    margin-bottom: 8px;
-  }
-
-  .db-logo-brand {
-    font-family: var(--font-display);
-    font-size: 11px;
-    font-weight: 700;
-    color: #1a1a1a;
-  }
-
-  .db-logo-brand span { color: var(--red); }
-
-  .db-logo-sub {
-    font-size: 8px;
-    color: #999;
-    margin-top: 1px;
-  }
-
-  .db-nav-item {
-    padding: 5px 12px;
-    font-size: 8px;
-    color: #888;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    cursor: pointer;
-    border-radius: 4px;
-    margin: 0 6px;
-    transition: background .15s;
-  }
-
-  .db-nav-item.active {
-    background: #fef2f2;
-    color: var(--red);
-    font-weight: 600;
-  }
-
-  .db-nav-section {
-    font-size: 7px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #bbb;
-    padding: 8px 12px 4px;
-    font-weight: 600;
-  }
-
-  .db-main {
-    flex: 1;
-    background: #f8f8f6;
-    padding: 12px;
-    overflow: hidden;
-  }
-
-  .db-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 10px;
-  }
-
-  .db-title-label {
-    font-size: 7px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: #999;
-    margin-bottom: 2px;
-  }
-
-  .db-title-value {
-    font-family: var(--font-display);
-    font-size: 18px;
-    font-weight: 700;
-    color: #16a34a;
-    letter-spacing: -0.5px;
-  }
-
-  .db-date-badge {
-    background: #fff;
-    border: 1px solid #e5e5e5;
-    border-radius: 5px;
-    padding: 4px 8px;
-    font-size: 7px;
-    color: #666;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .db-cards {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 5px;
-    margin-bottom: 10px;
-  }
-
-  .db-card {
-    background: #fff;
-    border: 1px solid #e8e8e4;
-    border-radius: 6px;
-    padding: 6px;
-  }
-
-  .db-card-icon {
-    font-size: 9px;
-    margin-bottom: 3px;
-  }
-
-  .db-card-label {
-    font-size: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #aaa;
-    margin-bottom: 2px;
-  }
-
-  .db-card-value {
-    font-size: 9px;
-    font-weight: 700;
-    color: #1a1a1a;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .db-chart-area {
-    background: #fff;
-    border: 1px solid #e8e8e4;
-    border-radius: 6px;
-    padding: 8px;
-    margin-bottom: 8px;
-    height: 80px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .db-chart-label {
-    font-size: 7px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 4px;
-  }
-
-  .chart-bars {
-    display: flex;
-    align-items: flex-end;
-    gap: 2px;
-    height: 52px;
-  }
-
-  .chart-bar {
-    flex: 1;
-    border-radius: 2px 2px 0 0;
-    background: #dcfce7;
-    transition: height .5s ease;
-  }
-
-  .chart-bar.highlight { background: #16a34a; }
-
-  .db-bottom-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px;
-  }
-
-  .db-bottom-card {
-    background: #fff;
-    border: 1px solid #e8e8e4;
-    border-radius: 6px;
-    padding: 8px;
-  }
-
-  .db-bottom-card-label {
-    font-size: 7px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 6px;
-  }
-
-  .db-bar-row {
-    margin-bottom: 4px;
-  }
-
-  .db-bar-label-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 6px;
-    color: #888;
-    margin-bottom: 2px;
-  }
-
-  .db-bar-track {
-    height: 4px;
-    background: #f0f0f0;
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .db-bar-fill {
-    height: 100%;
-    border-radius: 2px;
-  }
-
-  .notebook-hinge {
-    background: linear-gradient(180deg, #111 0%, #2a2a2e 50%, #1a1a1c 100%);
-    height: 5px;
-  }
-
-  .notebook-base {
-    background: linear-gradient(180deg, #2c2c30 0%, #1e1e22 100%);
-    height: 22px;
-    border-radius: 0 0 3px 3px;
-    position: relative;
-    box-shadow: 0 4px 0 #0a0a0c, 0 8px 32px rgba(0,0,0,0.35);
-  }
-
-  .notebook-base::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%,-50%);
-    width: 52px;
-    height: 6px;
-    background: #141416;
-    border-radius: 3px;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
-  }
-
-  .notebook-base::after {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.07) 50%, transparent 100%);
-  }
-
-  .notebook-foot {
-    height: 6px;
-    background: transparent;
-    margin: 0 40px;
-    border-radius: 0 0 50% 50%;
-    box-shadow: 0 6px 28px rgba(0,0,0,0.18);
-  }
-
-  /* Floating cards */
-  .float-badge {
-    position: absolute;
-    background: #fff;
-    border: 1px solid rgba(0,0,0,0.07);
-    border-radius: 16px;
-    padding: 14px 18px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
-    z-index: 20;
-  }
-
-  .fb-1 {
-    top: 0px;
-    right: -10px;
-    min-width: 175px;
-    animation: floatA 4s ease-in-out infinite;
-  }
-
-  .fb-2 {
-    bottom: 35px;
-    left: -10px;
-    min-width: 210px;
-    animation: floatB 4s 1.5s ease-in-out infinite;
-  }
-
-  @keyframes floatA {
-    0%,100%{ transform: translateY(0); }
-    50%{ transform: translateY(-10px); }
-  }
-
-  @keyframes floatB {
-    0%,100%{ transform: translateY(0); }
-    50%{ transform: translateY(8px); }
-  }
-
-  .fb-label {
-    font-size: 10px;
-    color: var(--text-light);
-    margin-bottom: 5px;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-  }
-
-  .fb-value {
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: -0.8px;
-    line-height: 1;
-  }
-
-  .fb-sub {
-    font-size: 12px;
-    color: #16a34a;
-    margin-top: 5px;
-    font-weight: 600;
-  }
-
-  .fb-wpp {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .fb-wpp-icon {
-    width: 36px; height: 36px;
-    background: #25d366;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-  }
-
-  .fb-wpp-text { }
-  .fb-wpp-text strong {
-    display: block;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 2px;
-  }
-  .fb-wpp-text span {
-    font-size: 11px;
-    color: var(--text-light);
-  }
-
-  /* ── TRUST BAR ── */
-  .trust-bar {
-    background: var(--bg-2);
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    padding: 28px 48px;
-  }
-
-  .trust-inner {
-    max-width: 1240px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    gap: 48px;
-    flex-wrap: wrap;
-  }
-
-  .trust-label {
-    font-size: 12px;
-    color: var(--text-light);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .trust-logos {
-    display: flex;
-    gap: 40px;
-    align-items: center;
-    flex-wrap: wrap;
-  }
-
-  .trust-item {
-    font-size: 13px;
-    font-weight: 500;
-    color: #bbb;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition: color .2s;
-  }
-
-  .trust-item:hover { color: var(--text-mid); }
-
-  /* ── SECTIONS ── */
-  .section {
-    padding: 110px 48px;
-  }
-
-  .section-inner {
-    max-width: 1240px;
-    margin: 0 auto;
-  }
-
-  .section-tag {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--red);
-    margin-bottom: 16px;
-  }
-
-  .section-title {
-    font-family: var(--font-display);
-    font-size: clamp(32px, 4vw, 52px);
-    font-weight: 800;
-    letter-spacing: -1.5px;
-    line-height: 1.08;
-    color: var(--text);
-    margin-bottom: 18px;
-  }
-
-  .section-sub {
-    font-size: 17px;
-    font-weight: 300;
-    color: var(--text-mid);
-    line-height: 1.75;
-    max-width: 520px;
-    margin-bottom: 64px;
-  }
-
-  /* ── STEPS ── */
-  .steps-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--border);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    overflow: hidden;
-  }
-
-  .step-card {
-    background: var(--bg);
-    padding: 52px 40px;
-    transition: background .25s;
-  }
-
-  .step-card:hover { background: var(--bg-2); }
-
-  .step-num {
-    font-family: var(--font-display);
-    font-size: 72px;
-    font-weight: 700;
-    color: var(--border);
-    letter-spacing: -3px;
-    line-height: 1;
-    margin-bottom: 24px;
-  }
-
-  .step-icon {
-    font-size: 30px;
-    margin-bottom: 18px;
-  }
-
-  .step-title {
-    font-family: var(--font-display);
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 12px;
-    letter-spacing: -0.3px;
-  }
-
-  .step-desc {
-    font-size: 14px;
-    color: var(--text-mid);
-    line-height: 1.75;
-    font-weight: 300;
-  }
-
-  /* ── FEATURES ── */
-  .features-bg { background: var(--bg-2); }
-
-  .features-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 80px;
-    align-items: start;
-  }
-
-  .features-list { display: flex; flex-direction: column; }
-
-  .feature-item {
-    padding: 22px 0;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-  }
-
-  .feature-item:first-child { border-top: 1px solid var(--border); }
-
-  .feature-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text-light);
-    transition: color .2s;
-  }
-
-  .feature-item.active .feature-header { color: var(--text); }
-  .feature-item.active .feature-body { display: block; }
-
-  .feature-icon-sm {
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    background: var(--bg-3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 15px;
-    flex-shrink: 0;
-    transition: background .2s;
-  }
-
-  .feature-item.active .feature-icon-sm {
-    background: #fef2f2;
-  }
-
-  .feature-body {
-    display: none;
-    padding: 12px 0 4px 50px;
-    font-size: 14px;
-    color: var(--text-mid);
-    line-height: 1.75;
-    font-weight: 300;
-  }
-
-  .features-display {
-    position: sticky;
-    top: 100px;
-  }
-
-  .display-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 28px;
-    min-height: 380px;
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-  }
-
-  .display-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-light);
-    font-weight: 600;
-    margin-bottom: 20px;
-  }
-
-  /* Kanban mini */
-  .kanban-mini {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-  }
-
-  .km-head {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-light);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-weight: 600;
-  }
-
-  .km-dot { width: 6px; height: 6px; border-radius: 50%; }
-
-  .km-item {
-    background: var(--bg-2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    font-size: 11px;
-  }
-
-  .km-name { color: var(--text); font-weight: 600; }
-  .km-val { color: var(--text-light); margin-top: 3px; }
-
-  /* WPP preview */
-  .wpp-preview { display: flex; flex-direction: column; gap: 10px; }
-
-  .wpp-bubble {
-    background: #f0f0f0;
-    border-radius: 12px 12px 12px 2px;
-    padding: 12px 16px;
-    font-size: 13px;
-    color: var(--text);
-    line-height: 1.6;
-    max-width: 88%;
-  }
-
-  .wpp-bubble.sent {
-    background: #dcf8c6;
-    border-radius: 12px 12px 2px 12px;
-    align-self: flex-end;
-  }
-
-  .wpp-time {
-    font-size: 10px;
-    color: var(--text-light);
-    text-align: right;
-    margin-top: 4px;
-  }
-
-  /* ── PRICING ── */
-  .pricing-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-
-  .price-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 36px 30px;
-    position: relative;
-    transition: all .3s;
-  }
-
-  .price-card:hover {
-    border-color: var(--border-dark);
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-md);
-  }
-
-  .price-card.featured {
-    border-color: var(--red);
-    box-shadow: 0 0 0 1px var(--red), var(--shadow-md);
-  }
-
-  .price-card.featured::before {
-    content: '★ MAIS POPULAR';
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--red);
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    padding: 4px 14px;
-    border-radius: 100px;
-    white-space: nowrap;
-  }
-
-  .price-label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-light);
-    font-weight: 600;
-    margin-bottom: 24px;
-  }
-
-  .price-amount { margin-bottom: 4px; }
-
-  .price-currency {
-    font-size: 18px;
-    font-weight: 600;
-    vertical-align: top;
-    line-height: 1.5;
-    color: var(--text-mid);
-  }
-
-  .price-num {
-    font-family: var(--font-display);
-    font-size: 56px;
-    font-weight: 700;
-    letter-spacing: -2px;
-    color: var(--text);
-    line-height: 1;
-  }
-
-  .price-period {
-    font-size: 13px;
-    color: var(--text-light);
-    margin-bottom: 6px;
-  }
-
-  .price-economy {
-    font-size: 12px;
-    color: #16a34a;
-    font-weight: 600;
-    margin-bottom: 28px;
-    min-height: 18px;
-  }
-
-  .price-features {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 28px;
-  }
-
-  .price-features li {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    color: var(--text-mid);
-    font-weight: 400;
-  }
-
-  .price-features li::before {
-    content: '✓';
-    color: #16a34a;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  .price-cta {
-    display: block;
-    text-align: center;
-    padding: 14px;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    text-decoration: none;
-    border: 1px solid var(--border-dark);
-    color: var(--text);
-    transition: all .2s;
-    cursor: pointer;
-    background: transparent;
-    width: 100%;
-    font-family: var(--font-body);
-  }
-
-  .price-cta:hover {
-    background: var(--bg-2);
-    border-color: var(--text-mid);
-  }
-
-  .price-cta.red-cta {
-    background: var(--red);
-    border-color: var(--red);
-    color: #fff;
-    box-shadow: 0 6px 24px rgba(232,39,26,0.25);
-  }
-
-  .price-cta.red-cta:hover {
-    background: var(--red-light);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 32px rgba(232,39,26,0.35);
-  }
-
-  .launch-offer {
-    margin-top: 32px;
-    text-align: center;
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    border-radius: 14px;
-    padding: 20px 28px;
-  }
-
-  .launch-offer p {
-    font-size: 15px;
-    color: var(--red);
-    font-weight: 600;
-    margin-bottom: 12px;
-  }
-
-  .launch-offer span {
-    font-size: 13px;
-    color: var(--text-mid);
-    font-weight: 300;
-  }
-
-  /* ── TESTIMONIALS ── */
-  .test-bg { background: var(--bg-2); }
-
-  .testimonials-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-
-  .testimonial-card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 28px 24px;
-    transition: all .3s;
-  }
-
-  .testimonial-card:hover {
-    border-color: var(--border-dark);
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .test-stars {
-    color: #f59e0b;
-    font-size: 13px;
-    margin-bottom: 16px;
-    letter-spacing: 2px;
-  }
-
-  .test-text {
-    font-size: 14px;
-    color: var(--text-mid);
-    line-height: 1.75;
-    font-weight: 300;
-    margin-bottom: 20px;
-    font-style: italic;
-  }
-
-  .test-author {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .test-avatar {
-    width: 42px; height: 42px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
-    background: var(--bg-2);
-  }
-
-  .test-name { font-size: 14px; font-weight: 600; color: var(--text); }
-  .test-biz { font-size: 12px; color: var(--text-light); margin-top: 2px; }
-
-  /* ── FAQ ── */
-  .faq-wrap { max-width: 760px; margin: 0 auto; }
-
-  .faq-item {
-    border-bottom: 1px solid var(--border);
-    padding: 22px 0;
-    cursor: pointer;
-  }
-
-  .faq-q {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--text);
-    gap: 20px;
-  }
-
-  .faq-icon {
-    color: var(--red);
-    font-size: 22px;
-    line-height: 1;
-    flex-shrink: 0;
-    transition: transform .3s;
-  }
-
-  .faq-item.open .faq-icon { transform: rotate(45deg); }
-
-  .faq-a {
-    display: none;
-    padding-top: 14px;
-    font-size: 14px;
-    color: var(--text-mid);
-    line-height: 1.8;
-    font-weight: 300;
-  }
-
-  .faq-item.open .faq-a { display: block; }
-
-  /* ── CTA FINAL ── */
-  .cta-section {
-    padding: 120px 48px;
-    background: var(--text);
-    position: relative;
-    overflow: hidden;
-    text-align: center;
-  }
-
-  .cta-section::before {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(232,39,26,0.15) 0%, transparent 70%);
-    pointer-events: none;
-  }
-
-  .cta-inner {
-    max-width: 680px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 2;
-  }
-
-  .cta-inner h2 {
-    font-family: var(--font-display);
-    font-size: clamp(36px, 5vw, 60px);
-    font-weight: 700;
-    letter-spacing: -1.5px;
-    line-height: 1.1;
-    color: #fff;
-    margin-bottom: 18px;
-  }
-
-  .cta-inner h2 em { font-style: italic; color: var(--red); }
-
-  .cta-inner p {
-    font-size: 17px;
-    font-weight: 300;
-    color: rgba(255,255,255,0.55);
-    line-height: 1.75;
-    margin-bottom: 44px;
-  }
-
-  .cta-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .btn-white {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #fff;
-    color: var(--text);
-    padding: 15px 30px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 500;
-    text-decoration: none;
-    font-family: var(--font-body);
-    transition: all .25s;
-  }
-
-  .btn-white:hover {
-    background: #f5f5f5;
-    transform: translateY(-2px);
-  }
-
-  .btn-ghost-white {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    color: rgba(255,255,255,0.8);
-    padding: 15px 26px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 400;
-    text-decoration: none;
-    border: 1px solid rgba(255,255,255,0.2);
-    font-family: var(--font-body);
-    transition: all .25s;
-  }
-
-  .btn-ghost-white:hover {
-    border-color: rgba(255,255,255,0.5);
-    color: #fff;
-    transform: translateY(-2px);
-  }
-
-  .cta-fine {
-    margin-top: 24px;
-    font-size: 13px;
-    color: rgba(255,255,255,0.25);
-  }
-
-  /* ── FOOTER ── */
-  footer {
-    background: var(--bg);
-    border-top: 1px solid var(--border);
-    padding: 60px 48px 40px;
-  }
-
-  .footer-inner { max-width: 1240px; margin: 0 auto; }
-
-  .footer-top {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 60px;
-    margin-bottom: 48px;
-  }
-
-  .footer-logo {
-    font-family: var(--font-display);
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.5px;
-    margin-bottom: 12px;
-  }
-
-  .footer-logo span { color: var(--red); }
-
-  .footer-desc {
-    font-size: 13px;
-    color: var(--text-light);
-    line-height: 1.75;
-    font-weight: 300;
-    max-width: 240px;
-  }
-
-  .footer-col-title {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--text-mid);
-    font-weight: 600;
-    margin-bottom: 18px;
-  }
-
-  .footer-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-
-  .footer-links a {
-    font-size: 13px;
-    color: var(--text-light);
-    text-decoration: none;
-    transition: color .2s;
-  }
-
-  .footer-links a:hover { color: var(--text); }
-
-  .footer-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 28px;
-    border-top: 1px solid var(--border);
-    font-size: 12px;
-    color: var(--text-light);
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-
-  /* ── ANIMATIONS ── */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  .reveal {
-    opacity: 0;
-    transform: translateY(28px);
-    transition: opacity .7s ease, transform .7s ease;
-  }
-
-  .reveal.visible { opacity: 1; transform: translateY(0); }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 960px) {
-    nav { padding: 0 20px; }
-    .nav-links { display: none; }
-    .hero, .section, .cta-section, footer { padding-left: 20px; padding-right: 20px; }
-    .trust-bar { padding: 20px; }
-    .hero-inner { grid-template-columns: 1fr; }
-    .hero-visual { display: none; }
-    .steps-grid { grid-template-columns: 1fr; }
-    .features-layout { grid-template-columns: 1fr; }
-    .features-display { position: static; }
-    .pricing-grid { grid-template-columns: 1fr; }
-    .testimonials-grid { grid-template-columns: 1fr; }
-    .footer-top { grid-template-columns: 1fr 1fr; gap: 36px; }
-  }
-
-  /* scroll progress */
-  .scroll-line {
-    position: fixed;
-    top: 68px; left: 0;
-    height: 2px;
-    background: var(--red);
-    z-index: 99;
-    width: 0%;
-    transition: width .1s linear;
-  }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+:root {
+  --red:       #E8271A;
+  --red-h:     #ff3528;
+  --text:      #111111;
+  --text-2:    #444444;
+  --text-3:    #888888;
+  --line:      #E5E5E5;
+  --line-2:    #D0D0D0;
+  --bg:        #FFFFFF;
+  --bg-soft:   #F7F7F6;
+  --bg-soft-2: #F0F0EE;
+  --green:     #16A34A;
+  --r:         10px;
+  --r-lg:      18px;
+  --r-xl:      24px;
+}
+
+body {
+  font-family: 'Geist', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ─── NAV ─── */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 40px;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid var(--line);
+  transition: box-shadow .3s;
+}
+.nav.shadow { box-shadow: 0 1px 24px rgba(0,0,0,.07); }
+
+.nav-logo { font-size: 22px; font-weight: 800; color: var(--text); text-decoration: none; letter-spacing: -0.5px; }
+.nav-logo b { color: var(--red); font-weight: 800; }
+
+.nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+.nav-links a { font-size: 14px; font-weight: 400; color: var(--text-2); text-decoration: none; transition: color .2s; }
+.nav-links a:hover { color: var(--text); }
+
+.nav-btn {
+  height: 38px; padding: 0 20px;
+  background: var(--red); color: #fff;
+  border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 600;
+  font-family: inherit; cursor: pointer;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  transition: background .2s, transform .15s, box-shadow .2s;
+}
+.nav-btn:hover { background: var(--red-h); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,39,26,.28); }
+
+/* ─── HERO ─── */
+.hero {
+  min-height: 100vh;
+  padding: 100px 40px 80px;
+  display: flex; align-items: center;
+  background: var(--bg);
+  position: relative; overflow: hidden;
+}
+
+/* Subtle radial glow top-right */
+.hero::after {
+  content: '';
+  position: absolute; top: -120px; right: -120px;
+  width: 640px; height: 640px;
+  background: radial-gradient(circle at center, rgba(232,39,26,.06) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.hero-inner {
+  max-width: 1200px; margin: 0 auto; width: 100%;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 64px; align-items: center;
+  position: relative; z-index: 2;
+}
+
+/* LEFT */
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--bg-soft); border: 1px solid var(--line-2);
+  padding: 5px 14px; border-radius: 100px;
+  font-size: 12px; font-weight: 500; color: var(--text-2);
+  letter-spacing: .04em; margin-bottom: 28px;
+  animation: up .5s ease both;
+}
+.eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(1.7)} }
+
+.hero h1 {
+  font-size: clamp(44px, 5.2vw, 72px);
+  font-weight: 800; line-height: 1.06;
+  letter-spacing: -2.5px; color: var(--text);
+  margin-bottom: 22px;
+  animation: up .55s .06s ease both;
+}
+.hero h1 i { font-style: normal; color: var(--red); }
+
+.hero-desc {
+  font-size: 17px; font-weight: 300; color: var(--text-2);
+  line-height: 1.75; max-width: 430px;
+  margin-bottom: 40px;
+  animation: up .55s .12s ease both;
+}
+
+.hero-btns {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  animation: up .55s .18s ease both;
+}
+
+.btn-red {
+  height: 48px; padding: 0 28px;
+  background: var(--red); color: #fff;
+  border: none; border-radius: var(--r);
+  font-size: 15px; font-weight: 600; font-family: inherit;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  cursor: pointer; transition: background .2s, transform .15s, box-shadow .2s;
+}
+.btn-red:hover { background: var(--red-h); transform: translateY(-2px); box-shadow: 0 10px 32px rgba(232,39,26,.3); }
+
+.btn-outline {
+  height: 48px; padding: 0 24px;
+  background: transparent; color: var(--text);
+  border: 1px solid var(--line-2); border-radius: var(--r);
+  font-size: 15px; font-weight: 400; font-family: inherit;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  cursor: pointer; transition: background .2s, border-color .2s, transform .15s;
+}
+.btn-outline:hover { background: var(--bg-soft); border-color: var(--line-2); transform: translateY(-2px); }
+
+.hero-metrics {
+  display: flex; gap: 0; margin-top: 48px; padding-top: 32px;
+  border-top: 1px solid var(--line);
+  animation: up .55s .24s ease both;
+}
+.hero-metric { flex: 1; padding-right: 24px; }
+.hero-metric + .hero-metric { padding-left: 24px; border-left: 1px solid var(--line); }
+.hero-metric-n { font-size: 30px; font-weight: 800; letter-spacing: -1px; color: var(--text); line-height: 1; }
+.hero-metric-l { font-size: 12px; color: var(--text-3); margin-top: 4px; font-weight: 400; }
+
+/* RIGHT – LAPTOP */
+.hero-visual {
+  position: relative;
+  display: flex; justify-content: center; align-items: center;
+  padding: 40px 50px 10px;
+  animation: fadeIn .8s .2s ease both;
+}
+
+.laptop {
+  width: 100%; max-width: 540px;
+  position: relative; filter: drop-shadow(0 32px 64px rgba(0,0,0,.18));
+}
+
+/* Lid */
+.lap-lid {
+  background: linear-gradient(170deg, #333337 0%, #1c1c1f 100%);
+  border-radius: 12px 12px 0 0;
+  padding: 8px 8px 0;
+  position: relative;
+}
+.lap-lid::before { /* top edge shine */
+  content: ''; position: absolute; top: 0; left: 12px; right: 12px; height: 1px;
+  background: rgba(255,255,255,.12); border-radius: 2px;
+}
+.lap-notch {
+  height: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 5px;
+}
+.lap-cam {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #3a3a3c; box-shadow: 0 0 0 1px #555;
+}
+.lap-screen {
+  background: #fff;
+  border-radius: 4px 4px 0 0;
+  aspect-ratio: 16/10;
+  overflow: hidden;
+  border: 1px solid #000;
+}
+
+/* Hinge */
+.lap-hinge {
+  background: linear-gradient(180deg, #141416 0%, #2a2a2e 100%);
+  height: 4px;
+}
+
+/* Base */
+.lap-base {
+  background: linear-gradient(180deg, #2e2e32 0%, #1e1e22 100%);
+  height: 20px; border-radius: 0 0 4px 4px;
+  position: relative;
+  box-shadow: 0 4px 0 #0c0c0e;
+}
+.lap-base::before { /* trackpad notch */
+  content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 48px; height: 5px; background: #141416; border-radius: 3px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.7);
+}
+.lap-base::after { /* top glint */
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.08) 50%, transparent);
+}
+.lap-foot {
+  height: 5px; margin: 0 40px;
+  border-radius: 0 0 50% 50%;
+  box-shadow: 0 5px 24px rgba(0,0,0,.16);
+}
+
+/* Floating cards */
+.lap-card {
+  position: absolute; z-index: 30;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,.09);
+  border-radius: 14px;
+  padding: 14px 18px;
+  box-shadow: 0 8px 40px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06);
+  min-width: 168px;
+}
+.lap-card-1 { top: 8px; right: 0px; animation: fc1 5s ease-in-out infinite; }
+.lap-card-2 { bottom: 28px; left: 0px; min-width: 210px; animation: fc2 5s 1.8s ease-in-out infinite; }
+
+@keyframes fc1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
+@keyframes fc2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(7px)} }
+
+.lc-label { font-size: 10px; color: var(--text-3); font-weight: 500; margin-bottom: 5px; letter-spacing: .03em; }
+.lc-value { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -1px; line-height: 1; }
+.lc-sub { font-size: 12px; color: var(--green); font-weight: 600; margin-top: 4px; }
+
+.lc-wpp { display: flex; align-items: center; gap: 11px; }
+.lc-wpp-ico {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: #25D366; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.lc-wpp-text strong { display: block; font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.lc-wpp-text span { font-size: 11px; color: var(--text-3); }
+
+/* Dashboard inside screen */
+.db { display: flex; height: 100%; font-size: 10px; }
+
+.db-side {
+  width: 130px; flex-shrink: 0;
+  background: #fff; border-right: 1px solid #eee;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.db-side-head {
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.db-brand { font-size: 10px; font-weight: 800; color: #111; letter-spacing: -.3px; }
+.db-brand b { color: var(--red); }
+.db-role { font-size: 8px; color: #aaa; margin-top: 1px; }
+
+.db-sec { font-size: 7px; text-transform: uppercase; letter-spacing: .08em; color: #bbb; font-weight: 700; padding: 7px 10px 3px; }
+
+.db-link {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 10px; font-size: 8.5px; color: #888;
+  border-radius: 5px; margin: 0 5px 1px;
+  cursor: pointer;
+}
+.db-link.on { background: #fef2f2; color: var(--red); font-weight: 700; }
+
+.db-main {
+  flex: 1; background: #f8f8f6; padding: 10px; overflow: hidden;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.db-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.db-fat-label { font-size: 7px; text-transform: uppercase; letter-spacing: .08em; color: #aaa; font-weight: 600; }
+.db-fat-val { font-size: 18px; font-weight: 800; color: #16a34a; letter-spacing: -1px; line-height: 1.1; }
+.db-date { background: #fff; border: 1px solid #e5e5e5; border-radius: 5px; padding: 4px 8px; font-size: 7px; color: #666; }
+
+.db-kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.db-kpi { background: #fff; border: 1px solid #e8e8e4; border-radius: 6px; padding: 5px 6px; }
+.db-kpi-ico { font-size: 8px; margin-bottom: 2px; }
+.db-kpi-l { font-size: 5.5px; text-transform: uppercase; letter-spacing: .05em; color: #bbb; font-weight: 600; }
+.db-kpi-v { font-size: 9px; font-weight: 800; color: #111; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.db-chart { background: #fff; border: 1px solid #e8e8e4; border-radius: 6px; padding: 7px; flex: 1; min-height: 0; }
+.db-chart-t { font-size: 7px; font-weight: 700; color: #333; margin-bottom: 5px; }
+.db-bars { display: flex; align-items: flex-end; gap: 2px; height: 44px; }
+.db-bar { flex: 1; border-radius: 2px 2px 0 0; background: #d1fae5; }
+.db-bar.hi { background: #16a34a; }
+
+.db-bottom { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.db-box { background: #fff; border: 1px solid #e8e8e4; border-radius: 6px; padding: 7px; }
+.db-box-t { font-size: 7px; font-weight: 700; color: #333; margin-bottom: 5px; }
+.db-row { margin-bottom: 4px; }
+.db-row-l { display: flex; justify-content: space-between; font-size: 6px; color: #888; margin-bottom: 2px; }
+.db-track { height: 4px; background: #f0f0f0; border-radius: 2px; overflow: hidden; }
+.db-fill { height: 100%; border-radius: 2px; }
+
+/* ─── TRUST BAR ─── */
+.trust {
+  background: var(--bg-soft);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: 0 40px;
+}
+.trust-inner {
+  max-width: 1200px; margin: 0 auto;
+  height: 64px; display: flex; align-items: center; gap: 40px;
+}
+.trust-label { font-size: 12px; color: var(--text-3); font-weight: 500; letter-spacing: .05em; text-transform: uppercase; flex-shrink: 0; }
+.trust-sep { width: 1px; height: 20px; background: var(--line-2); flex-shrink: 0; }
+.trust-items { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
+.trust-item { font-size: 13px; font-weight: 500; color: #bbb; display: flex; align-items: center; gap: 6px; transition: color .2s; }
+.trust-item:hover { color: var(--text-2); }
+
+/* ─── SECTION TEMPLATE ─── */
+.sec { padding: 100px 40px; }
+.sec-inner { max-width: 1200px; margin: 0 auto; }
+
+.sec-tag { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .12em; color: var(--red); margin-bottom: 14px; }
+.sec-h {
+  font-size: clamp(32px, 3.8vw, 52px);
+  font-weight: 800; letter-spacing: -1.5px; line-height: 1.08;
+  color: var(--text); margin-bottom: 16px;
+}
+.sec-sub { font-size: 17px; font-weight: 300; color: var(--text-2); line-height: 1.75; max-width: 500px; }
+
+/* ─── HOW IT WORKS ─── */
+.steps {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: var(--r-xl);
+  overflow: hidden; margin-top: 56px;
+}
+.step { background: var(--bg); padding: 48px 36px; transition: background .2s; }
+.step:hover { background: var(--bg-soft); }
+.step-n { font-size: 56px; font-weight: 800; color: var(--line); letter-spacing: -3px; line-height: 1; margin-bottom: 20px; }
+.step-ico { font-size: 28px; margin-bottom: 16px; }
+.step-t { font-size: 18px; font-weight: 700; color: var(--text); letter-spacing: -.3px; margin-bottom: 10px; }
+.step-d { font-size: 14px; font-weight: 300; color: var(--text-2); line-height: 1.75; }
+
+/* ─── FEATURES ─── */
+.sec-feat { background: var(--bg-soft); }
+
+.feat-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: start; }
+
+.feat-list { display: flex; flex-direction: column; }
+.feat-item {
+  padding: 20px 0; border-bottom: 1px solid var(--line); cursor: pointer;
+}
+.feat-item:first-child { border-top: 1px solid var(--line); }
+
+.feat-hd {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 15px; font-weight: 500; color: var(--text-3);
+  transition: color .2s;
+}
+.feat-item.on .feat-hd { color: var(--text); }
+.feat-item.on .feat-body { display: block; }
+
+.feat-ico {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--bg-soft-2); display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0; transition: background .2s;
+}
+.feat-item.on .feat-ico { background: #fee2e2; }
+
+.feat-body {
+  display: none; padding: 12px 0 0 50px;
+  font-size: 14px; font-weight: 300; color: var(--text-2); line-height: 1.75;
+}
+
+.feat-display { position: sticky; top: 96px; }
+
+.feat-card {
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--r-xl); padding: 28px;
+  min-height: 360px; box-shadow: 0 2px 16px rgba(0,0,0,.05);
+  overflow: hidden;
+}
+.feat-card-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--text-3); margin-bottom: 20px;
+}
+
+/* kanban mini */
+.kb { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.kb-head {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-3);
+  display: flex; align-items: center; gap: 5px; margin-bottom: 10px;
+}
+.kb-dot { width: 6px; height: 6px; border-radius: 50%; }
+.kb-card {
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+}
+.kb-name { font-size: 11px; font-weight: 600; color: var(--text); }
+.kb-val { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+
+/* wpp */
+.wpp-list { display: flex; flex-direction: column; gap: 10px; }
+.wpp-b {
+  background: #f0f0f0; border-radius: 12px 12px 12px 3px;
+  padding: 11px 14px; font-size: 13px; color: var(--text); line-height: 1.55; max-width: 88%;
+}
+.wpp-b.out { background: #dcf8c6; border-radius: 12px 12px 3px 12px; align-self: flex-end; }
+.wpp-t { font-size: 9px; color: var(--text-3); text-align: right; margin-top: 4px; }
+
+/* impressora */
+.receipt {
+  background: var(--bg-soft); border: 1px solid var(--line);
+  border-radius: 10px; padding: 20px;
+  font-family: 'Courier New', monospace; font-size: 11px;
+  color: var(--text-2); line-height: 1.9; text-align: center;
+}
+.receipt-brand { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.receipt-div { border-bottom: 1px dashed var(--line-2); margin: 8px 0; }
+.receipt-items { text-align: left; }
+
+/* ─── PRICING ─── */
+.price-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 56px; }
+
+.price-card {
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--r-xl); padding: 36px 28px;
+  position: relative; transition: transform .25s, box-shadow .25s, border-color .25s;
+}
+.price-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,.1); border-color: var(--line-2); }
+.price-card.feat { border-color: var(--red); box-shadow: 0 0 0 1px var(--red); }
+.price-card.feat:hover { box-shadow: 0 0 0 1px var(--red), 0 16px 48px rgba(232,39,26,.15); }
+
+.price-tag {
+  position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+  background: var(--red); color: #fff;
+  font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  padding: 4px 14px; border-radius: 100px; white-space: nowrap;
+}
+
+.price-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-3); margin-bottom: 24px; }
+.price-cur { font-size: 18px; font-weight: 600; color: var(--text-2); vertical-align: top; line-height: 1.5; }
+.price-num { font-size: 54px; font-weight: 800; letter-spacing: -2px; color: var(--text); line-height: 1; }
+.price-per { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+.price-eco { font-size: 12px; font-weight: 600; color: var(--green); margin: 6px 0 28px; min-height: 18px; }
+
+.price-feats { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px; }
+.price-feats li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-2); font-weight: 400; }
+.price-feats li::before { content: '✓'; color: var(--green); font-weight: 800; flex-shrink: 0; }
+
+.price-btn {
+  display: block; text-align: center; padding: 14px;
+  border-radius: var(--r); font-size: 14px; font-weight: 600;
+  text-decoration: none; cursor: pointer; font-family: inherit;
+  border: 1px solid var(--line-2); color: var(--text); background: transparent;
+  transition: all .2s; width: 100%;
+}
+.price-btn:hover { background: var(--bg-soft); }
+.price-btn.red { background: var(--red); border-color: var(--red); color: #fff; box-shadow: 0 6px 24px rgba(232,39,26,.25); }
+.price-btn.red:hover { background: var(--red-h); transform: translateY(-1px); box-shadow: 0 10px 32px rgba(232,39,26,.35); }
+
+.launch-strip {
+  margin-top: 28px;
+  background: #fef2f2; border: 1px solid #fecaca;
+  border-radius: var(--r-lg); padding: 22px 28px;
+  text-align: center;
+}
+.launch-strip strong { display: block; font-size: 15px; font-weight: 700; color: var(--red); margin-bottom: 6px; }
+.launch-strip p { font-size: 13px; color: var(--text-2); font-weight: 300; margin-bottom: 16px; }
+
+/* ─── TESTIMONIALS ─── */
+.sec-test { background: var(--bg-soft); }
+.test-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 56px; }
+
+.test-card {
+  background: var(--bg); border: 1px solid var(--line);
+  border-radius: var(--r-xl); padding: 28px 24px;
+  transition: transform .25s, box-shadow .25s;
+}
+.test-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,.08); }
+
+.test-stars { color: #FBBF24; font-size: 13px; letter-spacing: 2px; margin-bottom: 16px; }
+.test-txt { font-size: 14px; font-weight: 300; color: var(--text-2); line-height: 1.75; margin-bottom: 20px; font-style: italic; }
+.test-who { display: flex; align-items: center; gap: 12px; }
+.test-av { width: 42px; height: 42px; border-radius: 50%; background: var(--bg-soft-2); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.test-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.test-biz { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+/* ─── FAQ ─── */
+.faq-wrap { max-width: 740px; margin: 48px auto 0; }
+.faq-item { border-bottom: 1px solid var(--line); padding: 22px 0; cursor: pointer; }
+.faq-q { display: flex; justify-content: space-between; align-items: center; gap: 16px; font-size: 15px; font-weight: 600; color: var(--text); }
+.faq-ico { color: var(--red); font-size: 22px; line-height: 1; flex-shrink: 0; transition: transform .3s; }
+.faq-item.on .faq-ico { transform: rotate(45deg); }
+.faq-a { display: none; padding-top: 12px; font-size: 14px; font-weight: 300; color: var(--text-2); line-height: 1.8; }
+.faq-item.on .faq-a { display: block; }
+
+/* ─── CTA FINAL ─── */
+.cta-sec {
+  padding: 120px 40px; background: var(--text);
+  text-align: center; position: relative; overflow: hidden;
+}
+.cta-sec::before {
+  content: ''; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(232,39,26,.12) 0%, transparent 65%);
+  pointer-events: none;
+}
+.cta-inner { max-width: 660px; margin: 0 auto; position: relative; z-index: 2; }
+.cta-inner h2 {
+  font-size: clamp(36px, 5vw, 60px);
+  font-weight: 800; letter-spacing: -2px; line-height: 1.06;
+  color: #fff; margin-bottom: 16px;
+}
+.cta-inner h2 i { font-style: normal; color: var(--red); }
+.cta-inner p { font-size: 17px; font-weight: 300; color: rgba(255,255,255,.5); line-height: 1.75; margin-bottom: 40px; }
+
+.cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+.btn-white {
+  height: 50px; padding: 0 30px;
+  background: #fff; color: var(--text);
+  border: none; border-radius: var(--r); cursor: pointer;
+  font-size: 15px; font-weight: 700; font-family: inherit;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  transition: background .2s, transform .15s;
+}
+.btn-white:hover { background: #f5f5f5; transform: translateY(-2px); }
+
+.btn-ghost-w {
+  height: 50px; padding: 0 26px;
+  background: transparent; color: rgba(255,255,255,.75);
+  border: 1px solid rgba(255,255,255,.2); border-radius: var(--r); cursor: pointer;
+  font-size: 15px; font-weight: 400; font-family: inherit;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+  transition: border-color .2s, color .2s, transform .15s;
+}
+.btn-ghost-w:hover { border-color: rgba(255,255,255,.5); color: #fff; transform: translateY(-2px); }
+
+.cta-fine { margin-top: 20px; font-size: 12px; color: rgba(255,255,255,.2); }
+
+/* ─── FOOTER ─── */
+footer {
+  background: var(--bg); border-top: 1px solid var(--line);
+  padding: 60px 40px 40px;
+}
+.foot-inner { max-width: 1200px; margin: 0 auto; }
+.foot-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 56px; margin-bottom: 48px; }
+.foot-logo { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -.5px; margin-bottom: 12px; }
+.foot-logo b { color: var(--red); }
+.foot-desc { font-size: 13px; font-weight: 300; color: var(--text-3); line-height: 1.75; max-width: 240px; }
+.foot-col-h { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em; color: var(--text-2); margin-bottom: 16px; }
+.foot-links { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.foot-links a { font-size: 13px; color: var(--text-3); text-decoration: none; transition: color .2s; }
+.foot-links a:hover { color: var(--text); }
+.foot-bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 28px; border-top: 1px solid var(--line);
+  font-size: 12px; color: var(--text-3); flex-wrap: wrap; gap: 8px;
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .65s ease, transform .65s ease; }
+.reveal.in { opacity: 1; transform: translateY(0); }
+
+/* ─── SCROLL PROGRESS ─── */
+.sprog { position: fixed; top: 64px; left: 0; z-index: 199; height: 2px; background: var(--red); width: 0; transition: width .1s linear; }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 960px) {
+  .nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .hero, .sec, .cta-sec, footer { padding-left: 20px; padding-right: 20px; }
+  .trust { padding: 0 20px; }
+  .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+  .hero-visual { display: none; }
+  .steps { grid-template-columns: 1fr; }
+  .feat-layout { grid-template-columns: 1fr; }
+  .feat-display { position: static; }
+  .price-grid { grid-template-columns: 1fr; }
+  .test-grid { grid-template-columns: 1fr; }
+  .foot-top { grid-template-columns: 1fr 1fr; gap: 36px; }
+}
+
 </style>
 </head>
 <body>
 
-<div class="scroll-line" id="scrollLine"></div>
+<div class="sprog" id="prog"></div>
 
 <!-- NAV -->
-<nav id="mainNav">
-  <a href="#" class="nav-logo">Zira<span>.</span></a>
+<nav class="nav" id="nav">
+  <a href="#" class="nav-logo">Zira<b>.</b></a>
   <ul class="nav-links">
     <li><a href="#como-funciona">Como funciona</a></li>
     <li><a href="#funcionalidades">Funcionalidades</a></li>
     <li><a href="#precos">Preços</a></li>
     <li><a href="#faq">FAQ</a></li>
-    <li><a href="https://zirafood.com.br/cadastro" class="nav-cta">Começar por R$27 →</a></li>
+    <li><a href="https://zirafood.com.br/cadastro" class="nav-btn">Começar por R$27 →</a></li>
   </ul>
 </nav>
 
 <!-- HERO -->
-<section class="hero" id="home">
+<section class="hero">
   <div class="hero-inner">
+
+    <!-- Left -->
     <div>
-      <div class="hero-eyebrow">
-        <div class="eyebrow-dot"></div>
-        Lançamento 2025 — Oferta especial
+      <div class="hero-eyebrow"><div class="eyebrow-dot"></div>Oferta de lançamento 2025</div>
+
+      <h1>Seu delivery,<br>sem pagar<br><i>iFood.</i></h1>
+
+      <p class="hero-desc">Cardápio digital próprio, gestão de pedidos em tempo real, WhatsApp automático e impressão térmica — tudo em um único sistema.</p>
+
+      <div class="hero-btns">
+        <a href="https://zirafood.com.br/cadastro" class="btn-red">Testar por R$27 no 1º mês →</a>
+        <a href="#como-funciona" class="btn-outline">Ver como funciona</a>
       </div>
 
-      <h1>
-        Seu delivery,<br>
-        sem pagar<br>
-        <em>iFood.</em>
-      </h1>
-
-      <p class="hero-sub">
-        Cardápio digital próprio, gestão de pedidos em tempo real, WhatsApp automático e impressão térmica — tudo em um único sistema.
-      </p>
-
-      <div class="hero-actions">
-        <a href="https://zirafood.com.br/cadastro" class="btn-primary">
-          Testar por R$27 no 1º mês →
-        </a>
-        <a href="#como-funciona" class="btn-ghost">
-          Ver como funciona
-        </a>
-      </div>
-
-      <div class="hero-proof">
-        <div class="proof-stat">
-          <div class="proof-num">0%</div>
-          <div class="proof-label">Comissão por pedido</div>
+      <div class="hero-metrics">
+        <div class="hero-metric">
+          <div class="hero-metric-n">0%</div>
+          <div class="hero-metric-l">Comissão por pedido</div>
         </div>
-        <div class="proof-divider"></div>
-        <div class="proof-stat">
-          <div class="proof-num">100%</div>
-          <div class="proof-label">Seus dados, sua marca</div>
+        <div class="hero-metric">
+          <div class="hero-metric-n">100%</div>
+          <div class="hero-metric-l">Seus dados, sua marca</div>
         </div>
-        <div class="proof-divider"></div>
-        <div class="proof-stat">
-          <div class="proof-num">R$27</div>
-          <div class="proof-label">Primeiro mês</div>
+        <div class="hero-metric">
+          <div class="hero-metric-n">R$27</div>
+          <div class="hero-metric-l">Primeiro mês</div>
         </div>
       </div>
     </div>
 
-    <!-- NOTEBOOK -->
+    <!-- Right – Laptop -->
     <div class="hero-visual">
-      <div class="notebook-wrap">
+      <div class="laptop">
 
-        <!-- Floating badges -->
-        <div class="float-badge fb-1">
-          <div class="fb-label">Faturamento este mês</div>
-          <div class="fb-value">R$ 7.412</div>
-          <div class="fb-sub">↑ 28% vs mês anterior</div>
+        <!-- Card 1 – Faturamento -->
+        <div class="lap-card lap-card-1">
+          <div class="lc-label">Faturamento este mês</div>
+          <div class="lc-value">R$ 7.412</div>
+          <div class="lc-sub">↑ 28% vs mês anterior</div>
         </div>
 
-        <div class="float-badge fb-2">
-          <div class="fb-wpp">
-            <div class="fb-wpp-icon">💬</div>
-            <div class="fb-wpp-text">
+        <!-- Card 2 – WhatsApp -->
+        <div class="lap-card lap-card-2">
+          <div class="lc-wpp">
+            <div class="lc-wpp-ico">💬</div>
+            <div class="lc-wpp-text">
               <strong>WhatsApp automático</strong>
               <span>Seu pedido saiu pra entrega! 🛵</span>
             </div>
           </div>
         </div>
 
-        <div class="notebook-lid">
-          <div class="notebook-camera-bar">
-            <div class="notebook-camera"></div>
-          </div>
-          <div class="notebook-screen">
-            <!-- Dashboard real -->
-            <div class="db-layout">
-              <div class="db-sidebar">
-                <div class="db-logo">
-                  <div class="db-logo-brand">Fogueiro<span>.</span></div>
-                  <div class="db-logo-sub">Painel Admin</div>
+        <!-- Lid -->
+        <div class="lap-lid">
+          <div class="lap-notch"><div class="lap-cam"></div></div>
+          <div class="lap-screen">
+            <div class="db">
+              <!-- Sidebar -->
+              <div class="db-side">
+                <div class="db-side-head">
+                  <div class="db-brand">Fogueiro<b>.</b></div>
+                  <div class="db-role">Painel Admin</div>
                 </div>
-                <div class="db-nav-section">Principal</div>
-                <div class="db-nav-item active">📋 Gestor</div>
-                <div class="db-nav-section">Relatórios</div>
-                <div class="db-nav-item" style="background:#f0fdf4;color:#16a34a;font-weight:600;margin:0 6px;border-radius:4px;">📊 Relatórios</div>
-                <div class="db-nav-item">💰 Vendas</div>
-                <div class="db-nav-item">👥 Clientes</div>
-                <div class="db-nav-item">🍔 Cardápio</div>
-                <div class="db-nav-section">Cardápio</div>
-                <div class="db-nav-item">✏️ Editor</div>
-                <div class="db-nav-section">Marketing</div>
-                <div class="db-nav-item">🏷️ Cupons</div>
-                <div class="db-nav-item">⭐ Fidelização</div>
-                <div class="db-nav-item">💬 WhatsApp</div>
+                <div class="db-sec">Principal</div>
+                <div class="db-link">📋 Gestor</div>
+                <div class="db-sec">Relatórios</div>
+                <div class="db-link on">📊 Relatórios</div>
+                <div class="db-link">💰 Vendas</div>
+                <div class="db-link">👥 Clientes</div>
+                <div class="db-link">🍔 Cardápio</div>
+                <div class="db-sec">Marketing</div>
+                <div class="db-link">🏷️ Cupons</div>
+                <div class="db-link">⭐ Fidelização</div>
+                <div class="db-link">💬 WhatsApp</div>
               </div>
 
+              <!-- Main -->
               <div class="db-main">
-                <div class="db-header">
+                <div class="db-top">
                   <div>
-                    <div class="db-title-label">Total em vendas</div>
-                    <div class="db-title-value">R$ 7.412,30</div>
+                    <div class="db-fat-label">Total em vendas</div>
+                    <div class="db-fat-val">R$ 7.412,30</div>
                   </div>
-                  <div class="db-date-badge">📅 26/02 — 21/03/2026</div>
+                  <div class="db-date">📅 26/02 — 21/03/2026</div>
                 </div>
 
-                <div class="db-cards">
-                  <div class="db-card">
-                    <div class="db-card-icon">💰</div>
-                    <div class="db-card-label">Fat. Bruto</div>
-                    <div class="db-card-value">R$7.412</div>
-                  </div>
-                  <div class="db-card">
-                    <div class="db-card-icon">📦</div>
-                    <div class="db-card-label">Pedidos</div>
-                    <div class="db-card-value">155</div>
-                  </div>
-                  <div class="db-card">
-                    <div class="db-card-icon">🎯</div>
-                    <div class="db-card-label">Ticket Médio</div>
-                    <div class="db-card-value">R$47,82</div>
-                  </div>
-                  <div class="db-card">
-                    <div class="db-card-icon">🏷️</div>
-                    <div class="db-card-label">Com Cupom</div>
-                    <div class="db-card-value">46</div>
-                  </div>
-                  <div class="db-card">
-                    <div class="db-card-icon">⭐</div>
-                    <div class="db-card-label">Fidelidade</div>
-                    <div class="db-card-value">0</div>
-                  </div>
-                  <div class="db-card">
-                    <div class="db-card-icon">💸</div>
-                    <div class="db-card-label">Inv. Cupons</div>
-                    <div class="db-card-value">R$0,00</div>
+                <div class="db-kpis">
+                  <div class="db-kpi"><div class="db-kpi-ico">💰</div><div class="db-kpi-l">Fat. Bruto</div><div class="db-kpi-v">R$7.412</div></div>
+                  <div class="db-kpi"><div class="db-kpi-ico">📦</div><div class="db-kpi-l">Pedidos</div><div class="db-kpi-v">155</div></div>
+                  <div class="db-kpi"><div class="db-kpi-ico">🎯</div><div class="db-kpi-l">Ticket Méd.</div><div class="db-kpi-v">R$47,82</div></div>
+                  <div class="db-kpi"><div class="db-kpi-ico">🏷️</div><div class="db-kpi-l">C/ Cupom</div><div class="db-kpi-v">46</div></div>
+                  <div class="db-kpi"><div class="db-kpi-ico">⭐</div><div class="db-kpi-l">Fidelidade</div><div class="db-kpi-v">0</div></div>
+                  <div class="db-kpi"><div class="db-kpi-ico">💸</div><div class="db-kpi-l">Inv. Cupons</div><div class="db-kpi-v">R$0</div></div>
+                </div>
+
+                <div class="db-chart">
+                  <div class="db-chart-t">Desempenho — Faturamento e Pedidos</div>
+                  <div class="db-bars">
+                    <div class="db-bar" style="height:8%"></div><div class="db-bar" style="height:5%"></div>
+                    <div class="db-bar" style="height:6%"></div><div class="db-bar" style="height:4%"></div>
+                    <div class="db-bar" style="height:7%"></div><div class="db-bar" style="height:9%"></div>
+                    <div class="db-bar" style="height:6%"></div><div class="db-bar" style="height:11%"></div>
+                    <div class="db-bar" style="height:8%"></div><div class="db-bar" style="height:13%"></div>
+                    <div class="db-bar hi" style="height:92%"></div><div class="db-bar hi" style="height:72%"></div>
+                    <div class="db-bar" style="height:20%"></div><div class="db-bar" style="height:10%"></div>
+                    <div class="db-bar" style="height:8%"></div><div class="db-bar" style="height:12%"></div>
+                    <div class="db-bar" style="height:9%"></div><div class="db-bar" style="height:7%"></div>
+                    <div class="db-bar" style="height:10%"></div><div class="db-bar" style="height:8%"></div>
                   </div>
                 </div>
 
-                <div class="db-chart-area">
-                  <div class="db-chart-label">Desempenho — Faturamento e Pedidos</div>
-                  <div class="chart-bars">
-                    <div class="chart-bar" style="height:8%"></div>
-                    <div class="chart-bar" style="height:5%"></div>
-                    <div class="chart-bar" style="height:6%"></div>
-                    <div class="chart-bar" style="height:4%"></div>
-                    <div class="chart-bar" style="height:5%"></div>
-                    <div class="chart-bar" style="height:8%"></div>
-                    <div class="chart-bar" style="height:10%"></div>
-                    <div class="chart-bar" style="height:7%"></div>
-                    <div class="chart-bar" style="height:12%"></div>
-                    <div class="chart-bar" style="height:9%"></div>
-                    <div class="chart-bar highlight" style="height:90%"></div>
-                    <div class="chart-bar highlight" style="height:70%"></div>
-                    <div class="chart-bar" style="height:18%"></div>
-                    <div class="chart-bar" style="height:10%"></div>
-                    <div class="chart-bar" style="height:8%"></div>
-                    <div class="chart-bar" style="height:12%"></div>
-                    <div class="chart-bar" style="height:9%"></div>
-                    <div class="chart-bar" style="height:7%"></div>
-                    <div class="chart-bar" style="height:11%"></div>
-                    <div class="chart-bar" style="height:8%"></div>
+                <div class="db-bottom">
+                  <div class="db-box">
+                    <div class="db-box-t">Clientes Novos vs Recorrentes</div>
+                    <div class="db-row"><div class="db-row-l"><span>🟢 Novos (73)</span><span>47%</span></div><div class="db-track"><div class="db-fill" style="width:47%;background:#16a34a"></div></div></div>
+                    <div class="db-row"><div class="db-row-l"><span>🔵 Recorrentes (82)</span><span>53%</span></div><div class="db-track"><div class="db-fill" style="width:53%;background:#3b82f6"></div></div></div>
                   </div>
-                </div>
-
-                <div class="db-bottom-grid">
-                  <div class="db-bottom-card">
-                    <div class="db-bottom-card-label">Clientes Novos vs Recorrentes</div>
-                    <div class="db-bar-row">
-                      <div class="db-bar-label-row"><span>🟢 Novos (73)</span><span>47%</span></div>
-                      <div class="db-bar-track"><div class="db-bar-fill" style="width:47%;background:#16a34a"></div></div>
-                    </div>
-                    <div class="db-bar-row" style="margin-top:6px">
-                      <div class="db-bar-label-row"><span>🔵 Recorrentes (82)</span><span>53%</span></div>
-                      <div class="db-bar-track"><div class="db-bar-fill" style="width:53%;background:#3b82f6"></div></div>
-                    </div>
-                  </div>
-                  <div class="db-bottom-card">
-                    <div class="db-bottom-card-label">Top Produto</div>
-                    <div style="font-size:10px;font-weight:600;color:#1a1a1a;margin-bottom:3px;">🍔 X-Burguer Duplo</div>
-                    <div style="font-size:8px;color:#888;">98 unidades · R$ 2.744</div>
-                    <div style="margin-top:8px;">
-                      <div class="db-bar-track"><div class="db-bar-fill" style="width:78%;background:var(--red)"></div></div>
-                    </div>
+                  <div class="db-box">
+                    <div class="db-box-t">Top Produto</div>
+                    <div style="font-size:10px;font-weight:700;color:#111;margin-bottom:3px">🍔 X-Burguer Duplo</div>
+                    <div style="font-size:8px;color:#888;margin-bottom:6px">98 unid · R$2.744</div>
+                    <div class="db-track"><div class="db-fill" style="width:78%;background:var(--red)"></div></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="notebook-hinge"></div>
-        <div class="notebook-base"></div>
-        <div class="notebook-foot"></div>
+
+        <div class="lap-hinge"></div>
+        <div class="lap-base"></div>
+        <div class="lap-foot"></div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- TRUST BAR -->
-<div class="trust-bar">
+<div class="trust">
   <div class="trust-inner">
-    <div class="trust-label">Integra com</div>
-    <div class="trust-logos">
+    <span class="trust-label">Integra com</span>
+    <div class="trust-sep"></div>
+    <div class="trust-items">
       <div class="trust-item">💳 Mercado Pago</div>
       <div class="trust-item">🖨️ Impressora Térmica</div>
       <div class="trust-item">💬 WhatsApp</div>
@@ -1648,172 +777,172 @@
 </div>
 
 <!-- COMO FUNCIONA -->
-<section class="section" id="como-funciona">
-  <div class="section-inner">
-    <div class="section-tag">Como funciona</div>
-    <h2 class="section-title">Configure em minutos.<br>Receba pedidos hoje.</h2>
-    <p class="section-sub">Sem precisar de técnico, sem contrato de fidelidade, sem complicação.</p>
+<section class="sec" id="como-funciona">
+  <div class="sec-inner">
+    <div class="sec-tag">Como funciona</div>
+    <h2 class="sec-h">Configure em minutos.<br>Receba pedidos hoje.</h2>
+    <p class="sec-sub">Sem precisar de técnico. Sem contrato de fidelidade. Sem complicação.</p>
 
-    <div class="steps-grid reveal">
-      <div class="step-card">
-        <div class="step-num">01</div>
-        <div class="step-icon">🏪</div>
-        <div class="step-title">Monte seu cardápio</div>
-        <p class="step-desc">Crie categorias, produtos, complementos e fotos diretamente pelo painel. Sem precisar de técnico.</p>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-n">01</div>
+        <div class="step-ico">🏪</div>
+        <div class="step-t">Monte seu cardápio</div>
+        <p class="step-d">Crie categorias, produtos, complementos e fotos pelo painel admin. Sem precisar de técnico ou programador.</p>
       </div>
-      <div class="step-card">
-        <div class="step-num">02</div>
-        <div class="step-icon">🔗</div>
-        <div class="step-title">Compartilhe o link</div>
-        <p class="step-desc">Você recebe um link exclusivo do seu cardápio. Compartilhe no WhatsApp, Instagram e Google Meu Negócio.</p>
+      <div class="step">
+        <div class="step-n">02</div>
+        <div class="step-ico">🔗</div>
+        <div class="step-t">Compartilhe o link</div>
+        <p class="step-d">Receba um link exclusivo do seu cardápio. Compartilhe no WhatsApp, Instagram e Google Meu Negócio.</p>
       </div>
-      <div class="step-card">
-        <div class="step-num">03</div>
-        <div class="step-icon">📲</div>
-        <div class="step-title">Gerencie em tempo real</div>
-        <p class="step-desc">Pedidos aparecem no painel ao vivo. O sistema imprime e avisa o cliente pelo WhatsApp em cada etapa.</p>
+      <div class="step">
+        <div class="step-n">03</div>
+        <div class="step-ico">📲</div>
+        <div class="step-t">Gerencie em tempo real</div>
+        <p class="step-d">Pedidos aparecem no painel ao vivo. O sistema imprime e avisa o cliente pelo WhatsApp em cada etapa.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- FUNCIONALIDADES -->
-<section class="section features-bg" id="funcionalidades" style="padding-top:0">
-  <div class="section-inner">
-    <div class="section-tag">Funcionalidades</div>
-    <h2 class="section-title">Tudo que seu<br>delivery precisa.</h2>
-    <p class="section-sub">Uma plataforma completa para você criar seu próprio canal de vendas e parar de depender do iFood.</p>
+<section class="sec sec-feat" id="funcionalidades" style="padding-top:0">
+  <div class="sec-inner">
+    <div class="sec-tag">Funcionalidades</div>
+    <h2 class="sec-h">Tudo que seu<br>delivery precisa.</h2>
+    <p class="sec-sub">Uma plataforma completa para criar seu próprio canal de vendas e parar de depender do iFood.</p>
 
-    <div class="features-layout reveal">
-      <div class="features-list">
-        <div class="feature-item active" onclick="toggleFeature(this,'kanban')">
-          <div class="feature-header"><div class="feature-icon-sm">📋</div> Gestor de pedidos em tempo real</div>
-          <div class="feature-body">Kanban visual com as colunas Análise → Preparo → Entrega → Finalizado. Avance status com um clique e monitore tudo em tempo real.</div>
+    <div class="feat-layout reveal" style="margin-top:56px">
+      <div class="feat-list">
+        <div class="feat-item on" onclick="setFeat(this,'kb')">
+          <div class="feat-hd"><div class="feat-ico">📋</div>Gestor de pedidos em tempo real</div>
+          <div class="feat-body">Kanban visual com colunas Análise → Preparo → Entrega → Finalizado. Avance status com um clique e monitore tudo em tempo real.</div>
         </div>
-        <div class="feature-item" onclick="toggleFeature(this,'wpp')">
-          <div class="feature-header"><div class="feature-icon-sm">💬</div> WhatsApp automático</div>
-          <div class="feature-body">O cliente recebe mensagem automática em cada etapa do pedido — confirmação, preparo, saída para entrega e finalização.</div>
+        <div class="feat-item" onclick="setFeat(this,'wpp')">
+          <div class="feat-hd"><div class="feat-ico">💬</div>WhatsApp automático</div>
+          <div class="feat-body">O cliente recebe mensagem automática em cada etapa do pedido — confirmação, preparo, saída e entrega. Sem você precisar digitar nada.</div>
         </div>
-        <div class="feature-item" onclick="toggleFeature(this,'impressao')">
-          <div class="feature-header"><div class="feature-icon-sm">🖨️</div> Impressão térmica automática</div>
-          <div class="feature-body">Conecte sua impressora térmica e receba comandas impressas automaticamente quando o pedido chegar. Suporte 58mm e 80mm.</div>
+        <div class="feat-item" onclick="setFeat(this,'imp')">
+          <div class="feat-hd"><div class="feat-ico">🖨️</div>Impressão térmica automática</div>
+          <div class="feat-body">Conecte sua impressora térmica e receba comandas impressas automaticamente quando o pedido chegar. Suporte 58mm e 80mm.</div>
         </div>
-        <div class="feature-item" onclick="toggleFeature(this,'fidelidade')">
-          <div class="feature-header"><div class="feature-icon-sm">🎁</div> Programa de fidelidade</div>
-          <div class="feature-body">Crie seu programa de pontos: a cada R$ gasto o cliente acumula pontos e pode resgatar desconto ou produto grátis.</div>
+        <div class="feat-item" onclick="setFeat(this,'fid')">
+          <div class="feat-hd"><div class="feat-ico">🎁</div>Programa de fidelidade</div>
+          <div class="feat-body">Crie seu programa de pontos: a cada R$ gasto o cliente acumula pontos e pode resgatar desconto ou produto grátis.</div>
         </div>
-        <div class="feature-item" onclick="toggleFeature(this,'relatorios')">
-          <div class="feature-header"><div class="feature-icon-sm">📊</div> Relatórios e análises</div>
-          <div class="feature-body">Faturamento por período, produtos mais vendidos, horários de pico, formas de pagamento. Dados reais para decisões reais.</div>
+        <div class="feat-item" onclick="setFeat(this,'rel')">
+          <div class="feat-hd"><div class="feat-ico">📊</div>Relatórios e análises</div>
+          <div class="feat-body">Faturamento por período, produtos mais vendidos, horários de pico e clientes recorrentes. Dados reais para decisões reais.</div>
         </div>
-        <div class="feature-item" onclick="toggleFeature(this,'pixel')">
-          <div class="feature-header"><div class="feature-icon-sm">🎯</div> Integração com Meta Pixel</div>
-          <div class="feature-body">Rastreie ViewContent, AddToCart e Purchase com Conversions API incluída. Máxima precisão nos seus anúncios de tráfego pago.</div>
+        <div class="feat-item" onclick="setFeat(this,'pix')">
+          <div class="feat-hd"><div class="feat-ico">🎯</div>Integração com Meta Pixel</div>
+          <div class="feat-body">Rastreie ViewContent, AddToCart e Purchase com Conversions API incluída. Máxima precisão nos seus anúncios de tráfego pago.</div>
         </div>
       </div>
 
-      <div class="features-display">
-        <div class="display-card" id="fd-kanban">
-          <div class="display-label">Gestor de Pedidos</div>
-          <div class="kanban-mini">
+      <div class="feat-display">
+        <div class="feat-card" id="fd-kb">
+          <div class="feat-card-label">Gestor de Pedidos</div>
+          <div class="kb">
             <div>
-              <div class="km-head"><div class="km-dot" style="background:#f59e0b"></div>Preparo</div>
-              <div class="km-item"><div class="km-name">Pedro A.</div><div class="km-val">R$64 · 12min</div></div>
-              <div class="km-item"><div class="km-name">Luiza M.</div><div class="km-val">R$38 · 5min</div></div>
+              <div class="kb-head"><div class="kb-dot" style="background:#f59e0b"></div>Preparo</div>
+              <div class="kb-card"><div class="kb-name">Pedro A.</div><div class="kb-val">R$64 · 12min</div></div>
+              <div class="kb-card"><div class="kb-name">Luiza M.</div><div class="kb-val">R$38 · 5min</div></div>
             </div>
             <div>
-              <div class="km-head"><div class="km-dot" style="background:#3b82f6"></div>Entrega</div>
-              <div class="km-item"><div class="km-name">Jonas R.</div><div class="km-val">R$97 · 28min</div></div>
+              <div class="kb-head"><div class="kb-dot" style="background:#3b82f6"></div>Entrega</div>
+              <div class="kb-card"><div class="kb-name">Jonas R.</div><div class="kb-val">R$97 · 28min</div></div>
             </div>
             <div>
-              <div class="km-head"><div class="km-dot" style="background:#16a34a"></div>Feito</div>
-              <div class="km-item"><div class="km-name">Ana S.</div><div class="km-val">R$52 ✓</div></div>
-              <div class="km-item"><div class="km-name">Carlos B.</div><div class="km-val">R$73 ✓</div></div>
+              <div class="kb-head"><div class="kb-dot" style="background:#16a34a"></div>Feito</div>
+              <div class="kb-card"><div class="kb-name">Ana S.</div><div class="kb-val">R$52 ✓</div></div>
+              <div class="kb-card"><div class="kb-name">Carlos B.</div><div class="kb-val">R$73 ✓</div></div>
             </div>
           </div>
         </div>
 
-        <div class="display-card" id="fd-wpp" style="display:none">
-          <div class="display-label">WhatsApp Automático</div>
-          <div class="wpp-preview">
-            <div class="wpp-bubble">🎉 <strong>Pedido recebido!</strong><br>Olá, Rafael! Seu pedido #B-2847 foi confirmado.<div class="wpp-time">09:41 ✓✓</div></div>
-            <div class="wpp-bubble sent">Obrigado! 👏<div class="wpp-time">09:42 ✓✓</div></div>
-            <div class="wpp-bubble">👨‍🍳 Seu pedido está sendo preparado!<div class="wpp-time">09:55 ✓✓</div></div>
-            <div class="wpp-bubble">🛵 Pedido <strong>#B-2847</strong> saiu para entrega! 😊<div class="wpp-time">10:18 ✓✓</div></div>
+        <div class="feat-card" id="fd-wpp" style="display:none">
+          <div class="feat-card-label">WhatsApp Automático</div>
+          <div class="wpp-list">
+            <div class="wpp-b">🎉 <strong>Pedido recebido!</strong><br>Olá, Rafael! Seu pedido #B-2847 foi confirmado.<div class="wpp-t">09:41 ✓✓</div></div>
+            <div class="wpp-b out">Obrigado! 👏<div class="wpp-t">09:42 ✓✓</div></div>
+            <div class="wpp-b">👨‍🍳 Seu pedido está sendo preparado com carinho!<div class="wpp-t">09:55 ✓✓</div></div>
+            <div class="wpp-b">🛵 Pedido <strong>#B-2847</strong> saiu para entrega! 😊<div class="wpp-t">10:18 ✓✓</div></div>
           </div>
         </div>
 
-        <div class="display-card" id="fd-impressao" style="display:none">
-          <div class="display-label">Impressão Automática</div>
-          <div style="background:#f7f7f5;border:1px solid var(--border);border-radius:12px;padding:20px;font-family:'Courier New',monospace;font-size:11px;color:var(--text);line-height:2;text-align:center;">
-            <div style="font-size:14px;font-weight:bold;margin-bottom:8px;">BURGER HOUSE</div>
-            <div style="border-bottom:1px dashed #ccc;margin:8px 0"></div>
+        <div class="feat-card" id="fd-imp" style="display:none">
+          <div class="feat-card-label">Impressão Automática</div>
+          <div class="receipt">
+            <div class="receipt-brand">BURGER HOUSE</div>
+            <div class="receipt-div"></div>
             <div>PEDIDO #B-2847</div>
-            <div style="text-align:left;margin-top:8px;">
+            <div class="receipt-items" style="margin-top:6px">
               <div>1x X-Burguer............R$28</div>
               <div>&nbsp;&nbsp;+ Bacon</div>
               <div>1x Fritas Grande........R$14</div>
               <div>1x Coca Cola Lata.......R$7</div>
             </div>
-            <div style="border-bottom:1px dashed #ccc;margin:8px 0"></div>
+            <div class="receipt-div"></div>
             <div><strong>TOTAL: R$ 49,00</strong></div>
-            <div style="margin-top:4px;font-size:10px;color:#888;">Obrigado pela preferência! ♥</div>
+            <div style="font-size:9px;color:var(--text-3);margin-top:4px">Obrigado pela preferência! ♥</div>
           </div>
         </div>
 
-        <div class="display-card" id="fd-fidelidade" style="display:none">
-          <div class="display-label">Programa de Fidelidade</div>
-          <div style="display:flex;flex-direction:column;gap:16px">
-            <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:20px">
-              <div style="font-size:11px;color:var(--text-light);margin-bottom:4px">Saldo de pontos</div>
-              <div style="font-family:var(--font-display);font-size:42px;font-weight:700;color:var(--text);letter-spacing:-2px">320 pts</div>
-              <div style="font-size:12px;color:#16a34a;font-weight:500;margin-top:4px">+50 pontos no último pedido</div>
+        <div class="feat-card" id="fd-fid" style="display:none">
+          <div class="feat-card-label">Programa de Fidelidade</div>
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;padding:20px">
+              <div style="font-size:11px;color:var(--text-3);margin-bottom:4px">Saldo de pontos</div>
+              <div style="font-size:40px;font-weight:800;color:var(--text);letter-spacing:-2px;line-height:1">320 pts</div>
+              <div style="font-size:12px;color:var(--green);font-weight:600;margin-top:6px">+50 pontos no último pedido</div>
             </div>
-            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;display:flex;align-items:center;gap:14px">
-              <div style="font-size:28px">🎁</div>
+            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px">
+              <div style="font-size:26px">🎁</div>
               <div>
-                <div style="font-size:13px;font-weight:600;color:var(--text)">Resgate disponível!</div>
-                <div style="font-size:12px;color:var(--text-mid);margin-top:2px">300 pts = R$30 de desconto</div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Resgate disponível!</div>
+                <div style="font-size:12px;color:var(--text-2);margin-top:2px">300 pts = R$30 de desconto</div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="display-card" id="fd-relatorios" style="display:none">
-          <div class="display-label">Relatórios</div>
+        <div class="feat-card" id="fd-rel" style="display:none">
+          <div class="feat-card-label">Relatórios</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-            <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:10px;color:var(--text-light)">Este mês</div>
-              <div style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--text)">R$7.4k</div>
-              <div style="font-size:11px;color:#16a34a;font-weight:500">↑ 28%</div>
+            <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px">
+              <div style="font-size:10px;color:var(--text-3)">Este mês</div>
+              <div style="font-size:26px;font-weight:800;color:var(--text);letter-spacing:-1px">R$7.4k</div>
+              <div style="font-size:12px;color:var(--green);font-weight:600">↑ 28%</div>
             </div>
-            <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:14px">
-              <div style="font-size:10px;color:var(--text-light)">Pedidos</div>
-              <div style="font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--text)">155</div>
-              <div style="font-size:11px;color:#16a34a;font-weight:500">↑ 15%</div>
+            <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px">
+              <div style="font-size:10px;color:var(--text-3)">Pedidos</div>
+              <div style="font-size:26px;font-weight:800;color:var(--text);letter-spacing:-1px">155</div>
+              <div style="font-size:12px;color:var(--green);font-weight:600">↑ 15%</div>
             </div>
           </div>
-          <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:14px">
-            <div style="font-size:10px;color:var(--text-light);margin-bottom:6px">Produto mais vendido</div>
-            <div style="font-size:13px;font-weight:600;color:var(--text)">🍔 X-Burguer Duplo</div>
-            <div style="font-size:11px;color:var(--text-light);margin-top:2px">98 unidades · R$2.744</div>
+          <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px">
+            <div style="font-size:10px;color:var(--text-3);margin-bottom:6px">Produto mais vendido</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text)">🍔 X-Burguer Duplo</div>
+            <div style="font-size:12px;color:var(--text-3);margin-top:2px">98 unidades · R$2.744</div>
           </div>
         </div>
 
-        <div class="display-card" id="fd-pixel" style="display:none">
-          <div class="display-label">Meta Pixel</div>
+        <div class="feat-card" id="fd-pix" style="display:none">
+          <div class="feat-card-label">Meta Pixel</div>
           <div style="display:flex;flex-direction:column;gap:10px">
-            <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center">
-              <div><div style="font-size:11px;color:var(--text-light)">PageView</div><div style="font-size:16px;font-weight:600;color:var(--text)">2.847 eventos</div></div>
-              <div style="color:#16a34a;font-size:12px;font-weight:500">● Ativo</div>
+            <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-size:11px;color:var(--text-3)">PageView</div><div style="font-size:16px;font-weight:700;color:var(--text)">2.847 eventos</div></div>
+              <div style="color:var(--green);font-size:12px;font-weight:600">● Ativo</div>
             </div>
-            <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center">
-              <div><div style="font-size:11px;color:var(--text-light)">AddToCart</div><div style="font-size:16px;font-weight:600;color:var(--text)">1.234 eventos</div></div>
-              <div style="color:#16a34a;font-size:12px;font-weight:500">● Ativo</div>
+            <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-size:11px;color:var(--text-3)">AddToCart</div><div style="font-size:16px;font-weight:700;color:var(--text)">1.234 eventos</div></div>
+              <div style="color:var(--green);font-size:12px;font-weight:600">● Ativo</div>
             </div>
-            <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center">
-              <div><div style="font-size:11px;color:var(--text-light)">Purchase</div><div style="font-size:16px;font-weight:600;color:var(--text)">347 eventos</div></div>
-              <div style="color:#16a34a;font-size:12px;font-weight:500">● Ativo</div>
+            <div style="background:var(--bg-soft);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;justify-content:space-between;align-items:center">
+              <div><div style="font-size:11px;color:var(--text-3)">Purchase</div><div style="font-size:16px;font-weight:700;color:var(--text)">347 eventos</div></div>
+              <div style="color:var(--green);font-size:12px;font-weight:600">● Ativo</div>
             </div>
           </div>
         </div>
@@ -1823,19 +952,19 @@
 </section>
 
 <!-- PREÇOS -->
-<section class="section" id="precos">
-  <div class="section-inner">
-    <div class="section-tag">Preços</div>
-    <h2 class="section-title">Transparente.<br>Sem taxas por pedido.</h2>
-    <p class="section-sub" style="margin-bottom:48px">Cancele quando quiser. Zero comissão. Seus pedidos, seu dinheiro.</p>
+<section class="sec" id="precos">
+  <div class="sec-inner">
+    <div class="sec-tag">Preços</div>
+    <h2 class="sec-h">Sem taxas por pedido.<br>Sem surpresas.</h2>
+    <p class="sec-sub">Planos sem fidelidade — cancele quando quiser. Zero comissão sobre seus pedidos.</p>
 
-    <div class="pricing-grid reveal">
+    <div class="price-grid reveal">
       <div class="price-card">
         <div class="price-label">Mensal</div>
-        <div class="price-amount"><span class="price-currency">R$</span><span class="price-num">147</span></div>
-        <div class="price-period">/mês · cobrado mensalmente</div>
-        <div class="price-economy">&nbsp;</div>
-        <ul class="price-features">
+        <div><span class="price-cur">R$</span><span class="price-num">147</span></div>
+        <div class="price-per">/mês · cobrado mensalmente</div>
+        <div class="price-eco">&nbsp;</div>
+        <ul class="price-feats">
           <li>Cardápio digital ilimitado</li>
           <li>Gestor de pedidos em tempo real</li>
           <li>Relatórios de vendas</li>
@@ -1843,15 +972,16 @@
           <li>Integração com WhatsApp</li>
           <li>Suporte por e-mail</li>
         </ul>
-        <a href="https://zirafood.com.br/cadastro" class="price-cta">Assinar agora</a>
+        <a href="https://zirafood.com.br/cadastro" class="price-btn">Assinar agora</a>
       </div>
 
-      <div class="price-card featured">
+      <div class="price-card feat">
+        <div class="price-tag">★ Mais popular</div>
         <div class="price-label">Trimestral</div>
-        <div class="price-amount"><span class="price-currency">R$</span><span class="price-num">397</span></div>
-        <div class="price-period">/trimestre · R$132/mês</div>
-        <div class="price-economy">✓ Você economiza R$ 44</div>
-        <ul class="price-features">
+        <div><span class="price-cur">R$</span><span class="price-num">397</span></div>
+        <div class="price-per">/trimestre · R$132/mês</div>
+        <div class="price-eco">✓ Você economiza R$ 44</div>
+        <ul class="price-feats">
           <li>Cardápio digital ilimitado</li>
           <li>Gestor de pedidos em tempo real</li>
           <li>Relatórios de vendas</li>
@@ -1859,15 +989,15 @@
           <li>Integração com WhatsApp</li>
           <li>Suporte prioritário</li>
         </ul>
-        <a href="https://zirafood.com.br/cadastro" class="price-cta red-cta">Assinar agora</a>
+        <a href="https://zirafood.com.br/cadastro" class="price-btn red">Assinar agora</a>
       </div>
 
       <div class="price-card">
         <div class="price-label">Anual</div>
-        <div class="price-amount"><span class="price-currency">R$</span><span class="price-num">1.497</span></div>
-        <div class="price-period">/ano · R$124/mês</div>
-        <div class="price-economy">✓ Você economiza R$ 267</div>
-        <ul class="price-features">
+        <div><span class="price-cur">R$</span><span class="price-num">1.497</span></div>
+        <div class="price-per">/ano · R$124/mês</div>
+        <div class="price-eco">✓ Você economiza R$ 267</div>
+        <ul class="price-feats">
           <li>Cardápio digital ilimitado</li>
           <li>Gestor de pedidos em tempo real</li>
           <li>Relatórios de vendas</li>
@@ -1875,59 +1005,48 @@
           <li>Integração com WhatsApp</li>
           <li>Suporte VIP + onboarding</li>
         </ul>
-        <a href="https://zirafood.com.br/cadastro" class="price-cta">Assinar agora</a>
+        <a href="https://zirafood.com.br/cadastro" class="price-btn">Assinar agora</a>
       </div>
     </div>
 
-    <div class="launch-offer reveal" style="margin-top:32px">
-      <p>🎯 Oferta de lançamento — primeiro mês por R$ 27</p>
-      <span>Para os primeiros restaurantes que testarem a Zira. A partir do 2º mês, plano regular de R$147/mês.</span>
-      <div style="margin-top:16px">
-        <a href="https://zirafood.com.br/cadastro" class="btn-primary">Aproveitar oferta →</a>
-      </div>
+    <div class="launch-strip reveal">
+      <strong>🎯 Oferta de lançamento — primeiro mês por R$ 27</strong>
+      <p>Para os primeiros restaurantes que testarem a Zira. Use o sistema completo sem limitação. A partir do 2º mês, R$147/mês.</p>
+      <a href="https://zirafood.com.br/cadastro" class="btn-red">Aproveitar oferta de lançamento →</a>
     </div>
   </div>
 </section>
 
 <!-- DEPOIMENTOS -->
-<section class="section test-bg" style="padding-top:0" id="depoimentos">
-  <div class="section-inner">
-    <div class="section-tag">Depoimentos</div>
-    <h2 class="section-title">Quem usa,<br>não volta atrás.</h2>
-    <p class="section-sub" style="margin-bottom:48px">Restaurantes que criaram seu próprio canal de vendas.</p>
+<section class="sec sec-test" id="depoimentos" style="padding-top:0">
+  <div class="sec-inner">
+    <div class="sec-tag">Depoimentos</div>
+    <h2 class="sec-h">Quem usa,<br>não volta atrás.</h2>
+    <p class="sec-sub">Restaurantes que criaram seu próprio canal de vendas.</p>
 
-    <div class="testimonials-grid reveal">
-      <div class="testimonial-card">
+    <div class="test-grid reveal">
+      <div class="test-card">
         <div class="test-stars">★★★★★</div>
-        <p class="test-text">"Antes eu perdia 30% de tudo pro iFood. Agora recebo pedido pelo meu próprio cardápio, a comanda já imprime sozinha e o cliente recebe WhatsApp automático."</p>
-        <div class="test-author">
-          <div class="test-avatar">🍔</div>
-          <div>
-            <div class="test-name">Ricardo M.</div>
-            <div class="test-biz">Fogueiro Burguer · Araçatuba/SP</div>
-          </div>
+        <p class="test-txt">"Antes eu perdia 30% de tudo pro iFood. Agora recebo pedido pelo meu próprio cardápio, a comanda imprime sozinha e o cliente recebe WhatsApp automático."</p>
+        <div class="test-who">
+          <div class="test-av">🍔</div>
+          <div><div class="test-name">Ricardo M.</div><div class="test-biz">Fogueiro Burguer · Araçatuba/SP</div></div>
         </div>
       </div>
-      <div class="testimonial-card">
+      <div class="test-card">
         <div class="test-stars">★★★★★</div>
-        <p class="test-text">"O kanban de pedidos salvou minha operação no pico de sexta. Todo mundo sabe o que tá acontecendo, nenhum pedido se perde mais."</p>
-        <div class="test-author">
-          <div class="test-avatar">🍕</div>
-          <div>
-            <div class="test-name">Fernanda A.</div>
-            <div class="test-biz">Pizza da Fera · São Paulo/SP</div>
-          </div>
+        <p class="test-txt">"O kanban de pedidos salvou minha operação no pico de sexta. Todo mundo sabe o que tá acontecendo, nenhum pedido se perde mais."</p>
+        <div class="test-who">
+          <div class="test-av">🍕</div>
+          <div><div class="test-name">Fernanda A.</div><div class="test-biz">Pizza da Fera · São Paulo/SP</div></div>
         </div>
       </div>
-      <div class="testimonial-card">
+      <div class="test-card">
         <div class="test-stars">★★★★★</div>
-        <p class="test-text">"O programa de pontos aumentou minha frequência de compra em quase 40% num mês. Os relatórios me mostram tudo que preciso saber."</p>
-        <div class="test-author">
-          <div class="test-avatar">🥩</div>
-          <div>
-            <div class="test-name">Esmeraldo C.</div>
-            <div class="test-biz">Esmeraldo Porções · Araçatuba/SP</div>
-          </div>
+        <p class="test-txt">"O programa de pontos aumentou minha frequência de compra em 40% num mês. Os relatórios me mostram tudo que preciso saber."</p>
+        <div class="test-who">
+          <div class="test-av">🥩</div>
+          <div><div class="test-name">Esmeraldo C.</div><div class="test-biz">Esmeraldo Porções · Araçatuba/SP</div></div>
         </div>
       </div>
     </div>
@@ -1935,35 +1054,36 @@
 </section>
 
 <!-- FAQ -->
-<section class="section" style="padding-top:0" id="faq">
-  <div class="section-inner">
-    <div style="text-align:center;margin-bottom:56px">
-      <div class="section-tag" style="display:flex;justify-content:center">FAQ</div>
-      <h2 class="section-title">Perguntas frequentes</h2>
+<section class="sec" style="padding-top:0" id="faq">
+  <div class="sec-inner">
+    <div style="text-align:center;margin-bottom:0">
+      <div class="sec-tag" style="display:flex;justify-content:center">FAQ</div>
+      <h2 class="sec-h" style="max-width:none;text-align:center">Perguntas frequentes</h2>
     </div>
-    <div class="faq-wrap reveal">
+
+    <div class="faq-wrap">
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)"><span>O Zira cobra comissão por pedido?</span><span class="faq-icon">+</span></div>
-        <div class="faq-a">Não. Zero. Você paga apenas a mensalidade do plano e fica com 100% do valor de cada pedido.</div>
+        <div class="faq-q" onclick="faqToggle(this)"><span>O Zira cobra comissão por pedido?</span><span class="faq-ico">+</span></div>
+        <div class="faq-a">Não. Zero. Você paga apenas a mensalidade do plano e fica com 100% do valor de cada pedido. Sem surpresas.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)"><span>O cliente precisa baixar algum aplicativo?</span><span class="faq-icon">+</span></div>
-        <div class="faq-a">Não. O cardápio funciona direto no navegador do celular — é só abrir o link. Sem atrito nenhum.</div>
+        <div class="faq-q" onclick="faqToggle(this)"><span>O cliente precisa baixar algum aplicativo?</span><span class="faq-ico">+</span></div>
+        <div class="faq-a">Não. O cardápio funciona direto no navegador do celular — é só abrir o link. Sem atrito nenhum para o cliente.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)"><span>A impressora térmica é obrigatória?</span><span class="faq-icon">+</span></div>
+        <div class="faq-q" onclick="faqToggle(this)"><span>A impressora térmica é obrigatória?</span><span class="faq-ico">+</span></div>
         <div class="faq-a">Não. O sistema funciona perfeitamente sem ela. A impressora é opcional e faz diferença no volume alto de pedidos.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)"><span>E se eu quiser cancelar?</span><span class="faq-icon">+</span></div>
+        <div class="faq-q" onclick="faqToggle(this)"><span>E se eu quiser cancelar?</span><span class="faq-ico">+</span></div>
         <div class="faq-a">Cancela quando quiser, sem burocracia e sem multa. Não temos fidelidade porque o produto se paga sozinho.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)"><span>Como funciona o primeiro mês por R$27?</span><span class="faq-icon">+</span></div>
-        <div class="faq-a">Oferta de lançamento para os primeiros restaurantes. Você paga R$27, usa o sistema completo sem limitação e decide se continua. A partir do 2º mês vai para R$147/mês.</div>
+        <div class="faq-q" onclick="faqToggle(this)"><span>Como funciona o primeiro mês por R$27?</span><span class="faq-ico">+</span></div>
+        <div class="faq-a">Oferta de lançamento para os primeiros restaurantes. Você paga R$27, usa o sistema completo sem nenhuma limitação e decide se continua. A partir do 2º mês vai para R$147/mês.</div>
       </div>
       <div class="faq-item">
-        <div class="faq-q" onclick="toggleFaq(this)"><span>O WhatsApp automático é difícil de configurar?</span><span class="faq-icon">+</span></div>
+        <div class="faq-q" onclick="faqToggle(this)"><span>O WhatsApp automático é difícil de configurar?</span><span class="faq-ico">+</span></div>
         <div class="faq-a">Não. Você escaneia um QR Code para conectar seu WhatsApp. Leva menos de 5 minutos. Depois disso tudo é automático.</div>
       </div>
     </div>
@@ -1971,13 +1091,13 @@
 </section>
 
 <!-- CTA FINAL -->
-<section class="cta-section">
+<section class="cta-sec">
   <div class="cta-inner reveal">
-    <h2>Pronto para sair<br>do <em>iFood?</em></h2>
+    <h2>Pronto para sair<br>do <i>iFood?</i></h2>
     <p>Comece hoje por R$27. Configure em menos de 30 minutos e receba o primeiro pedido ainda hoje.</p>
-    <div class="cta-actions">
+    <div class="cta-btns">
       <a href="https://zirafood.com.br/cadastro" class="btn-white">Começar por R$27 →</a>
-      <a href="https://wa.me/5518997260619" class="btn-ghost-white">💬 Falar no WhatsApp</a>
+      <a href="https://wa.me/5518997260619" class="btn-ghost-w">💬 Falar no WhatsApp</a>
     </div>
     <p class="cta-fine">Sem fidelidade · Cancele quando quiser · 0% de comissão</p>
   </div>
@@ -1985,15 +1105,15 @@
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-inner">
-    <div class="footer-top">
+  <div class="foot-inner">
+    <div class="foot-top">
       <div>
-        <div class="footer-logo">Zira<span>.</span></div>
-        <p class="footer-desc">Sistema completo de gestão para delivery. Cardápio digital, pedidos em tempo real e automação sem depender do iFood.</p>
+        <div class="foot-logo">Zira<b>.</b></div>
+        <p class="foot-desc">Sistema completo de gestão para delivery. Cardápio digital, pedidos em tempo real e automação sem depender do iFood.</p>
       </div>
       <div>
-        <div class="footer-col-title">Produto</div>
-        <ul class="footer-links">
+        <div class="foot-col-h">Produto</div>
+        <ul class="foot-links">
           <li><a href="#como-funciona">Como funciona</a></li>
           <li><a href="#funcionalidades">Funcionalidades</a></li>
           <li><a href="#precos">Preços</a></li>
@@ -2001,56 +1121,57 @@
         </ul>
       </div>
       <div>
-        <div class="footer-col-title">Suporte</div>
-        <ul class="footer-links">
-          <li><a href="#faq">Perguntas frequentes</a></li>
+        <div class="foot-col-h">Suporte</div>
+        <ul class="foot-links">
+          <li><a href="#faq">FAQ</a></li>
           <li><a href="https://wa.me/5518997260619">WhatsApp</a></li>
-          <li><a href="/cdn-cgi/l/email-protection#4f2c20213b2e3b200f35263d2e2920202b612c2022612d3d">E-mail</a></li>
+          <li><a href="mailto:contato@zirafood.com.br">E-mail</a></li>
         </ul>
       </div>
       <div>
-        <div class="footer-col-title">Legal</div>
-        <ul class="footer-links">
+        <div class="foot-col-h">Legal</div>
+        <ul class="foot-links">
           <li><a href="#">Termos de uso</a></li>
           <li><a href="#">Privacidade</a></li>
         </ul>
       </div>
     </div>
-    <div class="footer-bottom">
+    <div class="foot-bottom">
       <span>© 2025 Zira Food. Todos os direitos reservados.</span>
       <span>Feito para quem vende comida de verdade 🍔</span>
     </div>
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-  // Scroll progress + nav shadow
-  window.addEventListener('scroll', () => {
-    const scrolled = window.scrollY;
-    const max = document.body.scrollHeight - window.innerHeight;
-    document.getElementById('scrollLine').style.width = (scrolled / max * 100) + '%';
-    document.getElementById('mainNav').classList.toggle('scrolled', scrolled > 40);
-  });
+<script>
+// Scroll progress + nav shadow
+window.addEventListener('scroll', () => {
+  const p = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+  document.getElementById('prog').style.width = p + '%';
+  document.getElementById('nav').classList.toggle('shadow', window.scrollY > 30);
+});
 
-  // Reveal on scroll
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
-  }, { threshold: 0.12 });
-  document.querySelectorAll('.reveal').forEach(r => obs.observe(r));
+// Reveal
+const ro = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); ro.unobserve(e.target); } }), { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(r => ro.observe(r));
 
-  // Feature tabs
-  const featureMap = { kanban:'fd-kanban', wpp:'fd-wpp', impressao:'fd-impressao', fidelidade:'fd-fidelidade', relatorios:'fd-relatorios', pixel:'fd-pixel' };
+// Features
+const fdMap = { kb:'fd-kb', wpp:'fd-wpp', imp:'fd-imp', fid:'fd-fid', rel:'fd-rel', pix:'fd-pix' };
+function setFeat(el, key) {
+  document.querySelectorAll('.feat-item').forEach(i => i.classList.remove('on'));
+  el.classList.add('on');
+  Object.values(fdMap).forEach(id => { const d = document.getElementById(id); if (d) d.style.display = 'none'; });
+  const t = document.getElementById(fdMap[key]);
+  if (t) t.style.display = 'flex';
+}
 
-  function toggleFeature(el, key) {
-    document.querySelectorAll('.feature-item').forEach(i => i.classList.remove('active'));
-    el.classList.add('active');
-    Object.values(featureMap).forEach(id => { const d = document.getElementById(id); if(d) d.style.display='none'; });
-    const t = document.getElementById(featureMap[key]);
-    if (t) t.style.display = 'flex';
-  }
-
-  // FAQ
-  function toggleFaq(el) {
-    const item = el.parentElement;
-    const wasOpen = item.classList.contains('open');
-    do
+// FAQ
+function faqToggle(el) {
+  const item = el.parentElement;
+  const was = item.classList.contains('on');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('on'));
+  if (!was) item.classList.add('on');
+}
+</script>
+</body>
+</html>
