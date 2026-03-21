@@ -77,8 +77,8 @@ body {
 
 .hero-inner {
   max-width: 100%; width: 100%;
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 0; align-items: flex-end;
+  display: grid; grid-template-columns: 3fr 9fr;
+  gap: 0; align-items: center;
   position: relative; z-index: 2;
 }
 
@@ -197,7 +197,7 @@ body {
   position: relative; z-index: 1;
   border-radius: 24px;
   overflow: hidden;
-  padding-left: 52px;
+  padding-left: 0;
 }
 
 /* Wrapper que envolve card + notebook que sai por cima */
@@ -208,19 +208,20 @@ body {
 
 .hero-visual {
   position: relative;
-  display: flex; justify-content: center; align-items: flex-end;
-  padding: 32px 0 0 0;
+  display: flex; justify-content: flex-end; align-items: flex-end;
+  padding: 28px 0 0 0;
   animation: fadeIn .8s .2s ease both;
   overflow: visible;
 }
 
 .hero-left {
-  padding: 0 0 60px 0;
+  padding: 48px 0 60px 64px;
 }
 
 .laptop {
-  width: 100%; max-width: 580px;
+  width: 115%; max-width: none;
   position: relative;
+  margin-left: -40px;
   filter: drop-shadow(0 -4px 0 rgba(0,0,0,.08)) drop-shadow(0 40px 80px rgba(0,0,0,.28));
 }
 
@@ -687,7 +688,7 @@ footer {
   position: relative; z-index: 1;
   border-radius: 24px;
   overflow: hidden;
-  padding-left: 52px;
+  padding-left: 0;
 }
 
 /* Wrapper que envolve card + notebook que sai por cima */
