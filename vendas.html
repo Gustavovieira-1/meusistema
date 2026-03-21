@@ -163,14 +163,14 @@ body {
   border-radius: 24px;
   padding: 56px 52px 0 52px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
-  max-width: 1200px;
+  max-width: calc(100% - 64px);
   margin: 0 auto;
 }
 
 /* Textura grain sobre o card */
-.hero-card::before {
+.hero-card-inner::before {
   content: '';
   position: absolute; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
@@ -182,7 +182,7 @@ body {
 }
 
 /* Círculo decorativo no canto superior direito (igual à Loovi) */
-.hero-card::after {
+.hero-card-inner::after {
   content: '';
   position: absolute;
   top: -80px; right: -80px;
@@ -195,6 +195,8 @@ body {
 
 .hero-card-inner {
   position: relative; z-index: 1;
+  border-radius: 24px;
+  overflow: hidden;
 }
 
 /* Wrapper que envolve card + notebook que sai por cima */
@@ -208,6 +210,7 @@ body {
   display: flex; justify-content: center; align-items: flex-end;
   padding: 32px 0 0 0;
   animation: fadeIn .8s .2s ease both;
+  overflow: visible;
 }
 
 .hero-left {
@@ -268,11 +271,7 @@ body {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255,255,255,.08) 50%, transparent);
 }
-.lap-foot {
-  height: 5px; margin: 0 40px;
-  border-radius: 0 0 50% 50%;
-  box-shadow: 0 5px 24px rgba(0,0,0,.16);
-}
+.lap-foot { display: none; }
 
 /* Floating cards */
 .lap-card {
@@ -653,14 +652,14 @@ footer {
   border-radius: 24px;
   padding: 56px 52px 0 52px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   isolation: isolate;
-  max-width: 1200px;
+  max-width: calc(100% - 64px);
   margin: 0 auto;
 }
 
 /* Textura grain sobre o card */
-.hero-card::before {
+.hero-card-inner::before {
   content: '';
   position: absolute; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
@@ -672,7 +671,7 @@ footer {
 }
 
 /* Círculo decorativo no canto superior direito (igual à Loovi) */
-.hero-card::after {
+.hero-card-inner::after {
   content: '';
   position: absolute;
   top: -80px; right: -80px;
@@ -685,6 +684,8 @@ footer {
 
 .hero-card-inner {
   position: relative; z-index: 1;
+  border-radius: 24px;
+  overflow: hidden;
 }
 
 /* Wrapper que envolve card + notebook que sai por cima */
