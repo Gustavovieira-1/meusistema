@@ -1286,19 +1286,36 @@ footer {
   .nav { padding: 0 16px; height: 56px; }
   .nav-links { display: none; }
   .nav-btn { font-size: 12px; padding: 0 12px; height: 32px; }
-  .hero { padding: 68px 0 0; background: var(--red); }
-  .hero-card { max-width: 100%; border-radius: 0; padding: 0; box-shadow: none; }
-  .hero-card-inner { padding-left: 0; border-radius: 18px; }
+
+  /* HERO MOBILE — igual Loovi: fundo branco, texto escuro, notebook abaixo */
+  .hero { padding: 64px 0 0; background: #fff; }
+  .hero-card { max-width: 100%; border-radius: 0; padding: 0; box-shadow: none; background: transparent; }
+  .hero-card-inner { padding-left: 0; border-radius: 0; overflow: visible; background: transparent; }
+  .hero-card-inner::before, .hero-card-inner::after { display: none; }
   .hero-inner { grid-template-columns: 1fr; }
-  .hero-left { padding: 28px 22px 32px; }
-  .hero h1 { font-size: 28px; letter-spacing: -1px; line-height: 1.1; }
-  .hero-desc { font-size: 14px; margin-bottom: 4px; }
-  .hero-desc-sub { font-size: 13px; margin-bottom: 20px; }
+  .hero-left { padding: 28px 22px 20px; }
+  .hero-eyebrow { background: var(--bg-soft); border-color: var(--line-2); color: var(--text-2); font-size: 10px; margin-bottom: 14px; }
+  .eyebrow-dot { background: var(--red); }
+  .hero h1 { font-size: 28px; letter-spacing: -1px; line-height: 1.1; color: var(--text); }
+  .hero h1 i { color: var(--red); }
+  .hero-desc { font-size: 14px; margin-bottom: 4px; color: var(--text); }
+  .hero-desc-sub { font-size: 13px; margin-bottom: 20px; color: var(--text-2); }
   .hero-btns { flex-direction: column; gap: 10px; }
-  .btn-red-inv, .btn-outline { width: 100%; justify-content: center; height: 48px; padding: 0; font-size: 14px; }
+  .btn-red-inv { width: 100%; justify-content: center; height: 48px; padding: 0; font-size: 14px; }
+  .btn-outline { width: 100%; justify-content: center; height: 48px; padding: 0; font-size: 14px; background: transparent; border-color: var(--line-2); color: var(--text); }
   .hero-trust { margin-top: 14px; }
-  .hero-visual { display: none; }
+  .hero-trust-ico { background: var(--bg-soft-2); border-color: var(--line-2); }
+  .hero-trust-text { color: var(--text-2); }
+  .hero-trust-text strong { color: var(--text); }
+
+  /* Notebook visível no mobile, abaixo do conteúdo */
+  .hero-visual { display: flex !important; justify-content: center; align-items: flex-end; padding: 24px 16px 0; margin-left: 0; overflow: hidden; }
+  .laptop { width: 95%; max-width: 360px; margin: 0; filter: drop-shadow(0 16px 40px rgba(0,0,0,.14)); }
+  .lap-card-1, .lap-card-2 { display: none; }
+
   .trust { display: none; }
+
+  /* COMO FUNCIONA */
   .sec-how { padding: 56px 20px; }
   .how-inner { grid-template-columns: 1fr !important; gap: 40px; }
   .how-right { justify-content: center; }
@@ -1309,6 +1326,8 @@ footer {
   .how-step-num { width: 28px; height: 28px; font-size: 11px; }
   .how-step-title { font-size: 14px; }
   .how-step-desc { font-size: 13px; }
+
+  /* MARKETING */
   .sec-mkt { padding: 56px 20px; }
   .mkt-header { flex-direction: column; gap: 10px; margin-bottom: 28px; }
   .mkt-header-right { text-align: left; max-width: none; }
@@ -1320,6 +1339,8 @@ footer {
   .mkt-pill { font-size: 11px; padding: 4px 10px; }
   .mkt-card-screen { margin: 0; border-radius: 0 0 14px 14px; }
   .mkt-card-screen img { max-height: 220px; object-fit: cover; object-position: top left; }
+
+  /* KANBAN */
   .sec-kanban { padding: 56px 20px; }
   .kanban-top { grid-template-columns: 1fr !important; gap: 32px; margin-bottom: 32px; }
   .kanban-feat { padding: 16px; gap: 12px; }
@@ -1327,6 +1348,8 @@ footer {
   .kanban-statuses { flex-wrap: wrap; gap: 6px; }
   .kstatus { font-size: 11px; padding: 4px 10px; }
   .kanban-screen-wrap img { height: 220px; object-fit: cover; object-position: top left; }
+
+  /* CTA */
   .cta-qual { padding: 56px 20px; }
   .cta-qual::before { left: 20px; right: 20px; }
   .cta-qual-inner { grid-template-columns: 1fr !important; gap: 36px; }
@@ -1340,9 +1363,13 @@ footer {
   .eval-step { padding: 12px 0; gap: 10px; }
   .eval-step-title { font-size: 13px; }
   .eval-step-desc { font-size: 11px; }
+
+  /* FOOTER */
   footer { padding: 48px 20px 32px; }
   .foot-top { grid-template-columns: 1fr 1fr; gap: 24px; }
   .foot-bottom { flex-direction: column; gap: 4px; }
+
+  /* GERAL */
   .sec-h { font-size: 26px; }
   .sec-sub { font-size: 14px; }
   .nav-hamburger { display: flex !important; }
