@@ -9,976 +9,413 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;font-size:16px}
-
+html{scroll-behavior:smooth}
 :root{
   --red:#E8271A;
-  --red-h:#ff3528;
   --green:#16A34A;
-  --text:#111111;
-  --text-2:#444444;
-  --text-3:#888888;
+  --text:#111;
+  --text2:#444;
+  --text3:#888;
   --line:#E5E5E5;
-  --line-2:#D0D0D0;
-  --bg:#FFFFFF;
-  --bg-soft:#F7F7F6;
-  --bg-soft-2:#F0F0EE;
+  --line2:#D0D0D0;
+  --bg:#fff;
+  --bgsoft:#F7F7F6;
   --r:10px;
-  --r-lg:16px;
-  --r-xl:20px;
+  --rlg:16px;
+  --rxl:20px;
 }
-
-body{font-family:'Geist',system-ui,sans-serif;background:var(--bg-soft);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh}
-
-/* ── NAV ── */
-.nav{
-  background:var(--bg);border-bottom:1px solid var(--line);
-  height:60px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 32px;position:sticky;top:0;z-index:100;
-}
+body{font-family:'Geist',system-ui,sans-serif;background:var(--bgsoft);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh}
+.nav{background:#fff;border-bottom:1px solid var(--line);height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:100}
 .nav-logo{font-size:20px;font-weight:800;color:var(--text);text-decoration:none;letter-spacing:-.5px}
 .nav-logo b{color:var(--red)}
-.nav-secure{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);font-weight:500}
-.nav-secure svg{color:var(--green)}
-
-/* ── PROGRESS ── */
-.progress-wrap{background:var(--bg);border-bottom:1px solid var(--line);padding:20px 32px}
-.progress-inner{max-width:600px;margin:0 auto}
-.progress-steps{display:flex;align-items:center;justify-content:center;gap:0}
-.pstep{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--text-3)}
+.nav-sec{font-size:12px;color:var(--text3);font-weight:500}
+.prog-wrap{background:#fff;border-bottom:1px solid var(--line);padding:20px 32px}
+.prog-steps{display:flex;align-items:center;justify-content:center}
+.pstep{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--text3)}
 .pstep.done{color:var(--green)}
 .pstep.active{color:var(--text);font-weight:700}
-.pstep-num{
-  width:28px;height:28px;border-radius:50%;
-  border:2px solid var(--line-2);
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:700;color:var(--text-3);
-  background:var(--bg);flex-shrink:0;transition:all .3s;
-}
-.pstep.done .pstep-num{background:var(--green);border-color:var(--green);color:#fff}
-.pstep.active .pstep-num{background:var(--red);border-color:var(--red);color:#fff}
-.pstep-line{width:40px;height:2px;background:var(--line);margin:0 4px;flex-shrink:0;transition:background .3s}
-.pstep-line.done{background:var(--green)}
-
-/* ── MAIN ── */
-.main{max-width:1100px;margin:0 auto;padding:40px 40px 80px}
-
-/* ── CARD ── */
-.card{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-xl);padding:40px;margin-bottom:16px;animation:slideUp .35s ease both}
-@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-
+.pnum{width:28px;height:28px;border-radius:50%;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--text3);background:#fff;flex-shrink:0;transition:all .3s}
+.pstep.done .pnum{background:var(--green);border-color:var(--green);color:#fff}
+.pstep.active .pnum{background:var(--red);border-color:var(--red);color:#fff}
+.pline{width:40px;height:2px;background:var(--line);margin:0 4px;flex-shrink:0}
+.pline.done{background:var(--green)}
+.main{max-width:640px;margin:0 auto;padding:40px 20px 80px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--rxl);padding:40px;margin-bottom:16px;animation:up .3s ease both}
+@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .card-title{font-size:22px;font-weight:800;letter-spacing:-.5px;color:var(--text);margin-bottom:6px}
-.card-sub{font-size:14px;color:var(--text-2);font-weight:300;line-height:1.6;margin-bottom:28px}
-
-/* ── OPCOES (quiz cards) ── */
+.card-sub{font-size:14px;color:var(--text2);font-weight:300;line-height:1.6;margin-bottom:28px}
 .opts{display:flex;flex-direction:column;gap:10px}
-.opt{
-  display:flex;align-items:center;gap:14px;
-  padding:16px 18px;
-  border:1.5px solid var(--line);border-radius:var(--r-lg);
-  cursor:pointer;transition:all .2s;background:var(--bg);
-}
+.opt{display:flex;align-items:center;gap:14px;padding:16px 18px;border:1.5px solid var(--line);border-radius:var(--rlg);cursor:pointer;transition:all .2s;background:#fff}
 .opt:hover{border-color:var(--red);background:#fef9f9}
-.opt.selected{border-color:var(--red);background:#fef2f2}
-.opt-radio{
-  width:20px;height:20px;border-radius:50%;
-  border:2px solid var(--line-2);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;transition:all .2s;
-}
-.opt.selected .opt-radio{border-color:var(--red);background:var(--red)}
-.opt.selected .opt-radio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff;display:block}
-.opt-icon{font-size:20px;flex-shrink:0}
-.opt-body{}
-.opt-label{font-size:14px;font-weight:600;color:var(--text)}
-.opt-desc{font-size:12px;color:var(--text-3);margin-top:2px;font-weight:300}
-
-/* ── INPUTS ── */
-.field-group{display:flex;flex-direction:column;gap:14px;margin-bottom:0}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-
+.opt.sel{border-color:var(--red);background:#fef2f2}
+.oradio{width:20px;height:20px;border-radius:50%;border:2px solid var(--line2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;position:relative}
+.opt.sel .oradio{border-color:var(--red);background:var(--red)}
+.opt.sel .oradio::after{content:'';width:8px;height:8px;border-radius:50%;background:#fff;display:block;position:absolute}
+.oico{font-size:22px;flex-shrink:0}
+.olabel{font-size:14px;font-weight:600;color:var(--text)}
+.odesc{font-size:12px;color:var(--text3);margin-top:2px;font-weight:300}
+.fgroup{display:flex;flex-direction:column;gap:14px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .field{display:flex;flex-direction:column;gap:6px}
-.field label{font-size:13px;font-weight:600;color:var(--text-2)}
-.field input,.field select{
-  height:48px;padding:0 14px;
-  border:1.5px solid var(--line);border-radius:var(--r);
-  font-size:14px;font-weight:400;color:var(--text);
-  font-family:inherit;background:var(--bg);
-  transition:border-color .2s,box-shadow .2s;outline:none;
-}
-.field input:focus,.field select:focus{
-  border-color:var(--red);
-  box-shadow:0 0 0 3px rgba(232,39,26,.08);
-}
-.field input.error,.field select.error{border-color:#ef4444}
-.field-hint{font-size:11px;color:var(--text-3);margin-top:2px}
-
-/* ── BTN ── */
-.btn-next{
-  width:100%;height:52px;
-  background:var(--red);color:#fff;
-  border:none;border-radius:100px;
-  font-size:15px;font-weight:700;font-family:inherit;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:background .2s,transform .15s,box-shadow .2s;
-  box-shadow:0 4px 20px rgba(232,39,26,.25);
-  margin-top:24px;
-}
-.btn-next:hover{background:var(--red-h);transform:translateY(-1px);box-shadow:0 8px 28px rgba(232,39,26,.35)}
+.field label{font-size:13px;font-weight:600;color:var(--text2)}
+.field input,.field select{height:48px;padding:0 14px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;color:var(--text);font-family:inherit;background:#fff;outline:none;transition:border-color .2s,box-shadow .2s}
+.field input:focus,.field select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,39,26,.08)}
+.fhint{font-size:11px;color:var(--text3);margin-top:2px}
+.btn-next{width:100%;height:52px;background:var(--red);color:#fff;border:none;border-radius:100px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,transform .15s,box-shadow .2s;box-shadow:0 4px 20px rgba(232,39,26,.25);margin-top:24px}
+.btn-next:hover{background:#ff3528;transform:translateY(-1px);box-shadow:0 8px 28px rgba(232,39,26,.35)}
 .btn-next:disabled{background:#ccc;box-shadow:none;cursor:not-allowed;transform:none}
-
-.btn-back{
-  background:none;border:none;
-  font-size:13px;color:var(--text-3);font-family:inherit;
-  cursor:pointer;display:flex;align-items:center;gap:4px;
-  padding:8px 0;margin-bottom:8px;
-}
+.btn-back{background:none;border:none;font-size:13px;color:var(--text3);font-family:inherit;cursor:pointer;padding:8px 0;margin-bottom:8px;display:block}
 .btn-back:hover{color:var(--text)}
-
-/* ── ERR ── */
-.err-msg{
-  background:#fef2f2;border:1px solid #fecaca;
-  border-radius:var(--r);padding:12px 16px;
-  font-size:13px;color:#dc2626;font-weight:500;
-  margin-top:12px;display:none;
-}
-.err-msg.show{display:block}
-
-/* ── PROPOSTA ── */
-.proposta-layout{display:grid;grid-template-columns:1fr 360px;gap:32px;align-items:start}
-
-.proposta-header{
-  background:var(--bg);border:1px solid var(--line);
-  border-radius:var(--r-xl);padding:20px 24px;
-  display:flex;align-items:center;gap:12px;
-  margin-bottom:24px;animation:slideUp .35s ease both;
-  flex-wrap:wrap;gap:8px;
-}
-.ph-item{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2)}
-.ph-item svg{color:var(--text-3);flex-shrink:0}
-.ph-sep{width:1px;height:16px;background:var(--line);flex-shrink:0}
-.ph-toggle{font-size:13px;color:var(--red);font-weight:600;cursor:pointer;margin-left:auto}
-
-.proposta-plano{animation:slideUp .35s .05s ease both}
-.pp-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);margin-bottom:16px}
-.pp-title{font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px;letter-spacing:-.3px}
-.pp-check{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:20px}
-
-.feature-list{display:flex;flex-direction:column;gap:0}
-.feat-row{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 0;border-bottom:1px solid var(--line);
-}
+.errmsg{background:#fef2f2;border:1px solid #fecaca;border-radius:var(--r);padding:12px 16px;font-size:13px;color:#dc2626;font-weight:500;margin-top:12px;display:none}
+.errmsg.show{display:block}
+.prop-layout{display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start}
+.prop-header{background:#fff;border:1px solid var(--line);border-radius:var(--rxl);padding:18px 24px;display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.phi{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2)}
+.phsep{width:1px;height:16px;background:var(--line2);flex-shrink:0}
+.feat-grid{display:flex;flex-direction:column;gap:0}
+.feat-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line)}
 .feat-row:last-child{border-bottom:none}
-.feat-left{display:flex;align-items:center;gap:10px}
-.feat-check-ico{
-  width:24px;height:24px;border-radius:50%;
-  background:#f0fdf4;border:1px solid #bbf7d0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:11px;flex-shrink:0;
-}
+.feat-l{display:flex;align-items:center;gap:10px}
+.feat-ico{width:22px;height:22px;border-radius:50%;background:#f0fdf4;border:1px solid #bbf7d0;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
 .feat-name{font-size:14px;font-weight:500;color:var(--text)}
-.feat-included{font-size:12px;color:var(--green);font-weight:600}
-
-/* ── SIDEBAR PREÇO ── */
-.price-sidebar{
-  background:var(--bg);border:1px solid var(--line);
-  border-radius:var(--r-xl);padding:28px;
-  position:sticky;top:80px;
-  animation:slideUp .35s .1s ease both;
-}
-.ps-tabs{display:flex;gap:8px;margin-bottom:20px}
-.ps-tab{
-  flex:1;height:38px;border-radius:var(--r);
-  border:1.5px solid var(--line);background:var(--bg);
-  font-size:13px;font-weight:600;color:var(--text-2);
-  font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
-  transition:all .2s;
-}
-.ps-tab.active{border-color:var(--text);background:var(--text);color:#fff}
-
-.ps-price{font-size:36px;font-weight:800;letter-spacing:-1.5px;color:var(--text);line-height:1;margin-bottom:4px}
-.ps-price span{font-size:16px;font-weight:400;color:var(--text-3)}
-.ps-preco-original{font-size:13px;color:var(--text-3);text-decoration:line-through;margin-bottom:16px}
-
-/* Cupom */
-.cupom-wrap{margin:16px 0}
-.cupom-field{display:flex;gap:8px}
-.cupom-input{
-  flex:1;height:40px;padding:0 12px;
-  border:1.5px solid var(--line);border-radius:var(--r);
-  font-size:14px;font-family:inherit;color:var(--text);
-  outline:none;transition:border-color .2s;text-transform:uppercase;
-}
-.cupom-input:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,39,26,.08)}
-.cupom-btn{
-  height:40px;padding:0 16px;
-  background:var(--bg-soft);border:1.5px solid var(--line);
-  border-radius:var(--r);font-size:13px;font-weight:600;
-  font-family:inherit;cursor:pointer;color:var(--text-2);
-  transition:all .2s;white-space:nowrap;
-}
-.cupom-btn:hover{border-color:var(--text-2);color:var(--text)}
-
-.cupom-applied{
-  background:#f0fdf4;border:1px solid #bbf7d0;
-  border-radius:var(--r);padding:10px 14px;
-  display:none;align-items:center;gap:8px;
-  font-size:13px;color:var(--green);font-weight:600;
-  margin-top:8px;
-}
-.cupom-applied.show{display:flex}
-.cupom-remove{margin-left:auto;cursor:pointer;opacity:.6;font-size:12px}
-.cupom-remove:hover{opacity:1}
+.feat-inc{font-size:12px;color:var(--green);font-weight:600}
+.sidebar{background:#fff;border:1px solid var(--line);border-radius:var(--rxl);padding:28px;position:sticky;top:80px}
+.tabs{display:flex;gap:8px;margin-bottom:20px}
+.tab{flex:1;height:38px;border-radius:var(--r);border:1.5px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--text2);font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s}
+.tab.on{border-color:var(--text);background:var(--text);color:#fff}
+.price-big{font-size:38px;font-weight:800;letter-spacing:-1.5px;color:var(--text);line-height:1;margin-bottom:2px}
+.price-big span{font-size:16px;font-weight:400;color:var(--text3)}
+.price-orig{font-size:13px;color:var(--text3);text-decoration:line-through;margin-bottom:16px;min-height:20px}
+.cupom-row{display:flex;gap:8px;margin-bottom:0}
+.cupom-in{flex:1;height:40px;padding:0 12px;border:1.5px solid var(--line);border-radius:var(--r);font-size:14px;font-family:inherit;color:var(--text);outline:none;transition:border-color .2s;text-transform:uppercase}
+.cupom-in:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,39,26,.08)}
+.cupom-btn{height:40px;padding:0 16px;background:var(--bgsoft);border:1.5px solid var(--line);border-radius:var(--r);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--text2);transition:all .2s;white-space:nowrap}
+.cupom-btn:hover{border-color:var(--text2)}
+.cupom-ok{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--r);padding:10px 14px;display:none;align-items:center;gap:8px;font-size:13px;color:var(--green);font-weight:600;margin-top:8px}
+.cupom-ok.show{display:flex}
+.cupom-rm{margin-left:auto;cursor:pointer;opacity:.6;font-size:12px}
 .cupom-err{font-size:12px;color:#dc2626;margin-top:6px;display:none}
 .cupom-err.show{display:block}
-
-.ps-breakdown{display:flex;flex-direction:column;gap:0;border-top:1px solid var(--line);margin-top:16px;padding-top:16px}
-.ps-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:14px}
-.ps-row.total{font-weight:800;font-size:16px;border-top:1px solid var(--line);margin-top:4px;padding-top:12px}
-.ps-row .strike{text-decoration:line-through;color:var(--text-3);font-size:12px}
-.ps-row .green{color:var(--green);font-weight:700}
-
-.ps-cta{
-  width:100%;height:52px;
-  background:var(--green);color:#fff;
-  border:none;border-radius:100px;
-  font-size:15px;font-weight:700;font-family:inherit;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:background .2s,transform .15s,box-shadow .2s;
-  box-shadow:0 4px 20px rgba(22,163,74,.25);
-  margin-top:20px;text-decoration:none;
-}
-.ps-cta:hover{background:#15803d;transform:translateY(-1px);box-shadow:0 8px 28px rgba(22,163,74,.35)}
-
-.ps-secure{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--text-3);margin-top:12px}
-
-/* ── LOADING ── */
-.loading-overlay{
-  display:none;position:fixed;inset:0;
-  background:rgba(255,255,255,.85);backdrop-filter:blur(8px);
-  z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:16px;
-}
-.loading-overlay.show{display:flex}
-.spinner{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--red);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-txt{font-size:14px;color:var(--text-2);font-weight:500}
-
-/* ── SUCESSO ── */
-.success-wrap{text-align:center;padding:40px 20px;display:none}
-.success-wrap.show{display:block}
-.success-ico{font-size:56px;margin-bottom:16px}
-.success-title{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:10px}
-.success-sub{font-size:15px;color:var(--text-2);font-weight:300;line-height:1.7}
-
-
-/* Desktop: quiz steps centralizados, proposta full width */
+.cupom-aviso{font-size:12px;color:#f59e0b;font-weight:500;margin-top:6px;display:none}
+.bkdown{border-top:1px solid var(--line);margin-top:16px;padding-top:16px;display:flex;flex-direction:column}
+.bkrow{display:flex;justify-content:space-between;padding:8px 0;font-size:14px}
+.bkrow.total{font-weight:800;font-size:16px;border-top:1px solid var(--line);margin-top:4px;padding-top:12px}
+.green{color:var(--green);font-weight:700}
+.cta-btn{width:100%;height:52px;background:var(--green);color:#fff;border:none;border-radius:100px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s,transform .15s;box-shadow:0 4px 20px rgba(22,163,74,.25);margin-top:20px}
+.cta-btn:hover{background:#15803d;transform:translateY(-1px)}
+.sec-txt{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--text3);margin-top:12px}
 @media(min-width:769px){
-  #step1 .card,
-  #step2 .card,
-  #step3 .card,
-  #step4 .card { max-width:600px; margin-left:auto; margin-right:auto; }
-
-  .proposta-header { max-width:100%; }
-
-  .ps-price { font-size:42px; }
-  
-  .price-sidebar { min-width: 320px; }
+  .main{max-width:1100px;padding:40px 40px 80px}
+  #step1 .card,#step2 .card,#step3 .card,#step4 .card{max-width:560px;margin-left:auto;margin-right:auto}
+  .feat-grid{display:grid;grid-template-columns:1fr 1fr}
+  .feat-row:nth-child(odd){padding-right:20px;border-right:1px solid var(--line)}
+  .feat-row:nth-child(even){padding-left:20px}
+  .feat-row:nth-last-child(-n+2){border-bottom:none}
 }
-
-/* ── RESPONSIVO ── */
 @media(max-width:768px){
   .nav{padding:0 16px}
-  .progress-wrap{padding:16px}
+  .prog-wrap{padding:16px}
   .main{padding:24px 16px 60px}
   .card{padding:24px}
-  .field-row{grid-template-columns:1fr}
-  .proposta-layout{grid-template-columns:1fr}
-  .price-sidebar{position:static}
-  .pstep-label{display:none}
-  .pstep-line{width:24px}
+  .frow{grid-template-columns:1fr}
+  .prop-layout{grid-template-columns:1fr}
+  .sidebar{position:static}
+  .plabel{display:none}
+  .pline{width:24px}
 }
-
-@media(min-width:769px){
-  .feature-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-  .feat-row { border-bottom: 1px solid var(--line); border-right: none; }
-  .feat-row:nth-child(odd) { padding-right: 20px; border-right: 1px solid var(--line); }
-  .feat-row:nth-child(even) { padding-left: 20px; }
-  .feat-row:nth-last-child(-n+2) { border-bottom: none; }
-}
-
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <div class="loading-txt" id="loadingTxt">Salvando suas informações...</div>
-</div>
-
-<!-- NAV -->
 <nav class="nav">
   <a href="https://zirafood.com.br" class="nav-logo">Zira<b>.</b></a>
-  <div class="nav-secure">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    Compra segura
-  </div>
+  <div class="nav-sec">🔒 Compra segura</div>
 </nav>
 
-<!-- PROGRESS -->
-<div class="progress-wrap">
-  <div class="progress-inner">
-    <div class="progress-steps">
-      <div class="pstep active" id="ps1">
-        <div class="pstep-num">01</div>
-        <div class="pstep-label">Seu negócio</div>
-      </div>
-      <div class="pstep-line" id="pl1"></div>
-      <div class="pstep" id="ps2">
-        <div class="pstep-num">02</div>
-        <div class="pstep-label">Seu perfil</div>
-      </div>
-      <div class="pstep-line" id="pl2"></div>
-      <div class="pstep" id="ps3">
-        <div class="pstep-num">03</div>
-        <div class="pstep-label">Proposta</div>
-      </div>
-    </div>
+<div class="prog-wrap">
+  <div class="prog-steps">
+    <div class="pstep active" id="ps1"><div class="pnum">01</div><div class="plabel">Seu negócio</div></div>
+    <div class="pline" id="pl1"></div>
+    <div class="pstep" id="ps2"><div class="pnum">02</div><div class="plabel">Seu perfil</div></div>
+    <div class="pline" id="pl2"></div>
+    <div class="pstep" id="ps3"><div class="pnum">03</div><div class="plabel">Proposta</div></div>
   </div>
 </div>
 
-<!-- MAIN -->
-<div class="main" id="mainWrap">
+<div class="main">
 
-  <!-- ── ETAPA 1: Tipo do negócio ── -->
   <div id="step1">
     <div class="card">
       <div class="card-title">Qual é o seu tipo de negócio?</div>
       <div class="card-sub">Isso nos ajuda a configurar o sistema da forma certa para você.</div>
-      <div class="opts" id="opts-tipo">
-        <label class="opt" data-val="hamburgueria">
-          <div class="opt-radio"></div>
-          <div class="opt-icon">🍔</div>
-          <div class="opt-body">
-            <div class="opt-label">Hamburgueria / Burger</div>
-            <div class="opt-desc">Artesanal, smash, gourmet ou fast food</div>
-          </div>
-        </label>
-        <label class="opt" data-val="pizzaria">
-          <div class="opt-radio"></div>
-          <div class="opt-icon">🍕</div>
-          <div class="opt-body">
-            <div class="opt-label">Pizzaria</div>
-            <div class="opt-desc">Delivery ou local</div>
-          </div>
-        </label>
-        <label class="opt" data-val="restaurante">
-          <div class="opt-radio"></div>
-          <div class="opt-icon">🍽️</div>
-          <div class="opt-body">
-            <div class="opt-label">Restaurante / Marmitaria</div>
-            <div class="opt-desc">Pratos, marmitas, self-service</div>
-          </div>
-        </label>
-        <label class="opt" data-val="acai">
-          <div class="opt-radio"></div>
-          <div class="opt-icon">🫐</div>
-          <div class="opt-body">
-            <div class="opt-label">Açaiteria / Sorveteria</div>
-            <div class="opt-desc">Açaí, sorvetes, milk-shake</div>
-          </div>
-        </label>
-        <label class="opt" data-val="outro">
-          <div class="opt-radio"></div>
-          <div class="opt-icon">🏪</div>
-          <div class="opt-body">
-            <div class="opt-label">Outro tipo de delivery</div>
-            <div class="opt-desc">Qualquer outro negócio de comida</div>
-          </div>
-        </label>
+      <div class="opts">
+        <div class="opt" data-val="hamburgueria" onclick="selecionarOpt(this,'tipo','btn1')"><div class="oradio"></div><div class="oico">🍔</div><div><div class="olabel">Hamburgueria / Burger</div><div class="odesc">Artesanal, smash, gourmet ou fast food</div></div></div>
+        <div class="opt" data-val="pizzaria" onclick="selecionarOpt(this,'tipo','btn1')"><div class="oradio"></div><div class="oico">🍕</div><div><div class="olabel">Pizzaria</div><div class="odesc">Delivery ou local</div></div></div>
+        <div class="opt" data-val="restaurante" onclick="selecionarOpt(this,'tipo','btn1')"><div class="oradio"></div><div class="oico">🍽️</div><div><div class="olabel">Restaurante / Marmitaria</div><div class="odesc">Pratos, marmitas, self-service</div></div></div>
+        <div class="opt" data-val="acai" onclick="selecionarOpt(this,'tipo','btn1')"><div class="oradio"></div><div class="oico">🫐</div><div><div class="olabel">Açaiteria / Sorveteria</div><div class="odesc">Açaí, sorvetes, milk-shake</div></div></div>
+        <div class="opt" data-val="outro" onclick="selecionarOpt(this,'tipo','btn1')"><div class="oradio"></div><div class="oico">🏪</div><div><div class="olabel">Outro tipo de delivery</div><div class="odesc">Qualquer outro negócio de comida</div></div></div>
       </div>
-      <button class="btn-next" id="btn1" disabled onclick="irPara2()">Avançar →</button>
+      <button class="btn-next" id="btn1" disabled onclick="ir(2)">Avançar →</button>
     </div>
   </div>
 
-  <!-- ── ETAPA 2: Faturamento ── -->
   <div id="step2" style="display:none">
-    <button class="btn-back" onclick="voltarPara(1)">← Voltar</button>
+    <button class="btn-back" onclick="ir(1)">← Voltar</button>
     <div class="card">
       <div class="card-title">Quanto seu delivery fatura por mês?</div>
-      <div class="card-sub">Não precisa ser exato — uma estimativa já nos ajuda.</div>
-      <div class="opts" id="opts-fat">
-        <label class="opt" data-val="ate5k">
-          <div class="opt-radio"></div>
-          <div class="opt-icon">🌱</div>
-          <div class="opt-body">
-            <div class="opt-label">Até R$ 5.000</div>
-            <div class="opt-desc">Estou começando ou ainda crescendo</div>
-          </div>
-        </label>
-        <label class="opt" data-val="5k_15k">
-          <div class="opt-radio"></div>
-          <div class="opt-icon">📈</div>
-          <div class="opt-body">
-            <div class="opt-label">R$ 5.000 a R$ 15.000</div>
-            <div class="opt-desc">Negócio em crescimento</div>
-          </div>
-        </label>
-        <label class="opt" data-val="15k_50k">
-          <div class="opt-radio"></div>
-          <div class="opt-icon">🚀</div>
-          <div class="opt-body">
-            <div class="opt-label">R$ 15.000 a R$ 50.000</div>
-            <div class="opt-desc">Operação consolidada</div>
-          </div>
-        </label>
-        <label class="opt" data-val="acima50k">
-          <div class="opt-radio"></div>
-          <div class="opt-icon">💎</div>
-          <div class="opt-body">
-            <div class="opt-label">Acima de R$ 50.000</div>
-            <div class="opt-desc">Grande volume de pedidos</div>
-          </div>
-        </label>
+      <div class="card-sub">Uma estimativa já nos ajuda bastante.</div>
+      <div class="opts">
+        <div class="opt" data-val="ate5k" onclick="selecionarOpt(this,'fat','btn2')"><div class="oradio"></div><div class="oico">🌱</div><div><div class="olabel">Até R$ 5.000</div><div class="odesc">Estou começando ou ainda crescendo</div></div></div>
+        <div class="opt" data-val="5k_15k" onclick="selecionarOpt(this,'fat','btn2')"><div class="oradio"></div><div class="oico">📈</div><div><div class="olabel">R$ 5.000 a R$ 15.000</div><div class="odesc">Negócio em crescimento</div></div></div>
+        <div class="opt" data-val="15k_50k" onclick="selecionarOpt(this,'fat','btn2')"><div class="oradio"></div><div class="oico">🚀</div><div><div class="olabel">R$ 15.000 a R$ 50.000</div><div class="odesc">Operação consolidada</div></div></div>
+        <div class="opt" data-val="acima50k" onclick="selecionarOpt(this,'fat','btn2')"><div class="oradio"></div><div class="oico">💎</div><div><div class="olabel">Acima de R$ 50.000</div><div class="odesc">Grande volume de pedidos</div></div></div>
       </div>
-      <button class="btn-next" id="btn2" disabled onclick="irPara3()">Avançar →</button>
+      <button class="btn-next" id="btn2" disabled onclick="ir(3)">Avançar →</button>
     </div>
   </div>
 
-  <!-- ── ETAPA 3: Dados do restaurante ── -->
   <div id="step3" style="display:none">
-    <button class="btn-back" onclick="voltarPara(2)">← Voltar</button>
+    <button class="btn-back" onclick="ir(2)">← Voltar</button>
     <div class="card">
       <div class="card-title">Dados do restaurante</div>
-      <div class="card-sub">Essas informações serão usadas para criar seu cardápio digital.</div>
-      <div class="field-group">
-        <div class="field">
-          <label>Nome do restaurante *</label>
-          <input type="text" id="f-nome-rest" placeholder="Ex: Burger do João" maxlength="80">
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label>Cidade *</label>
-            <input type="text" id="f-cidade" placeholder="Ex: São Paulo">
-          </div>
-          <div class="field">
-            <label>Estado *</label>
-            <select id="f-estado">
+      <div class="card-sub">Usaremos para criar seu cardápio digital.</div>
+      <div class="fgroup">
+        <div class="field"><label>Nome do restaurante *</label><input type="text" id="fnome-rest" placeholder="Ex: Burger do João" maxlength="80"></div>
+        <div class="frow">
+          <div class="field"><label>Cidade *</label><input type="text" id="fcidade" placeholder="Ex: São Paulo"></div>
+          <div class="field"><label>Estado *</label>
+            <select id="festado">
               <option value="">Selecione</option>
-              <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
-              <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
-              <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
-              <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
-              <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
-              <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
-              <option selected>SP</option><option>SE</option><option>TO</option>
+              <option>AC</option><option>AL</option><option>AP</option><option>AM</option><option>BA</option><option>CE</option><option>DF</option><option>ES</option><option>GO</option><option>MA</option><option>MT</option><option>MS</option><option>MG</option><option>PA</option><option>PB</option><option>PR</option><option>PE</option><option>PI</option><option>RJ</option><option>RN</option><option>RS</option><option>RO</option><option>RR</option><option>SC</option><option selected>SP</option><option>SE</option><option>TO</option>
             </select>
           </div>
         </div>
       </div>
-      <div class="err-msg" id="err3">Preencha todos os campos obrigatórios.</div>
-      <button class="btn-next" onclick="irPara4()">Avançar →</button>
+      <div class="errmsg" id="err3">Preencha todos os campos obrigatórios.</div>
+      <button class="btn-next" onclick="ir(4)">Avançar →</button>
     </div>
   </div>
 
-  <!-- ── ETAPA 4: Seus dados (dono) ── -->
   <div id="step4" style="display:none">
-    <button class="btn-back" onclick="voltarPara(3)">← Voltar</button>
+    <button class="btn-back" onclick="ir(3)">← Voltar</button>
     <div class="card">
       <div class="card-title">Seus dados de acesso</div>
       <div class="card-sub">Você receberá as credenciais de acesso neste e-mail.</div>
-      <div class="field-group">
-        <div class="field">
-          <label>Seu nome *</label>
-          <input type="text" id="f-nome" placeholder="Nome completo">
-        </div>
-        <div class="field">
-          <label>E-mail *</label>
-          <input type="email" id="f-email" placeholder="seu@email.com">
-          <span class="field-hint">Você receberá seu acesso neste e-mail</span>
-        </div>
-        <div class="field">
-          <label>WhatsApp *</label>
-          <input type="tel" id="f-tel" placeholder="(11) 99999-9999" maxlength="16">
-        </div>
+      <div class="fgroup">
+        <div class="field"><label>Seu nome *</label><input type="text" id="fnome" placeholder="Nome completo"></div>
+        <div class="field"><label>E-mail *</label><input type="email" id="femail" placeholder="seu@email.com"><span class="fhint">Você receberá seu acesso neste e-mail</span></div>
+        <div class="field"><label>WhatsApp *</label><input type="tel" id="ftel" placeholder="(11) 99999-9999" maxlength="16"></div>
       </div>
-      <div class="err-msg" id="err4">Preencha todos os campos corretamente.</div>
-      <button class="btn-next" onclick="irPara5()">Ver minha proposta →</button>
+      <div class="errmsg" id="err4">Preencha todos os campos corretamente.</div>
+      <button class="btn-next" onclick="irProposta()">Ver minha proposta →</button>
     </div>
   </div>
 
-  <!-- ── ETAPA 5: PROPOSTA ── -->
   <div id="step5" style="display:none">
-    <button class="btn-back" onclick="voltarPara(4)">← Voltar</button>
-
-    <!-- Header com dados do lead -->
-    <div class="proposta-header">
-      <div class="ph-item">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        <span id="ph-nome">—</span>
-      </div>
-      <div class="ph-sep"></div>
-      <div class="ph-item">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-        <span id="ph-rest">—</span>
-      </div>
-      <div class="ph-sep"></div>
-      <div class="ph-item">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <span id="ph-cidade">—</span>
-      </div>
+    <button class="btn-back" onclick="ir(4)">← Voltar</button>
+    <div class="prop-header">
+      <div class="phi">👤 <span id="ph-nome">—</span></div>
+      <div class="phsep"></div>
+      <div class="phi">🏪 <span id="ph-rest">—</span></div>
+      <div class="phsep"></div>
+      <div class="phi">📍 <span id="ph-cidade">—</span></div>
     </div>
-
-    <div class="proposta-layout">
-      <!-- Esquerda: plano -->
-      <div class="proposta-plano">
-        <div class="card" style="margin-bottom:16px">
-          <div class="pp-label">Seu plano</div>
-          <div class="pp-title">Zira — Sistema Completo de Delivery</div>
-          <div class="pp-check">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-            Cardápio digital personalizado ativado
-          </div>
-          <div class="feature-list">
-            <div class="feat-row">
-              <div class="feat-left">
-                <div class="feat-check-ico">✓</div>
-                <div class="feat-name">Cardápio digital próprio</div>
-              </div>
-              <div class="feat-included">Incluso</div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-left">
-                <div class="feat-check-ico">✓</div>
-                <div class="feat-name">Gestor de pedidos (Kanban)</div>
-              </div>
-              <div class="feat-included">Incluso</div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-left">
-                <div class="feat-check-ico">✓</div>
-                <div class="feat-name">WhatsApp automático</div>
-              </div>
-              <div class="feat-included">Incluso</div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-left">
-                <div class="feat-check-ico">✓</div>
-                <div class="feat-name">Impressão térmica automática</div>
-              </div>
-              <div class="feat-included">Incluso</div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-left">
-                <div class="feat-check-ico">✓</div>
-                <div class="feat-name">Programa de fidelidade</div>
-              </div>
-              <div class="feat-included">Incluso</div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-left">
-                <div class="feat-check-ico">✓</div>
-                <div class="feat-name">Cupons de desconto</div>
-              </div>
-              <div class="feat-included">Incluso</div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-left">
-                <div class="feat-check-ico">✓</div>
-                <div class="feat-name">Relatórios e análises</div>
-              </div>
-              <div class="feat-included">Incluso</div>
-            </div>
-            <div class="feat-row">
-              <div class="feat-left">
-                <div class="feat-check-ico">✓</div>
-                <div class="feat-name">Meta Pixel + Conversions API</div>
-              </div>
-              <div class="feat-included">Incluso</div>
-            </div>
+    <div class="prop-layout">
+      <div>
+        <div class="card" style="margin-bottom:0">
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:12px">Seu plano</div>
+          <div style="font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.3px;margin-bottom:6px">Zira — Sistema Completo de Delivery</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--green);font-weight:600;margin-bottom:20px">✓ Cardápio digital personalizado ativado</div>
+          <div class="feat-grid">
+            <div class="feat-row"><div class="feat-l"><div class="feat-ico">✓</div><div class="feat-name">Cardápio digital próprio</div></div><div class="feat-inc">Incluso</div></div>
+            <div class="feat-row"><div class="feat-l"><div class="feat-ico">✓</div><div class="feat-name">Gestor de pedidos (Kanban)</div></div><div class="feat-inc">Incluso</div></div>
+            <div class="feat-row"><div class="feat-l"><div class="feat-ico">✓</div><div class="feat-name">WhatsApp automático</div></div><div class="feat-inc">Incluso</div></div>
+            <div class="feat-row"><div class="feat-l"><div class="feat-ico">✓</div><div class="feat-name">Impressão térmica automática</div></div><div class="feat-inc">Incluso</div></div>
+            <div class="feat-row"><div class="feat-l"><div class="feat-ico">✓</div><div class="feat-name">Programa de fidelidade</div></div><div class="feat-inc">Incluso</div></div>
+            <div class="feat-row"><div class="feat-l"><div class="feat-ico">✓</div><div class="feat-name">Cupons de desconto</div></div><div class="feat-inc">Incluso</div></div>
+            <div class="feat-row"><div class="feat-l"><div class="feat-ico">✓</div><div class="feat-name">Relatórios e análises</div></div><div class="feat-inc">Incluso</div></div>
+            <div class="feat-row"><div class="feat-l"><div class="feat-ico">✓</div><div class="feat-name">Meta Pixel + Conversions API</div></div><div class="feat-inc">Incluso</div></div>
           </div>
         </div>
       </div>
-
-      <!-- Sidebar preço -->
-      <div class="price-sidebar" id="priceSidebar">
-        <div class="ps-tabs">
-          <button class="ps-tab active" onclick="setTab('mensal',this)" id="tabMensal">
-            💳 Mensal
-          </button>
-          <button class="ps-tab" onclick="setTab('anual',this)" id="tabAnual">
-            🗓 Anual
-          </button>
+      <div class="sidebar">
+        <div class="tabs">
+          <button class="tab on" onclick="setTab('mensal',this)">💳 Mensal</button>
+          <button class="tab" onclick="setTab('anual',this)">🗓 Anual</button>
         </div>
-
-        <div id="priceDisplay">
-          <div class="ps-price" id="precoFinal">R$ 147<span>/mês</span></div>
-          <div class="ps-preco-original" id="precoOriginal" style="display:none">De R$ 147/mês</div>
-        </div>
-
-        <!-- Cupom -->
-        <div class="cupom-wrap">
-          <div class="cupom-field">
-            <input class="cupom-input" type="text" id="cupomInput" placeholder="Código do cupom" oninput="this.value=this.value.toUpperCase()">
+        <div class="price-big" id="price-big">R$ 147<span>/mês</span></div>
+        <div class="price-orig" id="price-orig">&nbsp;</div>
+        <div style="margin-bottom:16px">
+          <div class="cupom-row">
+            <input class="cupom-in" type="text" id="cupom-in" placeholder="Código do cupom" oninput="this.value=this.value.toUpperCase()">
             <button class="cupom-btn" onclick="aplicarCupom()">Aplicar</button>
           </div>
-          <div class="cupom-applied" id="cupomApplied">
-            <span id="cupomTxt">🎉 Cupom ZIRA27 aplicado!</span>
-            <span class="cupom-remove" onclick="removerCupom()">✕ Remover</span>
-          </div>
-          <div class="cupom-err" id="cupomErr">Cupom inválido. Verifique e tente novamente.</div>
-          <div id="cupomAvisoMensal" style="display:none;font-size:12px;color:#f59e0b;margin-top:6px;font-weight:500">⚠️ Cupom disponível apenas no plano Mensal</div>
+          <div class="cupom-ok" id="cupom-ok"><span id="cupom-txt">🎉 Cupom aplicado!</span><span class="cupom-rm" onclick="removerCupom()">✕ Remover</span></div>
+          <div class="cupom-err" id="cupom-err">Cupom inválido.</div>
+          <div class="cupom-aviso" id="cupom-aviso">⚠️ Cupom disponível apenas no plano Mensal</div>
         </div>
-
-        <!-- Breakdown -->
-        <div class="ps-breakdown" id="breakdown">
-          <div class="ps-row">
-            <span>1º pagamento</span>
-            <span id="bk-subtotal">R$ 147,00</span>
-          </div>
-          <div class="ps-row" id="bk-desc-row" style="display:none">
-            <span>Desconto</span>
-            <span class="green" id="bk-desc">- R$ 120,00</span>
-          </div>
-          <div class="ps-row total">
-            <span>Total</span>
-            <span id="bk-total">R$ 147,00</span>
-          </div>
+        <div class="bkdown">
+          <div class="bkrow"><span>1º pagamento</span><span id="bk-sub">R$ 147,00</span></div>
+          <div class="bkrow" id="bk-desc-row" style="display:none"><span>Desconto</span><span class="green" id="bk-desc">-</span></div>
+          <div class="bkrow total"><span>Total</span><span id="bk-total">R$ 147,00</span></div>
         </div>
-
-        <a href="#" class="ps-cta" id="btnContratar" onclick="contratar(event)">
-          Contratar agora →
-        </a>
-
-        <div class="ps-secure">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Compra segura · Cancele quando quiser
-        </div>
+        <button class="cta-btn" onclick="contratar()">Contratar agora →</button>
+        <div class="sec-txt">🔒 Compra segura · Cancele quando quiser</div>
       </div>
     </div>
   </div>
 
-</div><!-- /main -->
+</div>
 
 <script>
-// ─────────────────────────────────────────────────────
-//  CONFIG
-// ─────────────────────────────────────────────────────
-const SB_URL  = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
-const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE0NzcsImV4cCI6MjA4ODMxNzQ3N30.URV7NROQ0wAGG_GzrS2yn2Kksxaefy4v4JJ49yRW51A';
+var SB_URL = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE0NzcsImV4cCI6MjA4ODMxNzQ3N30.URV7NROQ0wAGG_GzrS2yn2Kksxaefy4v4JJ49yRW51A';
+var LINKS = { mensal:'https://pay.kiwify.com.br/xAD5XIM', anual:'https://pay.kiwify.com.br/KUnOTDQ', promo:'https://pay.kiwify.com.br/q0y68Kr' };
+var CUPOM_VALIDO = 'ZIRA27';
+var S = { tipo:'', fat:'', nomeRest:'', cidade:'', estado:'', nome:'', email:'', tel:'', tab:'mensal', cupom:false, leadId:null };
 
-// Links Kiwify — substitua pelos seus
-const KIWIFY_MENSAL      = 'https://pay.kiwify.com.br/xAD5XIM';
-const KIWIFY_TRIMESTRAL  = 'https://pay.kiwify.com.br/DcPQUhg';
-const KIWIFY_ANUAL       = 'https://pay.kiwify.com.br/KUnOTDQ';
-const KIWIFY_PROMO       = 'https://pay.kiwify.com.br/q0y68Kr'; // mensal com cupom
-
-// Cupom válido
-const CUPOM_VALIDO = 'ZIRA27';
-const CUPOM_PRECO  = 27;
-
-// ─────────────────────────────────────────────────────
-//  ESTADO
-// ─────────────────────────────────────────────────────
-const S = {
-  tipo: '', fat: '', nomeRest: '', cidade: '', estado: '',
-  nome: '', email: '', tel: '',
-  tabAtiva: 'mensal', cupomAplicado: false, leadId: null
-};
-
-// Planos disponíveis
-const KIWIFY_ANUAL = 'https://pay.kiwify.com.br/KUnOTDQ';
-
-// ─────────────────────────────────────────────────────
-//  OPTS — seleção única
-// ─────────────────────────────────────────────────────
-document.querySelectorAll('.opts').forEach(grupo => {
-  grupo.querySelectorAll('.opt').forEach(opt => {
-    opt.addEventListener('click', () => {
-      grupo.querySelectorAll('.opt').forEach(o => o.classList.remove('selected'));
-      opt.classList.add('selected');
-      // Habilitar botão
-      const step = grupo.closest('[id^="step"]').id;
-      if (step === 'step1') { S.tipo = opt.dataset.val; document.getElementById('btn1').disabled = false; }
-      if (step === 'step2') { S.fat  = opt.dataset.val; document.getElementById('btn2').disabled = false; }
-    });
-  });
-});
-
-// ─────────────────────────────────────────────────────
-//  NAVEGAÇÃO
-// ─────────────────────────────────────────────────────
-function mostrarStep(n) {
-  [1,2,3,4,5].forEach(i => document.getElementById('step'+i).style.display = 'none');
-  document.getElementById('step'+n).style.display = 'block';
-  window.scrollTo({top:0,behavior:'smooth'});
-
-  // Progress
-  [1,2,3].forEach(i => {
-    const ps = document.getElementById('ps'+i);
-    const pl = document.getElementById('pl'+i);
-    ps.className = 'pstep';
-    if (pl) pl.className = 'pstep-line';
-
-    // Mapeamento: steps 1-2 = ps1, steps 3-4 = ps2, step 5 = ps3
-    const psMap = {1:1,2:1,3:2,4:2,5:3};
-    const cur = psMap[n];
-    if (i < cur) { ps.classList.add('done'); if (pl) pl.classList.add('done'); }
-    if (i === cur) ps.classList.add('active');
-  });
-}
-
-function irPara2() { mostrarStep(2); }
-function irPara3() { mostrarStep(3); }
-
-function irPara4() {
-  const nomeRest = document.getElementById('f-nome-rest').value.trim();
-  const cidade   = document.getElementById('f-cidade').value.trim();
-  const estado   = document.getElementById('f-estado').value;
-  const err = document.getElementById('err3');
-
-  if (!nomeRest || !cidade || !estado) { err.classList.add('show'); return; }
-  err.classList.remove('show');
-  S.nomeRest = nomeRest;
-  S.cidade   = cidade;
-  S.estado   = estado;
-  mostrarStep(4);
-}
-
-function irPara5() {
-  const nome  = document.getElementById('f-nome').value.trim();
-  const email = document.getElementById('f-email').value.trim();
-  const tel   = document.getElementById('f-tel').value.trim();
-  const err   = document.getElementById('err4');
-
-  if (!nome || !email || !tel || !/\S+@\S+\.\S+/.test(email)) {
-    err.classList.add('show');
-    return;
+function ir(n) {
+  if (n === 4) {
+    var nr = document.getElementById('fnome-rest').value.trim();
+    var ci = document.getElementById('fcidade').value.trim();
+    var es = document.getElementById('festado').value;
+    if (!nr || !ci || !es) { document.getElementById('err3').classList.add('show'); return; }
+    document.getElementById('err3').classList.remove('show');
+    S.nomeRest = nr; S.cidade = ci; S.estado = es;
   }
-  err.classList.remove('show');
-  S.nome  = nome;
-  S.email = email;
-  S.tel   = tel;
+  for (var i = 1; i <= 5; i++) document.getElementById('step'+i).style.display = 'none';
+  document.getElementById('step'+n).style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+  var mapa = {1:1,2:1,3:2,4:2,5:3};
+  var cur = mapa[n] || 1;
+  for (var j = 1; j <= 3; j++) {
+    var ps = document.getElementById('ps'+j);
+    var pl = document.getElementById('pl'+j);
+    ps.className = 'pstep';
+    if (pl) pl.className = 'pline';
+    if (j < cur) { ps.classList.add('done'); if (pl) pl.classList.add('done'); }
+    if (j === cur) ps.classList.add('active');
+  }
+}
 
-  // Preencher proposta
-  document.getElementById('ph-nome').textContent  = nome.split(' ')[0];
-  document.getElementById('ph-rest').textContent  = S.nomeRest;
+function irProposta() {
+  var nome = document.getElementById('fnome').value.trim();
+  var email = document.getElementById('femail').value.trim();
+  var tel = document.getElementById('ftel').value.trim();
+  if (!nome || !email || !tel || email.indexOf('@') < 0) {
+    document.getElementById('err4').classList.add('show'); return;
+  }
+  document.getElementById('err4').classList.remove('show');
+  S.nome = nome; S.email = email; S.tel = tel;
+  document.getElementById('ph-nome').textContent = nome.split(' ')[0];
+  document.getElementById('ph-rest').textContent = S.nomeRest;
   document.getElementById('ph-cidade').textContent = S.cidade + ' / ' + S.estado;
-
-  mostrarStep(5);
+  ir(5);
   salvarLead();
 }
 
-function voltarPara(n) { mostrarStep(n); }
+function selecionarOpt(el, campo, btnId) {
+  el.closest('.opts').querySelectorAll('.opt').forEach(function(o){ o.classList.remove('sel'); });
+  el.classList.add('sel');
+  S[campo] = el.dataset.val;
+  var btn = document.getElementById(btnId);
+  if (btn) btn.disabled = false;
+}
 
-// ─────────────────────────────────────────────────────
-//  TABS MENSAL / TRIMESTRAL
-// ─────────────────────────────────────────────────────
 function setTab(tab, el) {
-  S.tabAtiva = tab;
-  // Se tinha cupom aplicado e mudou para anual, remover cupom
-  if (tab !== 'mensal' && S.cupomAplicado) removerCupom();
-  document.querySelectorAll('.ps-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  if (tab !== 'mensal' && S.cupom) removerCupom();
+  S.tab = tab;
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('on'); });
+  el.classList.add('on');
   atualizarPreco();
 }
 
 function atualizarPreco() {
-  const tab = S.tabAtiva;
-  const precos = { mensal: 147, anual: 1497 };
-  const labels = { mensal: 'R$ 147/mês', anual: 'R$ 1.497/ano' };
-  const unidades = { mensal: '/mês', anual: '/ano' };
-  const precoBase = precos[tab] || 147;
-  const precoLabel = labels[tab] || 'R$ 147/mês';
-  const unidade = unidades[tab] || '/mês';
-
-  // Cupom só funciona no plano mensal
-  const cupomAtivo = S.cupomAplicado && tab === 'mensal';
-
-  // Mostrar/esconder aviso cupom só mensal
-  const avisoEl = document.getElementById('cupomAvisoMensal');
-  if (avisoEl) avisoEl.style.display = tab !== 'mensal' ? 'block' : 'none';
-
-  if (cupomAtivo) {
-    const comDesc = 27;
-    const desc = precoBase - comDesc;
-    document.getElementById('precoFinal').innerHTML   = `R$ ${comDesc}<span>${unidade}</span>`;
-    document.getElementById('precoOriginal').style.display = 'block';
-    document.getElementById('precoOriginal').textContent   = `De ${precoLabel}`;
-    document.getElementById('bk-subtotal').textContent = `R$ ${precoBase},00`;
-    document.getElementById('bk-desc').textContent     = `- R$ ${desc},00`;
+  var isAnual = S.tab === 'anual';
+  var base = isAnual ? 1497 : 147;
+  var uni = isAnual ? '/ano' : '/mês';
+  var baseStr = isAnual ? '1.497' : '147';
+  var cupomOk = S.cupom && !isAnual;
+  document.getElementById('cupom-aviso').style.display = 'none';
+  if (cupomOk) {
+    document.getElementById('price-big').innerHTML = 'R$ 27<span>' + uni + '</span>';
+    document.getElementById('price-orig').textContent = 'De R$ ' + baseStr + uni;
+    document.getElementById('bk-sub').textContent = 'R$ ' + baseStr + ',00';
+    document.getElementById('bk-desc').textContent = '- R$ ' + (base - 27) + ',00';
     document.getElementById('bk-desc-row').style.display = 'flex';
-    document.getElementById('bk-total').textContent    = `R$ 27,00`;
+    document.getElementById('bk-total').textContent = 'R$ 27,00';
   } else {
-    const fmt = precoBase >= 1000 ? '1.497' : precoBase.toString();
-    document.getElementById('precoFinal').innerHTML = `R$ ${fmt}<span>${unidade}</span>`;
-    document.getElementById('precoOriginal').style.display = 'none';
-    document.getElementById('bk-subtotal').textContent = `R$ ${precoBase >= 1000 ? '1.497' : precoBase},00`;
+    document.getElementById('price-big').innerHTML = 'R$ ' + baseStr + '<span>' + uni + '</span>';
+    document.getElementById('price-orig').innerHTML = '&nbsp;';
+    document.getElementById('bk-sub').textContent = 'R$ ' + baseStr + ',00';
     document.getElementById('bk-desc-row').style.display = 'none';
-    document.getElementById('bk-total').textContent = `R$ ${precoBase >= 1000 ? '1.497' : precoBase},00`;
+    document.getElementById('bk-total').textContent = 'R$ ' + baseStr + ',00';
   }
 }
 
-// ─────────────────────────────────────────────────────
-//  CUPOM
-// ─────────────────────────────────────────────────────
 function aplicarCupom() {
-  const val = document.getElementById('cupomInput').value.trim().toUpperCase();
-  const errEl = document.getElementById('cupomErr');
-  const okEl  = document.getElementById('cupomApplied');
-
+  var val = document.getElementById('cupom-in').value.trim().toUpperCase();
+  if (S.tab !== 'mensal') { document.getElementById('cupom-aviso').style.display = 'block'; return; }
   if (val === CUPOM_VALIDO) {
-    S.cupomAplicado = true;
-    document.getElementById('cupomTxt').textContent = `🎉 Cupom ${val} aplicado!`;
-    okEl.classList.add('show');
-    errEl.classList.remove('show');
-    document.getElementById('cupomInput').disabled = true;
+    S.cupom = true;
+    document.getElementById('cupom-txt').textContent = '🎉 Cupom ' + val + ' aplicado!';
+    document.getElementById('cupom-ok').classList.add('show');
+    document.getElementById('cupom-err').classList.remove('show');
+    document.getElementById('cupom-in').disabled = true;
     atualizarPreco();
-    salvarCupomLead(val);
   } else {
-    errEl.classList.add('show');
-    okEl.classList.remove('show');
+    document.getElementById('cupom-err').classList.add('show');
+    document.getElementById('cupom-ok').classList.remove('show');
   }
 }
 
 function removerCupom() {
-  S.cupomAplicado = false;
-  document.getElementById('cupomApplied').classList.remove('show');
-  document.getElementById('cupomInput').disabled = false;
-  document.getElementById('cupomInput').value = '';
-  document.getElementById('cupomErr').classList.remove('show');
+  S.cupom = false;
+  document.getElementById('cupom-ok').classList.remove('show');
+  document.getElementById('cupom-in').disabled = false;
+  document.getElementById('cupom-in').value = '';
+  document.getElementById('cupom-err').classList.remove('show');
+  document.getElementById('cupom-aviso').style.display = 'none';
   atualizarPreco();
 }
 
-// ─────────────────────────────────────────────────────
-//  CONTRATAR — redireciona para Kiwify
-// ─────────────────────────────────────────────────────
-function contratar(e) {
-  e.preventDefault();
-  let url;
-  if (S.cupomAplicado && S.tabAtiva === 'mensal') {
-    url = KIWIFY_PROMO;
-  } else if (S.tabAtiva === 'anual') {
-    url = KIWIFY_ANUAL;
-  } else {
-    url = KIWIFY_MENSAL;
-  }
-  atualizarLead({ status: 'checkout_iniciado', plano: S.tabAtiva, cupom: S.cupomAplicado ? CUPOM_VALIDO : null });
+function contratar() {
+  var url = (S.cupom && S.tab === 'mensal') ? LINKS.promo : (S.tab === 'anual' ? LINKS.anual : LINKS.mensal);
+  atualizarLead({ status:'checkout_iniciado', plano:S.tab, cupom_usado: S.cupom ? CUPOM_VALIDO : null });
   window.location.href = url;
 }
 
-// ─────────────────────────────────────────────────────
-//  SUPABASE — Salvar lead
-// ─────────────────────────────────────────────────────
-async function sbPost(path, body) {
-  const r = await fetch(SB_URL + path, {
+function salvarLead() {
+  fetch(SB_URL + '/rest/v1/leads_zira', {
     method: 'POST',
-    headers: {
-      'apikey': SB_KEY,
-      'Authorization': 'Bearer ' + SB_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify(body)
-  });
-  return r.json();
-}
-
-async function sbPatch(path, body) {
-  try {
-    const r = await fetch(SB_URL + path, {
-      method: 'PATCH',
-      headers: {
-        'apikey':        SB_KEY,
-        'Authorization': 'Bearer ' + SB_KEY,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=representation'
-      },
-      body: JSON.stringify(body)
-    });
-    const txt = await r.text();
-    console.log('[Zira] PATCH', path, r.status, txt);
-    return txt ? JSON.parse(txt) : {};
-  } catch(e) {
-    console.error('[Zira] PATCH erro:', e);
-    return {};
-  }
-}
-
-async function salvarLead() {
-  try {
-    const payload = {
-      nome:         S.nome,
-      email:        S.email,
-      telefone:     S.tel,
-      nome_rest:    S.nomeRest,
-      cidade:       S.cidade,
-      estado:       S.estado,
-      tipo_negocio: S.tipo,
-      faturamento:  S.fat,
-      status:       'proposta_visualizada'
-    };
-    console.log('[Zira] Salvando lead:', payload);
-
-    const resp = await fetch(SB_URL + '/rest/v1/leads_zira', {
-      method: 'POST',
-      headers: {
-        'apikey':        SB_KEY,
-        'Authorization': 'Bearer ' + SB_KEY,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=representation'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const txt = await resp.text();
-    console.log('[Zira] Resposta Supabase status:', resp.status);
-    console.log('[Zira] Resposta Supabase body:', txt);
-
-    if (!resp.ok) {
-      console.error('[Zira] Erro ao salvar lead:', resp.status, txt);
-      return;
+    headers: { 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=representation' },
+    body: JSON.stringify({ nome:S.nome, email:S.email, telefone:S.tel, nome_rest:S.nomeRest, cidade:S.cidade, estado:S.estado, tipo_negocio:S.tipo, faturamento:S.fat, status:'proposta_visualizada' })
+  }).then(function(r){ return r.text().then(function(t){ return {s:r.status,b:t}; }); })
+  .then(function(r){
+    if (r.s >= 200 && r.s < 300) {
+      try { var d = JSON.parse(r.b); if (Array.isArray(d) && d[0]) S.leadId = d[0].id; } catch(e){}
     }
-
-    const data = JSON.parse(txt);
-    if (Array.isArray(data) && data[0]) {
-      S.leadId = data[0].id;
-      console.log('[Zira] Lead salvo com ID:', S.leadId);
-    }
-  } catch(e) {
-    console.error('[Zira] Exceção ao salvar lead:', e);
-  }
+  }).catch(function(){});
 }
 
-async function atualizarLead(campos) {
+function atualizarLead(campos) {
   if (!S.leadId) return;
-  try {
-    await sbPatch('/rest/v1/leads_zira?id=eq.' + S.leadId, campos);
-  } catch(e) { console.warn('Update falhou:', e); }
+  fetch(SB_URL + '/rest/v1/leads_zira?id=eq.' + S.leadId, {
+    method: 'PATCH',
+    headers: { 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json' },
+    body: JSON.stringify(campos)
+  }).catch(function(){});
 }
 
-async function salvarCupomLead(cupom) {
-  if (!S.leadId) return;
-  atualizarLead({ cupom_usado: cupom });
-}
-
-// ─────────────────────────────────────────────────────
-//  MÁSCARA TELEFONE
-// ─────────────────────────────────────────────────────
-document.getElementById('f-tel').addEventListener('input', function() {
-  let v = this.value.replace(/\D/g,'');
-  if (v.length > 11) v = v.slice(0,11);
-  if (v.length > 6) v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7);
-  else if (v.length > 2) v = '(' + v.slice(0,2) + ') ' + v.slice(2);
-  else if (v.length > 0) v = '(' + v;
+document.getElementById('ftel').addEventListener('input', function(){
+  var v = this.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 6) v = '('+v.slice(0,2)+') '+v.slice(2,7)+'-'+v.slice(7);
+  else if (v.length > 2) v = '('+v.slice(0,2)+') '+v.slice(2);
+  else if (v.length > 0) v = '('+v;
   this.value = v;
 });
 
-// ─────────────────────────────────────────────────────
-//  INIT
-// ─────────────────────────────────────────────────────
-mostrarStep(1);
+ir(1);
 atualizarPreco();
 </script>
 </body>
