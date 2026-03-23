@@ -607,8 +607,8 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--bg-soft);color:va
           <button class="ps-tab active" onclick="setTab('mensal',this)" id="tabMensal">
             💳 Mensal
           </button>
-          <button class="ps-tab" onclick="setTab('trimestral',this)" id="tabTrim">
-            🗓 Trimestral
+          <button class="ps-tab" onclick="setTab('anual',this)" id="tabAnual">
+            🗓 Anual
           </button>
         </div>
 
@@ -628,6 +628,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--bg-soft);color:va
             <span class="cupom-remove" onclick="removerCupom()">✕ Remover</span>
           </div>
           <div class="cupom-err" id="cupomErr">Cupom inválido. Verifique e tente novamente.</div>
+          <div id="cupomAvisoMensal" style="display:none;font-size:12px;color:#f59e0b;margin-top:6px;font-weight:500">⚠️ Cupom disponível apenas no plano Mensal</div>
         </div>
 
         <!-- Breakdown -->
@@ -668,9 +669,10 @@ const SB_URL  = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
 const SB_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE0NzcsImV4cCI6MjA4ODMxNzQ3N30.URV7NROQ0wAGG_GzrS2yn2Kksxaefy4v4JJ49yRW51A';
 
 // Links Kiwify — substitua pelos seus
-const KIWIFY_MENSAL      = 'https://pay.kiwify.com.br/SEU-LINK-MENSAL';
-const KIWIFY_TRIMESTRAL  = 'https://pay.kiwify.com.br/SEU-LINK-TRIMESTRAL';
-const KIWIFY_PROMO       = 'https://pay.kiwify.com.br/SEU-LINK-PROMO'; // com cupom
+const KIWIFY_MENSAL      = 'https://pay.kiwify.com.br/xAD5XIM';
+const KIWIFY_TRIMESTRAL  = 'https://pay.kiwify.com.br/DcPQUhg';
+const KIWIFY_ANUAL       = 'https://pay.kiwify.com.br/KUnOTDQ';
+const KIWIFY_PROMO       = 'https://pay.kiwify.com.br/q0y68Kr'; // mensal com cupom
 
 // Cupom válido
 const CUPOM_VALIDO = 'ZIRA27';
@@ -684,6 +686,9 @@ const S = {
   nome: '', email: '', tel: '',
   tabAtiva: 'mensal', cupomAplicado: false, leadId: null
 };
+
+// Planos disponíveis
+const KIWIFY_ANUAL = 'https://pay.kiwify.com.br/KUnOTDQ';
 
 // ─────────────────────────────────────────────────────
 //  OPTS — seleção única
@@ -772,33 +777,46 @@ function voltarPara(n) { mostrarStep(n); }
 // ─────────────────────────────────────────────────────
 function setTab(tab, el) {
   S.tabAtiva = tab;
+  // Se tinha cupom aplicado e mudou para anual, remover cupom
+  if (tab !== 'mensal' && S.cupomAplicado) removerCupom();
   document.querySelectorAll('.ps-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
   atualizarPreco();
 }
 
 function atualizarPreco() {
-  const isTrim = S.tabAtiva === 'trimestral';
-  const precoBase  = isTrim ? 397 : 147;
-  const precoLabel = isTrim ? 'R$ 397/trimestre' : 'R$ 147/mês';
-  const unidade    = isTrim ? '/trimestre' : '/mês';
+  const tab = S.tabAtiva;
+  const precos = { mensal: 147, anual: 1497 };
+  const labels = { mensal: 'R$ 147/mês', anual: 'R$ 1.497/ano' };
+  const unidades = { mensal: '/mês', anual: '/ano' };
+  const precoBase = precos[tab] || 147;
+  const precoLabel = labels[tab] || 'R$ 147/mês';
+  const unidade = unidades[tab] || '/mês';
 
-  if (S.cupomAplicado) {
-    const desc = isTrim ? 120 : 120; // desconto fixo do cupom
-    const comDesc = precoBase - desc;
+  // Cupom só funciona no plano mensal
+  const cupomAtivo = S.cupomAplicado && tab === 'mensal';
+
+  // Mostrar/esconder aviso cupom só mensal
+  const avisoEl = document.getElementById('cupomAvisoMensal');
+  if (avisoEl) avisoEl.style.display = tab !== 'mensal' ? 'block' : 'none';
+
+  if (cupomAtivo) {
+    const comDesc = 27;
+    const desc = precoBase - comDesc;
     document.getElementById('precoFinal').innerHTML   = `R$ ${comDesc}<span>${unidade}</span>`;
     document.getElementById('precoOriginal').style.display = 'block';
     document.getElementById('precoOriginal').textContent   = `De ${precoLabel}`;
     document.getElementById('bk-subtotal').textContent = `R$ ${precoBase},00`;
     document.getElementById('bk-desc').textContent     = `- R$ ${desc},00`;
     document.getElementById('bk-desc-row').style.display = 'flex';
-    document.getElementById('bk-total').textContent    = `R$ ${comDesc},00`;
+    document.getElementById('bk-total').textContent    = `R$ 27,00`;
   } else {
-    document.getElementById('precoFinal').innerHTML = `R$ ${precoBase}<span>${unidade}</span>`;
+    const fmt = precoBase >= 1000 ? '1.497' : precoBase.toString();
+    document.getElementById('precoFinal').innerHTML = `R$ ${fmt}<span>${unidade}</span>`;
     document.getElementById('precoOriginal').style.display = 'none';
-    document.getElementById('bk-subtotal').textContent = `R$ ${precoBase},00`;
+    document.getElementById('bk-subtotal').textContent = `R$ ${precoBase >= 1000 ? '1.497' : precoBase},00`;
     document.getElementById('bk-desc-row').style.display = 'none';
-    document.getElementById('bk-total').textContent    = `R$ ${precoBase},00`;
+    document.getElementById('bk-total').textContent = `R$ ${precoBase >= 1000 ? '1.497' : precoBase},00`;
   }
 }
 
@@ -839,14 +857,13 @@ function removerCupom() {
 function contratar(e) {
   e.preventDefault();
   let url;
-  if (S.cupomAplicado) {
+  if (S.cupomAplicado && S.tabAtiva === 'mensal') {
     url = KIWIFY_PROMO;
-  } else if (S.tabAtiva === 'trimestral') {
-    url = KIWIFY_TRIMESTRAL;
+  } else if (S.tabAtiva === 'anual') {
+    url = KIWIFY_ANUAL;
   } else {
     url = KIWIFY_MENSAL;
   }
-  // Salvar intenção de compra
   atualizarLead({ status: 'checkout_iniciado', plano: S.tabAtiva, cupom: S.cupomAplicado ? CUPOM_VALIDO : null });
   window.location.href = url;
 }
