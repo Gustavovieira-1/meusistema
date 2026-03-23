@@ -61,7 +61,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--bg-soft);color:va
 .pstep-line.done{background:var(--green)}
 
 /* ── MAIN ── */
-.main{max-width:680px;margin:0 auto;padding:40px 20px 80px}
+.main{max-width:1100px;margin:0 auto;padding:40px 40px 80px}
 
 /* ── CARD ── */
 .card{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-xl);padding:40px;margin-bottom:16px;animation:slideUp .35s ease both}
@@ -145,7 +145,7 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--bg-soft);color:va
 .err-msg.show{display:block}
 
 /* ── PROPOSTA ── */
-.proposta-layout{display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start}
+.proposta-layout{display:grid;grid-template-columns:1fr 360px;gap:32px;align-items:start}
 
 .proposta-header{
   background:var(--bg);border:1px solid var(--line);
@@ -271,6 +271,21 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--bg-soft);color:va
 .success-title{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-bottom:10px}
 .success-sub{font-size:15px;color:var(--text-2);font-weight:300;line-height:1.7}
 
+
+/* Desktop: quiz steps centralizados, proposta full width */
+@media(min-width:769px){
+  #step1 .card,
+  #step2 .card,
+  #step3 .card,
+  #step4 .card { max-width:600px; margin-left:auto; margin-right:auto; }
+
+  .proposta-header { max-width:100%; }
+
+  .ps-price { font-size:42px; }
+  
+  .price-sidebar { min-width: 320px; }
+}
+
 /* ── RESPONSIVO ── */
 @media(max-width:768px){
   .nav{padding:0 16px}
@@ -283,6 +298,15 @@ body{font-family:'Geist',system-ui,sans-serif;background:var(--bg-soft);color:va
   .pstep-label{display:none}
   .pstep-line{width:24px}
 }
+
+@media(min-width:769px){
+  .feature-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .feat-row { border-bottom: 1px solid var(--line); border-right: none; }
+  .feat-row:nth-child(odd) { padding-right: 20px; border-right: 1px solid var(--line); }
+  .feat-row:nth-child(even) { padding-left: 20px; }
+  .feat-row:nth-last-child(-n+2) { border-bottom: none; }
+}
+
 </style>
 </head>
 <body>
@@ -845,35 +869,69 @@ async function sbPost(path, body) {
 }
 
 async function sbPatch(path, body) {
-  const r = await fetch(SB_URL + path, {
-    method: 'PATCH',
-    headers: {
-      'apikey': SB_KEY,
-      'Authorization': 'Bearer ' + SB_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify(body)
-  });
-  return r.json();
+  try {
+    const r = await fetch(SB_URL + path, {
+      method: 'PATCH',
+      headers: {
+        'apikey':        SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=representation'
+      },
+      body: JSON.stringify(body)
+    });
+    const txt = await r.text();
+    console.log('[Zira] PATCH', path, r.status, txt);
+    return txt ? JSON.parse(txt) : {};
+  } catch(e) {
+    console.error('[Zira] PATCH erro:', e);
+    return {};
+  }
 }
 
 async function salvarLead() {
   try {
-    const data = await sbPost('/rest/v1/leads_zira', {
-      nome:        S.nome,
-      email:       S.email,
-      telefone:    S.tel,
-      nome_rest:   S.nomeRest,
-      cidade:      S.cidade,
-      estado:      S.estado,
-      tipo_negocio:S.tipo,
-      faturamento: S.fat,
-      status:      'proposta_visualizada',
-      criado_em:   new Date().toISOString()
+    const payload = {
+      nome:         S.nome,
+      email:        S.email,
+      telefone:     S.tel,
+      nome_rest:    S.nomeRest,
+      cidade:       S.cidade,
+      estado:       S.estado,
+      tipo_negocio: S.tipo,
+      faturamento:  S.fat,
+      status:       'proposta_visualizada'
+    };
+    console.log('[Zira] Salvando lead:', payload);
+
+    const resp = await fetch(SB_URL + '/rest/v1/leads_zira', {
+      method: 'POST',
+      headers: {
+        'apikey':        SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=representation'
+      },
+      body: JSON.stringify(payload)
     });
-    if (data && data[0]) S.leadId = data[0].id;
-  } catch(e) { console.warn('Lead não salvo:', e); }
+
+    const txt = await resp.text();
+    console.log('[Zira] Resposta Supabase status:', resp.status);
+    console.log('[Zira] Resposta Supabase body:', txt);
+
+    if (!resp.ok) {
+      console.error('[Zira] Erro ao salvar lead:', resp.status, txt);
+      return;
+    }
+
+    const data = JSON.parse(txt);
+    if (Array.isArray(data) && data[0]) {
+      S.leadId = data[0].id;
+      console.log('[Zira] Lead salvo com ID:', S.leadId);
+    }
+  } catch(e) {
+    console.error('[Zira] Exceção ao salvar lead:', e);
+  }
 }
 
 async function atualizarLead(campos) {
