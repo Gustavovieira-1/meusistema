@@ -732,11 +732,13 @@ async function init(){
             minPedido: parseFloat(cfg.valor_minimo || cfg.delivery_minimo) || 0,
             taxaEntrega: parseFloat(cfg.taxa_entrega) || 0
         };
-        db.txCfg  = (txRows&&txRows[0]) ? {
-            tempoEntrega: txRows[0].tempo_entrega || 40,
-            tempoRetirada: txRows[0].tempo_retirada || 20,
-            taxaPadrao: parseFloat(txRows[0].taxa_padrao) || 0
-        } : {};
+        // taxas_entrega salva tudo dentro de dados:{...} no Supabase
+        var _tx = (txRows&&txRows[0]) ? (txRows[0].dados || txRows[0]) : {};
+        db.txCfg  = {
+            tempoEntrega:  _tx.tempoEntrega  || _tx.tempo_entrega  || 40,
+            tempoRetirada: _tx.tempoRetirada || _tx.tempo_retirada || 20,
+            taxaPadrao:    parseFloat(_tx.taxaPadrao || _tx.taxa_padrao || 0)
+        };
         db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados || []) : [];
         db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados || {}) : {};
         pixelInicializar(db.integracoes);
@@ -892,8 +894,13 @@ async function _initBackground(cacheKey) {
                            cidade: cfg.cidade||'', logo: cfg.logo||'', capa: cfg.capa||'',
                            minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0,
                            taxaEntrega: parseFloat(cfg.taxa_entrega)||0 };
-        db.txCfg       = (txRows&&txRows[0]) ? { tempoEntrega: txRows[0].tempo_entrega||40,
-                           tempoRetirada: txRows[0].tempo_retirada||20, taxaPadrao: parseFloat(txRows[0].taxa_padrao)||0 } : {};
+        // taxas_entrega salva tudo dentro de dados:{...} no Supabase
+        var _tx2 = (txRows&&txRows[0]) ? (txRows[0].dados || txRows[0]) : {};
+        db.txCfg = {
+            tempoEntrega:  _tx2.tempoEntrega  || _tx2.tempo_entrega  || 40,
+            tempoRetirada: _tx2.tempoRetirada || _tx2.tempo_retirada || 20,
+            taxaPadrao:    parseFloat(_tx2.taxaPadrao || _tx2.taxa_padrao || 0)
+        };
         db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados||[]) : [];
         db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados||{}) : {};
         pixelInicializar(db.integracoes);
