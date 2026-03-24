@@ -911,7 +911,6 @@ async function _initBackground(cacheKey) {
         }
 
         // Atualiza db e re-renderiza se houve mudança
-        const rest = restRows[0];
         const cfg  = (cfgRows && cfgRows[0]) || {};
         db.categories  = (cats||[]).map(c => ({id: c.id, name: c.nome, active: true}));
         db.prods       = (prods||[]).map(p => {
@@ -920,7 +919,8 @@ async function _initBackground(cacheKey) {
                      desc: p.descricao||'', img: p.imagem||'', comps: p.complementos||[], active: true };
         });
         db.comps       = (comps||[]).map(c => ({id: c.id, title: c.titulo||c.nome||'', type: c.tipo||'check', options: c.opcoes||[]}));
-        db.cfg         = { nomeMarca: cfg.nome_marca||rest.nome, nomeUnidade: cfg.nome_unidade||rest.nome,
+        var _restNome = (typeof restRows !== 'undefined' && restRows && restRows[0]) ? restRows[0].nome : (db.cfg && db.cfg.nomeMarca) || '';
+        db.cfg         = { nomeMarca: cfg.nome_marca||_restNome, nomeUnidade: cfg.nome_unidade||_restNome,
                            cidade: cfg.cidade||'', logo: cfg.logo||'', capa: cfg.capa||'',
                            minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0,
                            taxaEntrega: parseFloat(cfg.taxa_entrega)||0 };
