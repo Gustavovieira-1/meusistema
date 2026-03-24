@@ -12,17 +12,12 @@ t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
 (window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
 try{var _pc=localStorage.getItem('f_pixel_id');if(_pc){window.fbq('init',_pc);window.fbq('track','PageView');window._pixelPreInit=_pc;}}catch(e){}
 </script>
-<!-- Meta Pixel — inicializado com ID vazio, preenchido via JS após carregar config -->
-<script id="fb-pixel-script">
-!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
-(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-// ID preenchido dinamicamente — não chama init aqui
-</script>
+<!-- Meta Pixel — script base já no head, ID preenchido via JS após carregar config -->
+<link rel="preconnect" href="https://oijcggqfcgjkgcaymjqx.supabase.co" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://oijcggqfcgjkgcaymjqx.supabase.co">
+<link rel="dns-prefetch" href="https://connect.facebook.net">
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
 <style>
@@ -617,11 +612,18 @@ function cupomGetDesconto(sub, taxa) {
 }
 
 async function supaFetch(path) {
-    const r = await fetch(SUPA_URL + '/rest/v1/' + path, {
-        headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY}
-    });
-    if (!r.ok) throw new Error('Supa ' + r.status);
-    return r.json();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
+    try {
+        const r = await fetch(SUPA_URL + '/rest/v1/' + path, {
+            headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Connection': 'keep-alive'},
+            signal: controller.signal
+        });
+        if (!r.ok) throw new Error('Supa ' + r.status);
+        return r.json();
+    } finally {
+        clearTimeout(timeout);
+    }
 }
 
 async function init(){
@@ -633,7 +635,7 @@ async function init(){
     // Se já visitou antes, renderiza do cache imediatamente enquanto
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
-    const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+    const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
         if (cached && cached.ts && (Date.now() - cached.ts) < CACHE_TTL && cached.db) {
@@ -649,6 +651,10 @@ async function init(){
             lojaPausada    = !!cached.db.lojaPausada;
             lojaForaHorario = !!cached.db.lojaForaHorario;
             aberta         = !lojaPausada && !lojaForaHorario;
+            // Restaura config de fidelidade do cache para pill aparecer corretamente
+            if (cached.db.fidelidadeCfg) {
+                try { localStorage.setItem('f_fidelidade_cfg', JSON.stringify(cached.db.fidelidadeCfg)); } catch(e) {}
+            }
             renderHeader();
             renderCardapio();
             pixelInicializar(db.integracoes);
@@ -773,7 +779,13 @@ async function init(){
                     horarios: db.horarios,
                     integracoes: db.integracoes,
                     lojaPausada: lojaPausada,
-                    lojaForaHorario: lojaForaHorario
+                    lojaForaHorario: lojaForaHorario,
+                    fidelidadeCfg: fidRows && fidRows[0] ? {
+                        ativo: fidRows[0].ativo, reaisPorPonto: fidRows[0].reais_por_ponto,
+                        pontosPorReal: fidRows[0].pontos_por_real, descontoAtivo: fidRows[0].desconto_ativo,
+                        pontosDesc: fidRows[0].pontos_desc, reaisDesc: fidRows[0].reais_desc,
+                        produtoAtivo: fidRows[0].produto_ativo, resgates: fidRows[0].resgates || []
+                    } : null
                 }
             }));
         } catch(e) {}
@@ -905,7 +917,13 @@ async function _initBackground(cacheKey) {
                 ts: Date.now(), restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
-                      integracoes: db.integracoes, lojaPausada, lojaForaHorario }
+                      integracoes: db.integracoes, lojaPausada, lojaForaHorario,
+                      fidelidadeCfg: fidRows && fidRows[0] ? {
+                          ativo: fidRows[0].ativo, reaisPorPonto: fidRows[0].reais_por_ponto,
+                          pontosPorReal: fidRows[0].pontos_por_real, descontoAtivo: fidRows[0].desconto_ativo,
+                          pontosDesc: fidRows[0].pontos_desc, reaisDesc: fidRows[0].reais_desc,
+                          produtoAtivo: fidRows[0].produto_ativo, resgates: fidRows[0].resgates || []
+                      } : null }
             }));
         } catch(e) {}
     } catch(e) { console.warn('[BG] Erro na atualização em background:', e.message); }
@@ -1013,17 +1031,29 @@ function renderHeader(){
         atualizarContagem();
     }
     document.getElementById('info-entrega').textContent=(tx.tempoEntrega||40)+' min';
-    var taxa=parseFloat(tx.taxaPadrao||0);
-    document.getElementById('info-taxa').textContent=taxa>0?money(taxa):'Grátis';
+    // Taxa: usa cfg.taxaEntrega (do admin) se disponível, senão tx.taxaPadrao
+    var taxa = parseFloat(c.taxaEntrega || tx.taxaPadrao || 0);
+    var taxaEl = document.getElementById('info-taxa');
+    var taxaPill = document.getElementById('info-taxa-pill');
+    if (taxa > 0) {
+        taxaEl.textContent = money(taxa);
+    } else {
+        // Só mostra "Grátis" se a taxa realmente foi carregada (não placeholder)
+        var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
+        taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
+    }
     var min=parseFloat(c.minPedido||0);
     document.getElementById('info-minimo').textContent=min>0?money(min):'Sem mínimo';
-    // Pill de fidelidade
+    // Pill de fidelidade — se ativo, substitui pill de taxa
     var fidCfg=fidelGetCfg();
-    if(fidCfg.ativo){
+    if(fidCfg && fidCfg.ativo){
         var rpp=fidCfg.reaisPorPonto||1, ppr=fidCfg.pontosPorReal||1;
         document.getElementById('info-pontos-rate').textContent='R$'+rpp+' = '+ppr+'pt';
         document.getElementById('info-pontos-pill').style.display='';
-        document.getElementById('info-taxa-pill').style.display='none';
+        taxaPill.style.display='none';
+    } else {
+        document.getElementById('info-pontos-pill').style.display='none';
+        taxaPill.style.display='';
     }
 }
 
