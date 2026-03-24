@@ -1278,6 +1278,29 @@ ON CONFLICT (id) DO NOTHING;</pre>
           </div>
         </div><!-- /sec-rastreamento -->
 
+        <!-- ══ ABA CUPONS ══ -->
+        <div class="secao" id="sec-cupons">
+          <div class="sec-header">
+            <div>
+              <div class="sec-titulo">Cupons de Venda</div>
+              <div class="sec-sub">Gerencie os cupons que aparecem no funil de cadastro (zirafood.com.br/cadastro)</div>
+            </div>
+            <button class="btn-primary" onclick="cpAbrirModal(null)">
+              <i class="fas fa-plus"></i> Novo Cupom
+            </button>
+          </div>
+
+          <div class="info-box" style="margin-bottom:20px;">
+            <strong>Como funciona:</strong> Quando um cliente insere um código válido na página de cadastro, o sistema aplica o desconto automaticamente e redireciona para o link da Kiwify correspondente. O cupom <strong>ZIRA27</strong> já vem pré-cadastrado e ativo.
+          </div>
+
+          <div class="tabela-wrap">
+            <div id="tabela-cupons-body">
+              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando cupons...</span></div>
+            </div>
+          </div>
+        </div>
+
       </div><!-- /page -->
     </div><!-- /main-content -->
   </div><!-- /app-layout -->
@@ -1341,29 +1364,6 @@ ON CONFLICT (id) DO NOTHING;</pre>
     </div>
   </div>
 </div>
-
-<!-- ══ ABA CUPONS ══ -->
-        <div class="secao" id="sec-cupons">
-          <div class="sec-header">
-            <div>
-              <div class="sec-titulo">Cupons de Venda</div>
-              <div class="sec-sub">Gerencie os cupons que aparecem no funil de cadastro (zirafood.com.br/cadastro)</div>
-            </div>
-            <button class="btn-primary" onclick="cpAbrirModal(null)">
-              <i class="fas fa-plus"></i> Novo Cupom
-            </button>
-          </div>
-
-          <div class="info-box" style="margin-bottom:20px;">
-            <strong>Como funciona:</strong> Quando um cliente insere um código válido na página de cadastro, o sistema aplica o desconto automaticamente e redireciona para o link da Kiwify correspondente. O cupom <strong>ZIRA27</strong> já vem pré-cadastrado e ativo.
-          </div>
-
-          <div class="tabela-wrap">
-            <div id="tabela-cupons-body">
-              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando cupons...</span></div>
-            </div>
-          </div>
-        </div>
 
 <!-- ══ MODAL: NOVO/EDITAR USUÁRIO ══ -->
 <div class="modal-overlay" id="modal-usuario">
