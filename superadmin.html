@@ -965,6 +965,9 @@ tr:hover td { background: rgba(255,255,255,.015); }
         <button class="nav-item" id="nav-rastreamento" onclick="saAba('rastreamento',this)">
           <i class="fas fa-satellite-dish"></i> Rastreamento
         </button>
+        <button class="nav-item" id="nav-cupons" onclick="saAba('cupons',this)">
+          <i class="fas fa-ticket"></i> Cupons de Venda
+        </button>
       </nav>
 
       <div class="sidebar-bottom">
@@ -1339,6 +1342,29 @@ ON CONFLICT (id) DO NOTHING;</pre>
   </div>
 </div>
 
+<!-- ══ ABA CUPONS ══ -->
+        <div class="secao" id="sec-cupons">
+          <div class="sec-header">
+            <div>
+              <div class="sec-titulo">Cupons de Venda</div>
+              <div class="sec-sub">Gerencie os cupons que aparecem no funil de cadastro (zirafood.com.br/cadastro)</div>
+            </div>
+            <button class="btn-primary" onclick="cpAbrirModal(null)">
+              <i class="fas fa-plus"></i> Novo Cupom
+            </button>
+          </div>
+
+          <div class="info-box" style="margin-bottom:20px;">
+            <strong>Como funciona:</strong> Quando um cliente insere um código válido na página de cadastro, o sistema aplica o desconto automaticamente e redireciona para o link da Kiwify correspondente. O cupom <strong>ZIRA27</strong> já vem pré-cadastrado e ativo.
+          </div>
+
+          <div class="tabela-wrap">
+            <div id="tabela-cupons-body">
+              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando cupons...</span></div>
+            </div>
+          </div>
+        </div>
+
 <!-- ══ MODAL: NOVO/EDITAR USUÁRIO ══ -->
 <div class="modal-overlay" id="modal-usuario">
   <div class="modal">
@@ -1444,6 +1470,63 @@ ON CONFLICT (id) DO NOTHING;</pre>
     <div id="detalhe-body"></div>
     <div class="modal-footer">
       <button class="btn-secondary" onclick="saFecharDetalhe()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: CUPOM ══ -->
+<div class="modal-overlay" id="modal-cupom">
+  <div class="modal">
+    <div class="modal-titulo" id="modal-cupom-titulo">Novo Cupom</div>
+    <div class="modal-sub">Configure o cupom que será usado na página de cadastro</div>
+    <input type="hidden" id="mc-id">
+
+    <div class="campo-row">
+      <div class="campo" style="margin-bottom:0"><label>Código do Cupom *</label>
+        <input id="mc-codigo" type="text" placeholder="Ex: ZIRA27" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+      </div>
+      <div class="campo" style="margin-bottom:0"><label>Desconto (R$) *</label>
+        <input id="mc-desconto" type="number" step="0.01" min="0" placeholder="27.00">
+      </div>
+    </div>
+
+    <div class="campo" style="margin-top:12px"><label>Preço com desconto exibido (R$)</label>
+      <input id="mc-preco-display" type="number" step="0.01" min="0" placeholder="Ex: 27.00 — aparece na proposta do cadastro">
+    </div>
+
+    <div class="campo"><label>Link Kiwify com cupom aplicado *</label>
+      <input id="mc-link-kiwify" type="url" placeholder="https://pay.kiwify.com.br/...">
+    </div>
+
+    <div class="campo"><label>Descrição (interno)</label>
+      <input id="mc-descricao" type="text" placeholder="Ex: Cupom de lançamento — 1º mês por R$27">
+    </div>
+
+    <div class="campo-row">
+      <div class="campo" style="margin-bottom:0"><label>Plano ao qual se aplica</label>
+        <select id="mc-plano">
+          <option value="mensal">Mensal</option>
+          <option value="anual">Anual</option>
+          <option value="trimestral">Trimestral</option>
+          <option value="todos">Todos</option>
+        </select>
+      </div>
+      <div class="campo" style="margin-bottom:0"><label>Status</label>
+        <select id="mc-ativo">
+          <option value="true">Ativo</option>
+          <option value="false">Inativo</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-erro" id="modal-cupom-erro"></div>
+    <div class="modal-ok"   id="modal-cupom-ok"></div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="cpFecharModal()">Cancelar</button>
+      <button class="btn-primary" id="modal-cupom-btn" onclick="cpSalvar()">
+        <i class="fas fa-check"></i> Salvar Cupom
+      </button>
     </div>
   </div>
 </div>
@@ -2508,7 +2591,8 @@ const tabTitles = {
     usuarios: 'Usuários',
     pedidos: 'Pedidos',
     pagamentos: 'Pagamentos',
-    rastreamento: 'Rastreamento'
+    rastreamento: 'Rastreamento',
+    cupons: 'Cupons de Venda'
 };
 
 function saAba(id, btn) {
@@ -2523,6 +2607,7 @@ function saAba(id, btn) {
     if (id === 'pagamentos')   saCarregarPagamentos();
     if (id === 'usuarios')     saCarregarUsuarios();
     if (id === 'rastreamento') trCarregar();
+    if (id === 'cupons')       cpCarregar();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -2612,6 +2697,210 @@ function trStatus(msg, ok) {
     el.style.color      = ok ? 'var(--green)' : 'var(--red)';
     el.textContent      = msg;
     if (ok) setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// ══════════════════════════════════════════════════════════════
+// CUPONS DE VENDA — tabela cupons_zira
+// ══════════════════════════════════════════════════════════════
+
+// SQL para criar a tabela (exibido apenas na 1ª vez que não existe):
+// CREATE TABLE cupons_zira (
+//   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+//   codigo text NOT NULL UNIQUE,
+//   desconto numeric DEFAULT 0,
+//   preco_display numeric DEFAULT 0,
+//   link_kiwify text DEFAULT '',
+//   descricao text DEFAULT '',
+//   plano text DEFAULT 'mensal',
+//   ativo boolean DEFAULT true,
+//   usos integer DEFAULT 0,
+//   criado_em timestamptz DEFAULT now()
+// );
+
+var _cpEditId = null;
+
+async function cpCarregar() {
+    const el = document.getElementById('tabela-cupons-body');
+    if (!el) return;
+    el.innerHTML = '<div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando cupons...</span></div>';
+    try {
+        const tok = SA_TOKEN || SA_KEY;
+        const r = await fetch(SA_URL + '/rest/v1/cupons_zira?select=*&order=criado_em.desc', {
+            headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + tok }
+        });
+        if (r.status === 404 || r.status === 400) {
+            // Tabela não existe ainda — mostra botão de criar
+            el.innerHTML = `
+              <div style="padding:40px;text-align:center;">
+                <div style="font-size:36px;margin-bottom:12px;opacity:.3;">🎫</div>
+                <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Tabela de cupons não encontrada</div>
+                <div style="font-size:13px;color:var(--muted2);margin-bottom:20px;">Execute o SQL abaixo no Supabase para criar a tabela e o cupom ZIRA27 inicial.</div>
+                <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:18px;text-align:left;font-family:monospace;font-size:12px;color:var(--gold);white-space:pre-wrap;margin-bottom:16px;">${cpSQLCriar()}</div>
+                <button class="btn-secondary" onclick="navigator.clipboard.writeText(document.querySelector('#tabela-cupons-body pre, #tabela-cupons-body div[style*=monospace]').textContent||'').then(()=>toast('SQL copiado!'))">
+                  <i class="fas fa-copy"></i> Copiar SQL
+                </button>
+              </div>`;
+            return;
+        }
+        const rows = await r.json();
+        if (!rows || !rows.length) {
+            el.innerHTML = `<div class="vazio"><div class="vazio-icon">🎫</div>Nenhum cupom cadastrado ainda. Clique em "Novo Cupom" para criar o primeiro.</div>`;
+            return;
+        }
+        el.innerHTML = `
+          <table class="tabela">
+            <thead><tr>
+              <th>Código</th>
+              <th>Descrição</th>
+              <th>Desconto</th>
+              <th>Preço exibido</th>
+              <th>Plano</th>
+              <th>Usos</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr></thead>
+            <tbody>${rows.map(c => `
+              <tr>
+                <td><code style="font-family:monospace;font-size:13px;font-weight:800;color:var(--gold);background:rgba(201,168,76,.08);padding:3px 8px;border-radius:6px;">${c.codigo}</code></td>
+                <td style="font-size:12px;color:var(--muted2);">${c.descricao || '—'}</td>
+                <td style="font-weight:700;">R$ ${parseFloat(c.desconto||0).toFixed(2).replace('.',',')}</td>
+                <td style="font-weight:700;color:var(--green);">R$ ${parseFloat(c.preco_display||0).toFixed(2).replace('.',',')}</td>
+                <td><span style="font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(37,99,235,.1);color:#60a5fa;font-weight:700;">${c.plano||'mensal'}</span></td>
+                <td style="color:var(--muted2);">${c.usos||0}</td>
+                <td>${c.ativo ? '<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(22,163,74,.1);color:#4ade80;font-weight:700;">Ativo</span>' : '<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:rgba(220,38,38,.1);color:#f87171;font-weight:700;">Inativo</span>'}</td>
+                <td>
+                  <div style="display:flex;gap:6px;">
+                    <button class="btn-ghost" onclick="cpAbrirModal(${JSON.stringify(c).replace(/"/g,'&quot;')})" title="Editar"><i class="fas fa-pen"></i></button>
+                    <button class="btn-ghost" onclick="cpExcluir('${c.id}','${c.codigo}')" title="Excluir" style="color:var(--red);"><i class="fas fa-trash"></i></button>
+                  </div>
+                </td>
+              </tr>`).join('')}
+            </tbody>
+          </table>`;
+    } catch(e) {
+        el.innerHTML = `<div class="vazio">Erro ao carregar cupons: ${e.message}</div>`;
+    }
+}
+
+function cpSQLCriar() {
+    return `CREATE TABLE IF NOT EXISTS cupons_zira (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  codigo text NOT NULL UNIQUE,
+  desconto numeric DEFAULT 0,
+  preco_display numeric DEFAULT 0,
+  link_kiwify text DEFAULT '',
+  descricao text DEFAULT '',
+  plano text DEFAULT 'mensal',
+  ativo boolean DEFAULT true,
+  usos integer DEFAULT 0,
+  criado_em timestamptz DEFAULT now()
+);
+
+-- Desabilitar RLS (anon pode ler para validar no cadastro)
+ALTER TABLE cupons_zira DISABLE ROW LEVEL SECURITY;
+
+-- Inserir cupom ZIRA27 inicial
+INSERT INTO cupons_zira (codigo, desconto, preco_display, link_kiwify, descricao, plano, ativo)
+VALUES ('ZIRA27', 120.00, 27.00, 'https://pay.kiwify.com.br/q0y68Kr', 'Cupom de lançamento — 1º mês por R$ 27', 'mensal', true)
+ON CONFLICT (codigo) DO NOTHING;`;
+}
+
+function cpAbrirModal(cupom) {
+    _cpEditId = cupom ? cupom.id : null;
+    const titulo = document.getElementById('modal-cupom-titulo');
+    titulo.textContent = cupom ? 'Editar Cupom' : 'Novo Cupom';
+
+    document.getElementById('mc-id').value           = cupom ? cupom.id : '';
+    document.getElementById('mc-codigo').value        = cupom ? cupom.codigo : '';
+    document.getElementById('mc-desconto').value      = cupom ? cupom.desconto : '';
+    document.getElementById('mc-preco-display').value = cupom ? cupom.preco_display : '';
+    document.getElementById('mc-link-kiwify').value   = cupom ? cupom.link_kiwify : '';
+    document.getElementById('mc-descricao').value     = cupom ? cupom.descricao : '';
+    document.getElementById('mc-plano').value         = cupom ? (cupom.plano || 'mensal') : 'mensal';
+    document.getElementById('mc-ativo').value         = cupom ? String(cupom.ativo) : 'true';
+
+    document.getElementById('modal-cupom-erro').style.display = 'none';
+    document.getElementById('modal-cupom-ok').style.display   = 'none';
+    document.getElementById('modal-cupom').style.display      = 'flex';
+}
+
+function cpFecharModal() {
+    document.getElementById('modal-cupom').style.display = 'none';
+    _cpEditId = null;
+}
+
+async function cpSalvar() {
+    const btn      = document.getElementById('modal-cupom-btn');
+    const erroEl   = document.getElementById('modal-cupom-erro');
+    const okEl     = document.getElementById('modal-cupom-ok');
+    erroEl.style.display = 'none';
+    okEl.style.display   = 'none';
+
+    const codigo       = document.getElementById('mc-codigo').value.trim().toUpperCase();
+    const desconto     = parseFloat(document.getElementById('mc-desconto').value) || 0;
+    const precoDisplay = parseFloat(document.getElementById('mc-preco-display').value) || 0;
+    const linkKiwify   = document.getElementById('mc-link-kiwify').value.trim();
+    const descricao    = document.getElementById('mc-descricao').value.trim();
+    const plano        = document.getElementById('mc-plano').value;
+    const ativo        = document.getElementById('mc-ativo').value === 'true';
+
+    if (!codigo)     { erroEl.textContent = 'Código é obrigatório.'; erroEl.style.display = 'block'; return; }
+    if (!linkKiwify) { erroEl.textContent = 'Link da Kiwify é obrigatório.'; erroEl.style.display = 'block'; return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Salvando...';
+
+    const body = { codigo, desconto, preco_display: precoDisplay, link_kiwify: linkKiwify, descricao, plano, ativo };
+    const tok  = SA_TOKEN || SA_KEY;
+    const hdrs = {
+        'apikey': SA_KEY, 'Authorization': 'Bearer ' + tok,
+        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+    };
+
+    try {
+        let r;
+        if (_cpEditId) {
+            r = await fetch(SA_URL + '/rest/v1/cupons_zira?id=eq.' + _cpEditId, {
+                method: 'PATCH', headers: hdrs, body: JSON.stringify(body)
+            });
+        } else {
+            r = await fetch(SA_URL + '/rest/v1/cupons_zira', {
+                method: 'POST', headers: { ...hdrs, 'Prefer': 'return=minimal,resolution=merge-duplicates' },
+                body: JSON.stringify(body)
+            });
+        }
+        if (!r.ok) {
+            const txt = await r.text();
+            if (txt.includes('23505') || txt.includes('unique')) throw new Error('Já existe um cupom com esse código.');
+            throw new Error(txt.substring(0, 120));
+        }
+        okEl.textContent = _cpEditId ? '✓ Cupom atualizado!' : '✓ Cupom criado com sucesso!';
+        okEl.style.display = 'block';
+        toast(_cpEditId ? 'Cupom atualizado!' : 'Cupom criado!');
+        setTimeout(() => { cpFecharModal(); cpCarregar(); }, 1200);
+    } catch(e) {
+        erroEl.textContent = e.message;
+        erroEl.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Salvar Cupom';
+    }
+}
+
+async function cpExcluir(id, codigo) {
+    if (!confirm(`Excluir o cupom "${codigo}"? Essa ação não pode ser desfeita.`)) return;
+    const tok = SA_TOKEN || SA_KEY;
+    try {
+        const r = await fetch(SA_URL + '/rest/v1/cupons_zira?id=eq.' + id, {
+            method: 'DELETE',
+            headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + tok, 'Prefer': 'return=minimal' }
+        });
+        if (!r.ok) throw new Error(await r.text());
+        toast('Cupom excluído.');
+        cpCarregar();
+    } catch(e) {
+        toast('Erro ao excluir: ' + e.message, false);
+    }
 }
 
 // ══════════════════════════════════════════════════════════════
