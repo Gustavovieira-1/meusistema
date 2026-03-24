@@ -675,7 +675,7 @@ async function init(){
             if (cached.db.fidelidadeCfg) {
                 try { localStorage.setItem('f_fidelidade_cfg', JSON.stringify(cached.db.fidelidadeCfg)); } catch(e) {}
             }
-            renderHeader();
+            renderHeader(cached.db.fidelidadeCfg || null);
             renderCardapio();
             pixelInicializar(db.integracoes);
             // Atualiza em background silenciosamente
@@ -842,14 +842,14 @@ async function init(){
                     }
                 }
                 aberta = !lojaPausada && !lojaForaHorario;
-                renderHeader();
+                renderHeader(fidelGetCfg());
             } catch(e) {}
         }, 60000);
 
         // Tentar conectar ao servidor local em background (impressora/SSE)
         if (SERVIDOR) {
             fetch(SERVIDOR+'/cardapio/dados').then(r=>r.json()).then(d=>{
-                if(d&&d.cfg) { db.cfg=d.cfg; db.txCfg=d.txCfg||db.txCfg; renderHeader(); }
+                if(d&&d.cfg) { db.cfg=d.cfg; db.txCfg=d.txCfg||db.txCfg; renderHeader(fidelGetCfg()); }
             }).catch(()=>{});
         }
 
