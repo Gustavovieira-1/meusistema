@@ -626,10 +626,16 @@ function cupomGetDesconto(sub, taxa) {
 
 async function supaFetch(path) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
+    const timeout = setTimeout(() => controller.abort(), 8000);
     try {
         const r = await fetch(SUPA_URL + '/rest/v1/' + path, {
-            headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Connection': 'keep-alive'},
+            headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': 'Bearer ' + SUPA_KEY,
+                'Accept': 'application/json',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive'
+            },
             signal: controller.signal
         });
         if (!r.ok) throw new Error('Supa ' + r.status);
@@ -648,7 +654,7 @@ async function init(){
     // Se já visitou antes, renderiza do cache imediatamente enquanto
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
-    const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+    const CACHE_TTL = 30 * 60 * 1000; // 30 minutos
     const CACHE_VER = 3; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
@@ -711,31 +717,34 @@ async function init(){
         if (!restRows) restRows = [{ id: REST_ID, nome: '', slug: REST_SLUG, ativo: true }];
         const rest = restRows[0];
 
-        // Verificação de pagamento + cardápio em paralelo (não mais sequencial)
-        const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
-            supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
-            supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
-            supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
-            supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=*'),
-            supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
-            supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
-            supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
-            supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
-            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
+        // Carrega cardápio + config em paralelo. Pagamento checado em seguida (não bloqueia render).
+        const [cats, prods, comps, cfgRows, txRows, horRows, fidRows] = await Promise.all([
+            supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=id,nome,ordem'),
+            supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=id,nome,preco,descricao,imagem,categoria_nome,complementos'),
+            supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=id,titulo,tipo,opcoes'),
+            supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=nome_marca,nome_unidade,cidade,logo,capa,valor_minimo,taxa_entrega,pausada&limit=1'),
+            supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
+            supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
+            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=ativo,reais_por_ponto,pontos_por_real,desconto_ativo,pontos_desc,reais_desc,produto_ativo,resgates&limit=1')
         ]);
-
-        // Verifica pagamento com os dados que já vieram no Promise.all
-        if (pgtoRows && pgtoRows[0]) {
-            const pgto = pgtoRows[0];
-            const hoje = new Date(); hoje.setHours(0,0,0,0);
-            const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
-            const status = pgto.status_pgto;
-            if (status === 'inadimplente' || status === 'cancelado' ||
-                (status === 'trial' && venc && hoje > venc)) {
-                document.getElementById('cardapio-bloqueio').style.display = 'flex';
-                return;
+        // Pagamento e integrações em background — não bloqueiam o render
+        const pgtoRows = [null]; // checado abaixo assincronamente
+        const intRows = [null];
+        Promise.all([
+            supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
+            supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1')
+        ]).then(function([_pgto, _int]) {
+            // Verifica bloqueio em background
+            if (_pgto && _pgto[0]) {
+                const pgto = _pgto[0], hoje = new Date(); hoje.setHours(0,0,0,0);
+                const venc = pgto.vencimento ? new Date(pgto.vencimento+'T00:00:00') : null;
+                if (pgto.status_pgto==='inadimplente'||pgto.status_pgto==='cancelado'||(pgto.status_pgto==='trial'&&venc&&hoje>venc))
+                    document.getElementById('cardapio-bloqueio').style.display='flex';
             }
-        }
+            if (_int && _int[0]) { db.integracoes = _int[0].dados||{}; pixelInicializar(db.integracoes); }
+        }).catch(function(){});
+
+        // Pagamento verificado em background (não bloqueia render)
 
         db.categories = (cats||[]).map(c => ({id: c.id, name: c.nome, active: true}));
         db.prods      = (prods||[]).map(p => {
@@ -765,7 +774,7 @@ async function init(){
             taxaPadrao:    parseFloat(_tx.taxaPadrao || _tx.taxa_padrao || 0)
         };
         db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados || []) : [];
-        db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados || {}) : {};
+        db.integracoes = {}; // preenchido em background pelo Promise de integrações
         pixelInicializar(db.integracoes);
 
         // Salvar fidelidade_config no localStorage para uso offline/carrinho
