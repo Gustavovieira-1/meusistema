@@ -636,9 +636,16 @@ async function init(){
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+    const CACHE_VER = 2; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
-        if (cached && cached.ts && (Date.now() - cached.ts) < CACHE_TTL && cached.db) {
+        const cacheValido = cached
+            && cached.ts
+            && (Date.now() - cached.ts) < CACHE_TTL
+            && cached.db
+            && (cached.ver || 0) >= CACHE_VER
+            && cached.db.fidelidadeCfg !== undefined;
+        if (cacheValido) {
             // Renderiza instantâneo do cache
             REST_ID = cached.restId;
             db.categories  = cached.db.categories;
@@ -651,7 +658,7 @@ async function init(){
             lojaPausada    = !!cached.db.lojaPausada;
             lojaForaHorario = !!cached.db.lojaForaHorario;
             aberta         = !lojaPausada && !lojaForaHorario;
-            // Restaura config de fidelidade do cache para pill aparecer corretamente
+            // Restaura config de fidelidade para pill aparecer corretamente desde o inicio
             if (cached.db.fidelidadeCfg) {
                 try { localStorage.setItem('f_fidelidade_cfg', JSON.stringify(cached.db.fidelidadeCfg)); } catch(e) {}
             }
@@ -662,6 +669,8 @@ async function init(){
             _initBackground(CACHE_KEY);
             return;
         }
+        // Cache desatualizado — remove para forcar recarregamento limpo
+        if (cached) localStorage.removeItem(CACHE_KEY);
     } catch(e) {}
     // ── SEM CACHE: carregamento normal ───────────────────────────
 
@@ -769,6 +778,7 @@ async function init(){
             const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
             localStorage.setItem(_cacheKey2, JSON.stringify({
                 ts: Date.now(),
+                ver: 2,
                 restId: REST_ID,
                 db: {
                     categories: db.categories,
@@ -914,7 +924,7 @@ async function _initBackground(cacheKey) {
         // Salva cache atualizado
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
-                ts: Date.now(), restId: REST_ID,
+                ts: Date.now(), ver: 2, restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
