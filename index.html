@@ -291,7 +291,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
     </div>
   </div>
 
-  <!-- Info pills -->
+  <!-- Info pills: Entrega | Taxa | Pontos (pontos oculto se fidelidade inativa) -->
   <div class="info-grid" id="info-grid">
     <div class="info-pill"><div class="info-val" id="info-entrega">-- min</div><div class="info-lbl">Entrega</div></div>
     <div class="info-pill" id="info-taxa-pill">
@@ -303,7 +303,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       <div class="fidel-pill-lbl">Pontos</div>
     </div>
   </div>
-  <!-- Pre-init pills: lê localStorage antes do JS principal para evitar flash -->
+  <!-- Pre-init: mostra pontos instantaneamente se fidelidade já está no localStorage -->
   <script>
   (function(){
     try {
@@ -312,7 +312,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
         var rpp = fc.reaisPorPonto || 1, ppr = fc.pontosPorReal || 1;
         document.getElementById('info-pontos-rate').textContent = 'R$' + rpp + ' = ' + ppr + 'pt';
         document.getElementById('info-pontos-pill').style.display = '';
-        document.getElementById('info-taxa-pill').style.display = 'none';
+        // Taxa continua visível — os dois aparecem juntos
       }
     } catch(e) {}
   })();
@@ -767,10 +767,6 @@ async function init(){
             };
             localStorage.setItem('f_fidelidade_cfg', JSON.stringify(_fidCfgNow));
         }
-        console.log('[DEBUG FIDELIDADE] fidRows bruto:', JSON.stringify(fidRows && fidRows[0]));
-        console.log('[DEBUG FIDELIDADE] _fidCfgNow processado:', JSON.stringify(_fidCfgNow));
-        console.log('[DEBUG TAXA] txCfg:', JSON.stringify(db.txCfg));
-        console.log('[DEBUG TAXA] cfg.taxaEntrega:', db.cfg && db.cfg.taxaEntrega);
 
         // Verificar se loja está aberta
         lojaPausada = !!cfg.pausada;
@@ -792,17 +788,6 @@ async function init(){
         }
         aberta = !lojaPausada && !lojaForaHorario;
 
-        // DEBUG TEMPORÁRIO — remover após diagnóstico
-        (function() {
-            var dbg = document.createElement('div');
-            dbg.id = 'debug-banner';
-            dbg.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#1e293b;color:#fff;font-size:11px;padding:6px 12px;z-index:99999;font-family:monospace;';
-            var fidAtivo = _fidCfgNow ? _fidCfgNow.ativo : 'null (sem fidRows)';
-            var taxa = (db.txCfg && db.txCfg.taxaPadrao) || (db.cfg && db.cfg.taxaEntrega) || 0;
-            dbg.textContent = 'DEBUG: fid.ativo=' + fidAtivo + ' | taxa=' + taxa + ' | rpp=' + (_fidCfgNow && _fidCfgNow.reaisPorPonto) + ' | ppr=' + (_fidCfgNow && _fidCfgNow.pontosPorReal);
-            document.body.appendChild(dbg);
-            setTimeout(function(){ var el=document.getElementById('debug-banner'); if(el) el.remove(); }, 15000);
-        })();
         renderHeader(_fidCfgNow); renderCardapio();
 
         // Salva cache para próxima visita instantânea
@@ -1091,13 +1076,13 @@ function renderHeader(fidCfgOverride){
         var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
         taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
     }
-    // Pill de fidelidade — se ativo, substitui pill de taxa
+    // Pill de fidelidade — aparece ao lado da taxa (ambos visíveis ao mesmo tempo)
     var fidCfg = fidCfgOverride || fidelGetCfg();
     if(fidCfg && fidCfg.ativo){
         var rpp=fidCfg.reaisPorPonto||1, ppr=fidCfg.pontosPorReal||1;
         document.getElementById('info-pontos-rate').textContent='R$'+rpp+' = '+ppr+'pt';
         document.getElementById('info-pontos-pill').style.display='';
-        taxaPill.style.display='none';
+        taxaPill.style.display=''; // taxa continua aparecendo junto
     } else {
         document.getElementById('info-pontos-pill').style.display='none';
         taxaPill.style.display='';
