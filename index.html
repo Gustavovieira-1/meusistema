@@ -649,7 +649,7 @@ async function init(){
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
-    const CACHE_VER = 2; // incrementar aqui invalida cache antigo em todos os clientes
+    const CACHE_VER = 3; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
         const cacheValido = cached
@@ -686,18 +686,30 @@ async function init(){
         if (cached) localStorage.removeItem(CACHE_KEY);
     } catch(e) {}
     // ── SEM CACHE: carregamento normal ───────────────────────────
+    // Tenta recuperar REST_ID do cache de slug para pular 1 roundtrip
+    try {
+        const _slugCache = JSON.parse(localStorage.getItem('zira_slug_' + REST_SLUG) || 'null');
+        if (_slugCache && _slugCache.id && _slugCache.ts && (Date.now() - _slugCache.ts) < 86400000) {
+            REST_ID = _slugCache.id;
+        }
+    } catch(e) {}
 
     try{
-        // Buscar restaurante pelo slug
+        // Se não temos REST_ID em cache, buscar restaurante pelo slug
         let restRows;
-        if (REST_SLUG) {
-            restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
-        } else {
-            restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1&order=id.asc');
+        if (!REST_ID) {
+            if (REST_SLUG) {
+                restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
+            } else {
+                restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1&order=id.asc');
+            }
+            if (!restRows || !restRows[0]) throw new Error('Restaurante não encontrado');
+            REST_ID = restRows[0].id;
+            // Salva REST_ID no cache por 24h para pular esse roundtrip na próxima visita
+            try { localStorage.setItem('zira_slug_' + REST_SLUG, JSON.stringify({id: REST_ID, ts: Date.now()})); } catch(e) {}
         }
-        if (!restRows || !restRows[0]) throw new Error('Restaurante não encontrado');
+        if (!restRows) restRows = [{ id: REST_ID, nome: '', slug: REST_SLUG, ativo: true }];
         const rest = restRows[0];
-        REST_ID = rest.id;
 
         // Verificação de pagamento + cardápio em paralelo (não mais sequencial)
         const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
@@ -795,7 +807,7 @@ async function init(){
             const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
             localStorage.setItem(_cacheKey2, JSON.stringify({
                 ts: Date.now(),
-                ver: 2,
+                ver: 3,
                 restId: REST_ID,
                 db: {
                     categories: db.categories,
@@ -861,14 +873,17 @@ async function init(){
 // Atualização em background — roda após renderizar do cache
 async function _initBackground(cacheKey) {
     try {
-        let restRows;
-        if (REST_SLUG) {
-            restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
-        } else {
-            restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1&order=id.asc');
+        // REST_ID já está carregado do init principal — não precisa buscar de novo
+        if (!REST_ID) {
+            let restRows;
+            if (REST_SLUG) {
+                restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
+            } else {
+                restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1&order=id.asc');
+            }
+            if (!restRows || !restRows[0]) return;
+            REST_ID = restRows[0].id;
         }
-        if (!restRows || !restRows[0]) return;
-        REST_ID = restRows[0].id;
 
         const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
             supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
@@ -948,7 +963,7 @@ async function _initBackground(cacheKey) {
         // Salva cache atualizado
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
-                ts: Date.now(), ver: 2, restId: REST_ID,
+                ts: Date.now(), ver: 3, restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
