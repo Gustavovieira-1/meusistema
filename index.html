@@ -294,16 +294,29 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
   <!-- Info pills -->
   <div class="info-grid" id="info-grid">
     <div class="info-pill"><div class="info-val" id="info-entrega">-- min</div><div class="info-lbl">Entrega</div></div>
-    <div class="info-pill fidel-pill" id="info-pontos-pill" style="display:none;">
-      <div class="fidel-pill-val" id="info-pontos-rate">R$1 = 1pt</div>
-      <div class="fidel-pill-lbl">Pontos</div>
-    </div>
     <div class="info-pill" id="info-taxa-pill">
       <div class="info-val" id="info-taxa">R$ --</div>
       <div class="info-lbl">Taxa</div>
     </div>
-    <div class="info-pill"><div class="info-val" id="info-minimo">--</div><div class="info-lbl">Mínimo</div></div>
+    <div class="info-pill fidel-pill" id="info-pontos-pill" style="display:none;">
+      <div class="fidel-pill-val" id="info-pontos-rate">R$1 = 1pt</div>
+      <div class="fidel-pill-lbl">Pontos</div>
+    </div>
   </div>
+  <!-- Pre-init pills: lê localStorage antes do JS principal para evitar flash -->
+  <script>
+  (function(){
+    try {
+      var fc = JSON.parse(localStorage.getItem('f_fidelidade_cfg') || 'null');
+      if (fc && fc.ativo) {
+        var rpp = fc.reaisPorPonto || 1, ppr = fc.pontosPorReal || 1;
+        document.getElementById('info-pontos-rate').textContent = 'R$' + rpp + ' = ' + ppr + 'pt';
+        document.getElementById('info-pontos-pill').style.display = '';
+        document.getElementById('info-taxa-pill').style.display = 'none';
+      }
+    } catch(e) {}
+  })();
+  </script>
 
   <div class="card-divider"></div>
 
@@ -1059,8 +1072,6 @@ function renderHeader(){
         var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
         taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
     }
-    var min=parseFloat(c.minPedido||0);
-    document.getElementById('info-minimo').textContent=min>0?money(min):'Sem mínimo';
     // Pill de fidelidade — se ativo, substitui pill de taxa
     var fidCfg=fidelGetCfg();
     if(fidCfg && fidCfg.ativo){
