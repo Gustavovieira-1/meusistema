@@ -1106,13 +1106,13 @@ function renderHeader(fidCfgOverride){
         var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
         taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
     }
-    // Pill de fidelidade — aparece ao lado da taxa (ambos visíveis ao mesmo tempo)
-    var fidCfg = fidCfgOverride || fidelGetCfg();
+    // Pill de fidelidade — fidCfgOverride tem prioridade, senão lê localStorage
+    var fidCfg = (fidCfgOverride && fidCfgOverride.ativo !== undefined) ? fidCfgOverride : fidelGetCfg();
     if(fidCfg && fidCfg.ativo){
         var rpp=fidCfg.reaisPorPonto||1, ppr=fidCfg.pontosPorReal||1;
         document.getElementById('info-pontos-rate').textContent='R$'+rpp+' = '+ppr+'pt';
         document.getElementById('info-pontos-pill').style.display='';
-        taxaPill.style.display=''; // taxa continua aparecendo junto
+        taxaPill.style.display='';
     } else {
         document.getElementById('info-pontos-pill').style.display='none';
         taxaPill.style.display='';
