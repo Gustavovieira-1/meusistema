@@ -1079,7 +1079,7 @@ function renderHeader(){
         var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
         taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
     }
-    // Pill de fidelidade — igual taxa: lê direto de db.fidelidade
+    // Pill de fidelidade
     var fid = db.fidelidade || {};
     if(fid.ativo === true){
         var rpp = parseFloat(fid.reaisPorPonto) || 1;
