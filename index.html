@@ -485,7 +485,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const SERVIDOR = window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'
     ? 'http://localhost:9876' : null;
 
-var db={categories:[],prods:[],comps:[],cfg:{},txCfg:{},fidelidade:null};
+var db={categories:[],prods:[],comps:[],cfg:{},txCfg:{},fidelidade:{}};
 var carrinho=[],prodAtual=null,qtdAtual=1,compsAtual={},tipoAtual='Entrega',pgtoAtual='Pix',aberta=true;
 var lojaPausada=false,lojaForaHorario=false; // separados para banner diferente
 var REST_SLUG = null;
@@ -648,7 +648,7 @@ async function init(){
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
-    const CACHE_VER = 9; // incrementar aqui invalida cache antigo em todos os clientes
+    const CACHE_VER = 10; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
         const cacheValido = cached
@@ -656,9 +656,7 @@ async function init(){
             && (Date.now() - cached.ts) < CACHE_TTL
             && cached.db
             && (cached.ver || 0) >= CACHE_VER
-            && cached.db.fidelidadeCfg !== undefined
-            && cached.db.fidelidadeCfg !== null
-            && cached.db.fidelidadeCfg.ativo !== undefined;
+            && cached.db.fidelidadeCfg !== undefined;
         if (cacheValido) {
             // Renderiza instantâneo do cache
             REST_ID = cached.restId;
@@ -808,7 +806,7 @@ async function init(){
             const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
             localStorage.setItem(_cacheKey2, JSON.stringify({
                 ts: Date.now(),
-                ver: 9,
+                ver: 10,
                 restId: REST_ID,
                 db: {
                     categories: db.categories,
@@ -958,7 +956,7 @@ async function _initBackground(cacheKey) {
         // Salva cache atualizado
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
-                ts: Date.now(), ver: 9, restId: REST_ID,
+                ts: Date.now(), ver: 10, restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
@@ -1081,16 +1079,17 @@ function renderHeader(){
         var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
         taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
     }
-    // Pill de fidelidade — lê de db.fidelidade (igual taxa lê de db.txCfg)
-    var fidCfg = db.fidelidade || fidelGetCfg();
-    if(fidCfg && fidCfg.ativo){
-        var rpp=fidCfg.reaisPorPonto||1, ppr=fidCfg.pontosPorReal||1;
-        document.getElementById('info-pontos-rate').textContent='R$'+rpp+' = '+ppr+'pt';
-        document.getElementById('info-pontos-pill').style.display='';
-        taxaPill.style.display='';
+    // Pill de fidelidade — igual taxa: lê direto de db.fidelidade
+    var fid = db.fidelidade || {};
+    if(fid.ativo === true){
+        var rpp = parseFloat(fid.reaisPorPonto) || 1;
+        var ppr = parseFloat(fid.pontosPorReal) || 1;
+        document.getElementById('info-pontos-rate').textContent = 'R$' + rpp + ' = ' + ppr + 'pt';
+        document.getElementById('info-pontos-pill').style.display = '';
+        taxaPill.style.display = '';
     } else {
-        document.getElementById('info-pontos-pill').style.display='none';
-        taxaPill.style.display='';
+        document.getElementById('info-pontos-pill').style.display = 'none';
+        taxaPill.style.display = '';
     }
 }
 
