@@ -2,64 +2,26 @@
 <html lang="pt-BR">
 <head>
 <script data-cfasync="false" type="text/javascript">
-/* Zira Pixel Loader */
-(function(){
-  var SB='https://oijcggqfcgjkgcaymjqx.supabase.co';
-  var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE0NzcsImV4cCI6MjA4ODMxNzQ3N30.URV7NROQ0wAGG_GzrS2yn2Kksxaefy4v4JJ49yRW51A';
-  function boot(pid){
-    if(!pid||!pid.trim())return;
-    var t=document.createElement('script');
-    t.async=true;
-    t.setAttribute('data-cfasync','false');
-    t.src='https://connect.facebook.net/en_US/fbevents.js';
-    t.onload=function(){
-      window.fbq=window.fbq||function(){(window._fbq=window._fbq||[]).push(arguments)};
-      fbq('init',pid.trim());
-      fbq('track','PageView');
-      fbq('track','ViewContent',{content_name:'Landing Page Zira Food',content_category:'Vendas'});
-      window._zpid=pid.trim();
-      // CTAs
-      document.querySelectorAll('a[href*="cadastro"]').forEach(function(a){
-        a.addEventListener('click',function(){fbq('track','InitiateCheckout',{content_name:'CTA Vendas',currency:'BRL'});});
-      });
-      // Lead 70%
-      var fl=false;
-      window.addEventListener('scroll',function(){
-        if(fl)return;
-        if((window.scrollY+window.innerHeight)/document.body.scrollHeight>=0.7){
-          fl=true;fbq('track','Lead',{content_name:'Scroll70',content_category:'Vendas'});
-        }
-      });
-      console.log('[Zira Pixel] vendas ativo:',pid.trim());
-    };
-    document.head.appendChild(t);
-  }
-  // Fetch com timeout manual para evitar hang
-  var done=false;
-  var timer=setTimeout(function(){if(!done){done=true;console.warn('[Zira Pixel] timeout');}},5000);
-  fetch(SB+'/rest/v1/tracking_config?id=eq.sistema&select=pixel_planos&limit=1',{
-    headers:{'apikey':KEY,'Authorization':'Bearer '+KEY},
-    cache:'no-store'
-  })
-  .then(function(r){
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    return r.text();
-  })
-  .then(function(t){
-    if(done)return;done=true;clearTimeout(timer);
-    try{
-      var d=JSON.parse(t);
-      var pid=(Array.isArray(d)&&d[0]&&d[0].pixel_planos)?d[0].pixel_planos:'';
-      if(pid)boot(pid);
-      else console.warn('[Zira Pixel] pixel_planos vazio. Resposta:',t.substring(0,120));
-    }catch(e){console.warn('[Zira Pixel] parse erro:',e.message,'| raw:',t.substring(0,120));}
-  })
-  .catch(function(e){
-    if(done)return;done=true;clearTimeout(timer);
-    console.warn('[Zira Pixel] fetch erro:',e.message);
+/* Zira Pixel Vendas */
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','489349017450364');
+fbq('track','PageView');
+fbq('track','ViewContent',{content_name:'Landing Page Zira Food',content_category:'Vendas'});
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('a[href*="cadastro"]').forEach(function(a){
+    a.addEventListener('click',function(){fbq('track','InitiateCheckout',{content_name:'CTA Vendas',currency:'BRL'});});
   });
-})();
+});
+var _zfl=false;
+window.addEventListener('scroll',function(){
+  if(_zfl)return;
+  if((window.scrollY+window.innerHeight)/document.body.scrollHeight>=0.7){
+    _zfl=true;fbq('track','Lead',{content_name:'Scroll70',content_category:'Vendas'});
+  }
+});
+console.log('[Zira Pixel] vendas OK');
 </script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=489349017450364&ev=PageView&noscript=1"/></noscript>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
