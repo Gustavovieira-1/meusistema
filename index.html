@@ -720,7 +720,7 @@ async function init(){
         const rest = restRows[0];
 
         // Verificação de pagamento + cardápio em paralelo (não mais sequencial)
-        const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
+        const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows, wppRows] = await Promise.all([
             supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
             supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
@@ -729,7 +729,8 @@ async function init(){
             supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
-            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
+            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('whatsapp_config?restaurante_id=eq.'+REST_ID+'&select=numero_restaurante&limit=1')
         ]);
 
         // Verifica pagamento com os dados que já vieram no Promise.all
@@ -775,6 +776,10 @@ async function init(){
         db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados || []) : [];
         db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados || {}) : {};
         pixelInicializar(db.integracoes);
+
+        // Salvar numero_restaurante do WhatsApp em db
+        db.wppNumero = (wppRows && wppRows[0] && wppRows[0].numero_restaurante) ? wppRows[0].numero_restaurante.replace(/\D/g,'') : '';
+        if (db.wppNumero.length === 10 || db.wppNumero.length === 11) db.wppNumero = '55' + db.wppNumero;
 
         // Salvar fidelidade em db (igual à taxa) e localStorage
         if (fidRows && fidRows[0]) {
@@ -889,7 +894,7 @@ async function _initBackground(cacheKey) {
             REST_ID = restRows[0].id;
         }
 
-        const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
+        const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows, wppRows] = await Promise.all([
             supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
             supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
@@ -898,7 +903,8 @@ async function _initBackground(cacheKey) {
             supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
-            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
+            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('whatsapp_config?restaurante_id=eq.'+REST_ID+'&select=numero_restaurante&limit=1')
         ]);
 
         // Verifica bloqueio
@@ -1269,7 +1275,8 @@ async function finalizarPedido(){
     var desc=fidelGetDesconto();
     var taxaFinal=tipoAtual==='Entrega'?(cupomAtual&&cupomAtual.tipo==='frete'?0:taxa):0;
     var descCupom=cupomGetDesconto(sub,taxa);
-    var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value:'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:cfg.cidade||'',subtotal:sub,taxaEntrega:taxaFinal,descontoPontos:desc,descontoCupom:descCupom,cupom:cupomAtual?cupomAtual.codigo:'',produtoBrindeNome:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoNome:''),produtoBrindeId:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoId:''),resgPontos:fidelResgSel,total:Math.max(0,sub+taxaFinal-desc-descCupom),items:carrinho.slice()};
+    var _totalFinal = Math.max(0, sub + taxaFinal - desc - descCupom);
+    var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value:'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:cfg.cidade||'',subtotal:sub,taxaEntrega:taxaFinal,descontoPontos:desc,descontoCupom:descCupom,cupom:cupomAtual?cupomAtual.codigo:'',produtoBrindeNome:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoNome:''),produtoBrindeId:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoId:''),resgPontos:fidelResgSel,total:_totalFinal,items:carrinho.slice()};
     var btn=document.getElementById('btn-fin');btn.disabled=true;btn.textContent='Enviando...';
     // Gerar número do pedido localmente
     const _numPed = 'B-' + Math.floor(100000 + Math.random() * 900000);
@@ -1430,16 +1437,8 @@ function enviarResumoWhatsapp() {
 
     var msg = encodeURIComponent(partes.join('\n'));
 
-    // Usa número do restaurante (salvo no admin) como destino
-    var numRest = '';
-    try {
-        var _wc = JSON.parse(localStorage.getItem('f_wpp_cfg_' + REST_ID) || 'null');
-        if (_wc && _wc.numeroRestaurante) numRest = _wc.numeroRestaurante.replace(/\D/g,'');
-    } catch(e) {}
-    // Se não tem número do restaurante configurado, tenta buscar do Supabase
-    var enviarPara = numRest;
-    if (enviarPara && (enviarPara.length === 10 || enviarPara.length === 11)) enviarPara = '55' + enviarPara;
-
+    // Usa número do restaurante buscado do Supabase no init
+    var enviarPara = db.wppNumero || '';
     window.open('https://wa.me/' + enviarPara + '?text=' + msg, '_blank');
     novoPedido();
 }
