@@ -8109,9 +8109,20 @@ async function supaCarregarConfigs() {
                 if (_sn) _sn.textContent = _cfgCarregada.nomeMarca;
                 document.title = _cfgCarregada.nomeMarca + ' — Admin';
             }
+            // Re-renderiza o formulário se estiver aberto (evita que o usuário veja campos vazios)
+            if (document.getElementById('sec-configuracoes') && document.getElementById('sec-configuracoes').classList.contains('active')) {
+                try { cfgInicializar(); } catch(e) {}
+            }
+            // Sempre atualiza os campos de limpeza (usados pelo cfgAplicarLimpeza em background)
+            try { cfgCarregarLimpeza(); } catch(e) {}
         }
-        if (horRows && horRows[0] && horRows[0].dados)
+        if (horRows && horRows[0] && horRows[0].dados) {
             localStorage.setItem('f_horarios', JSON.stringify(horRows[0].dados));
+            // Re-renderiza horários se estiver aberto
+            if (document.getElementById('sec-horarios') && document.getElementById('sec-horarios').classList.contains('active')) {
+                try { horInicializar(); } catch(e) {}
+            }
+        }
         if (fidRows && fidRows[0]) {
             const r = fidRows[0];
             localStorage.setItem('f_fidelidade_cfg', JSON.stringify({
@@ -10162,12 +10173,18 @@ function cfgSalvar() {
         document.title = obj.nomeMarca + ' — Admin';
     }
 
-    // Supabase
+    // Supabase — salva todos os campos relevantes + dados_extras completo
     supaUpsert('configuracoes', {
-        nome_marca: obj.nomeMarca, nome_unidade: obj.nomeUnidade,
-        logo: obj.logo, capa: obj.capa,
+        nome_marca:      obj.nomeMarca,
+        nome_unidade:    obj.nomeUnidade,
+        logo:            obj.logo,
+        capa:            obj.capa,
         delivery_minimo: obj.deliveryMinimo || 0,
-        pausada: false, dados_extras: obj
+        taxa_entrega:    obj.deliveryMinimo || 0,
+        tempo_entrega:   obj.retiradaMax    || 40,
+        tempo_retirada:  obj.retiradaMin    || 20,
+        pausada:         false,
+        dados_extras:    obj
     }, 'restaurante_id').catch(e => console.warn('Supa cfg:', e.message));
     cupToast('Configurações salvas!', '#16a34a');
 }
