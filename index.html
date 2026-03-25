@@ -485,7 +485,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const SERVIDOR = window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'
     ? 'http://localhost:9876' : null;
 
-var db={categories:[],prods:[],comps:[],cfg:{},txCfg:{}};
+var db={categories:[],prods:[],comps:[],cfg:{},txCfg:{},fidelidade:null};
 var carrinho=[],prodAtual=null,qtdAtual=1,compsAtual={},tipoAtual='Entrega',pgtoAtual='Pix',aberta=true;
 var lojaPausada=false,lojaForaHorario=false; // separados para banner diferente
 var REST_SLUG = null;
@@ -648,7 +648,7 @@ async function init(){
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
-    const CACHE_VER = 8; // incrementar aqui invalida cache antigo em todos os clientes
+    const CACHE_VER = 9; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
         const cacheValido = cached
@@ -779,8 +779,6 @@ async function init(){
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
             };
             localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade));
-        } else {
-            db.fidelidade = null;
         }
 
         // Verificar se loja está aberta
@@ -810,7 +808,7 @@ async function init(){
             const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
             localStorage.setItem(_cacheKey2, JSON.stringify({
                 ts: Date.now(),
-                ver: 8,
+                ver: 9,
                 restId: REST_ID,
                 db: {
                     categories: db.categories,
@@ -940,8 +938,6 @@ async function _initBackground(cacheKey) {
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
             };
             localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade));
-        } else {
-            db.fidelidade = null;
         }
         // Recalcula status da loja
         lojaPausada = !!cfg.pausada;
@@ -962,7 +958,7 @@ async function _initBackground(cacheKey) {
         // Salva cache atualizado
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
-                ts: Date.now(), ver: 8, restId: REST_ID,
+                ts: Date.now(), ver: 9, restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
