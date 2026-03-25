@@ -772,12 +772,24 @@ async function init(){
         if (fidRows && fidRows[0]) {
             const fr = fidRows[0];
             db.fidelidade = {
-                ativo: fr.ativo === true || fr.ativo === "true" || fr.ativo === 1, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
+                ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
                 descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
             };
             localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade));
         }
+
+        // DEBUG TEMPORARIO - barra vermelha mostra o que chegou do Supabase
+        (function() {
+            try {
+                var d = document.createElement('div');
+                d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:white;font-size:11px;padding:5px 8px;z-index:99999;font-family:monospace;word-break:break-all;';
+                var info = 'REST_ID=' + REST_ID + ' | fidRows=' + JSON.stringify(fidRows && fidRows[0] ? {ativo: fidRows[0].ativo, rpp: fidRows[0].reais_por_ponto} : null) + ' | db.fidelidade.ativo=' + (db.fidelidade && db.fidelidade.ativo);
+                d.textContent = info;
+                document.body.appendChild(d);
+                setTimeout(function(){ d.remove(); }, 20000);
+            } catch(e) {}
+        })();
 
         // Verificar se loja está aberta
         lojaPausada = !!cfg.pausada;
@@ -930,7 +942,7 @@ async function _initBackground(cacheKey) {
         if (fidRows && fidRows[0]) {
             const fr = fidRows[0];
             db.fidelidade = {
-                ativo: fr.ativo === true || fr.ativo === "true" || fr.ativo === 1, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
+                ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
                 descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
             };
@@ -1080,7 +1092,7 @@ function renderHeader(){
     }
     // Pill de fidelidade
     var fid = db.fidelidade || {};
-    if(fid && (fid.ativo === true || fid.ativo === "true" || fid.ativo === 1)){
+    if(fid && fid.ativo === true){
         var rpp = parseFloat(fid.reaisPorPonto) || 1;
         var ppr = parseFloat(fid.pontosPorReal) || 1;
         document.getElementById('info-pontos-rate').textContent = 'R$' + rpp + ' = ' + ppr + 'pt';
