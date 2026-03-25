@@ -2543,6 +2543,23 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             </div>
         </div>
 
+        <!-- NÚMERO WHATSAPP DO RESTAURANTE -->
+        <div style="background:white; border:1.5px solid #f1f5f9; border-radius:16px; padding:24px 28px; margin-bottom:20px;">
+            <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:4px;">Número do WhatsApp do restaurante</div>
+            <div style="font-size:12px; color:#94a3b8; margin-bottom:16px;">Quando o cliente clicar em "Enviar resumo no WhatsApp", o pedido será enviado para este número.</div>
+            <div style="display:flex; gap:10px; align-items:flex-end;">
+                <div style="flex:1;">
+                    <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:6px;">Número (com DDD)</label>
+                    <input id="wpp-numero-restaurante" type="tel" placeholder="Ex: 18997260619"
+                        style="width:100%; border:1.5px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:13px; font-family:inherit; outline:none; transition:.15s;"
+                        onfocus="this.style.borderColor='#25d366'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <button onclick="wppSalvarNumeroRestaurante()" style="background:#25d366; color:white; border:none; border-radius:10px; padding:10px 20px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; transition:.15s;" onmouseover="this.style.background='#1db954'" onmouseout="this.style.background='#25d366'">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+
         <!-- CONFIRMAÇÃO DE PEDIDO -->
         <div style="background:white; border:1.5px solid #f1f5f9; border-radius:16px; padding:24px 28px; margin-bottom:20px;">
             <div style="font-size:14px; font-weight:800; color:#1e293b; margin-bottom:4px;">Confirmação de pedido</div>
@@ -5564,16 +5581,17 @@ function wppSaveConfig(obj) {
 async function wppSalvarSupabase(obj) {
     if (!REST_ID) return;
     var row = {
-        ativar:         obj.ativar        || false,
-        pix_chave:      obj.pixChave      || '',
-        pix_titular:    obj.pixTitular    || '',
-        rodape:         obj.rodape        || '',
-        msg_preparo:    (obj.mensagens && obj.mensagens.preparo)    || '',
-        msg_pronto:     (obj.mensagens && obj.mensagens.pronto)     || '',
-        msg_entrega:    (obj.mensagens && obj.mensagens.entrega)    || '',
-        msg_finalizado: (obj.mensagens && obj.mensagens.finalizado) || '',
-        msg_cancelado:  (obj.mensagens && obj.mensagens.cancelado)  || '',
-        atualizado_em:  new Date().toISOString()
+        ativar:              obj.ativar             || false,
+        pix_chave:           obj.pixChave           || '',
+        pix_titular:         obj.pixTitular         || '',
+        rodape:              obj.rodape             || '',
+        numero_restaurante:  obj.numeroRestaurante  || '',
+        msg_preparo:         (obj.mensagens && obj.mensagens.preparo)    || '',
+        msg_pronto:          (obj.mensagens && obj.mensagens.pronto)     || '',
+        msg_entrega:         (obj.mensagens && obj.mensagens.entrega)    || '',
+        msg_finalizado:      (obj.mensagens && obj.mensagens.finalizado) || '',
+        msg_cancelado:       (obj.mensagens && obj.mensagens.cancelado)  || '',
+        atualizado_em:       new Date().toISOString()
     };
     try {
         await supaUpsert('whatsapp_config', row, 'restaurante_id');
@@ -5587,10 +5605,11 @@ async function wppCarregarSupabase() {
         if (!rows || !rows.length) return;
         var r = rows[0];
         var cfg = wppGetConfig();
-        cfg.ativar     = r.ativar     || false;
-        cfg.pixChave   = r.pix_chave  || '';
-        cfg.pixTitular = r.pix_titular|| '';
-        cfg.rodape     = r.rodape     || '';
+        cfg.ativar             = r.ativar              || false;
+        cfg.pixChave           = r.pix_chave           || '';
+        cfg.pixTitular         = r.pix_titular         || '';
+        cfg.rodape             = r.rodape              || '';
+        cfg.numeroRestaurante  = r.numero_restaurante  || '';
         cfg.mensagens  = {
             preparo:    r.msg_preparo    || '',
             pronto:     r.msg_pronto     || '',
@@ -5618,9 +5637,10 @@ async function wppInicializar() {
     set('wpp-msg-entrega',    msgs.entrega);
     set('wpp-msg-finalizado', msgs.finalizado);
     set('wpp-msg-cancelado',  msgs.cancelado);
-    set('wpp-pix-chave',   cfg.pixChave   || '');
-    set('wpp-pix-titular', cfg.pixTitular || '');
-    set('wpp-rodape',      cfg.rodape     || '');
+    set('wpp-pix-chave',            cfg.pixChave          || '');
+    set('wpp-pix-titular',          cfg.pixTitular        || '');
+    set('wpp-rodape',               cfg.rodape            || '');
+    set('wpp-numero-restaurante',   cfg.numeroRestaurante || '');
     var tog = document.getElementById('wpp-tog-ativar');
     if (tog) { if (cfg.ativar) tog.classList.remove('off'); else tog.classList.add('off'); }
     wppVerificarStatus();
@@ -5790,6 +5810,14 @@ async function wppDesconectar() {
     }
 }
 
+function wppSalvarNumeroRestaurante() {
+    var cfg = wppGetConfig();
+    cfg.numeroRestaurante = (document.getElementById('wpp-numero-restaurante') ||{}).value || '';
+    wppSaveConfig(cfg);
+    wppSalvarSupabase(cfg);
+    cupToast('Número salvo!', '#25d366');
+}
+
 function wppSalvarConfirmacao() {
     var cfg = wppGetConfig();
     cfg.pixChave   = (document.getElementById('wpp-pix-chave')   ||{}).value || '';
@@ -5800,12 +5828,10 @@ function wppSalvarConfirmacao() {
     cupToast('Configurações de confirmação salvas!', '#25d366');
 }
 
-async function wppEnviarConfirmacao(order) {
+function wppEnviarConfirmacao(order) {
     // Confirmação dispara sempre que WhatsApp conectado — independente do toggle de etapas
-    if (!order || !order.phone) return;
-    // Sempre busca config fresca do Supabase para garantir PIX atualizado
-    await wppCarregarSupabase();
     var cfg = wppGetConfig();
+    if (!order || !order.phone) return;
 
     var impCfg  = impGetConfig();
     var lojaCfg = cfgGetConfig();
