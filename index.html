@@ -1375,68 +1375,57 @@ function enviarResumoWhatsapp() {
     if (!p) { novoPedido(); return; }
 
     var cfg = db.cfg || {};
-    var tx  = db.txCfg || {};
     var nomeLoja = (cfg.nomeMarca || cfg.nomeUnidade || 'Restaurante').toUpperCase();
     var nomeCliente = p.client || 'Cliente';
+    var nl = '%0A';
+    var sep = nl + '------------------------------';
 
     // Monta itens
     var linhasItens = '';
     (p.items || []).forEach(function(item) {
-        linhasItens += '%0A*' + encodeURIComponent(item.name || '') + '*';
+        linhasItens += nl + '*' + (item.name || '') + '*';
         var comps = item.comps || [];
         comps.forEach(function(c) {
-            if (c.name) linhasItens += '%0A1x ' + encodeURIComponent(c.name) + (c.price > 0 ? ' - R$' + parseFloat(c.price).toFixed(2).replace('.',',') : '');
+            if (c.name) linhasItens += nl + '1x ' + c.name + (c.price > 0 ? ' - R$' + parseFloat(c.price).toFixed(2).replace('.',',') : '');
         });
-        if (item.obs) linhasItens += '%0AOBS: ' + encodeURIComponent(item.obs);
-        linhasItens += '%0AQuantidade: ' + (item.qtd || item.qty || 1);
-        linhasItens += '%0AValor: R$' + parseFloat((item.price||0) * (item.qtd||item.qty||1)).toFixed(2).replace('.',',');
-        linhasItens += '%0A------------------------------';
+        if (item.obs) linhasItens += nl + 'OBS: ' + item.obs;
+        linhasItens += nl + 'Quantidade: ' + (item.qtd || item.qty || 1);
+        linhasItens += nl + 'Valor: R$' + parseFloat((item.price||0) * (item.qtd||item.qty||1)).toFixed(2).replace('.',',');
+        linhasItens += sep;
     });
 
     // Endereço
     var endLine = '';
     if (p.tipo === 'Entrega') {
         var parts = [p.address, p.bairro, p.cidade].filter(Boolean);
-        endLine = encodeURIComponent(parts.join(', '));
-        if (p.complemento) endLine += encodeURIComponent(', Compl: ' + p.complemento);
+        endLine = parts.join(', ');
+        if (p.complemento) endLine += ', Compl: ' + p.complemento;
     } else {
-        endLine = encodeURIComponent(p.tipo || 'Retirada');
+        endLine = p.tipo || 'Retirada';
     }
 
-    var msg = encodeURIComponent(nomeCliente + ' !
-');
-    msg += encodeURIComponent('Seu pedido na *' + nomeLoja + '* foi recebido. 🎉
-');
-    msg += encodeURIComponent('Meu pedido #' + (p.id||'') + '
-');
-    msg += encodeURIComponent('------------------------------');
-    msg += linhasItens;
-    msg += encodeURIComponent('
-Nome: ' + nomeCliente);
-    msg += encodeURIComponent('
-------------------------------');
-    msg += encodeURIComponent('
-Celular: ' + (p.phone||''));
-    msg += encodeURIComponent('
-------------------------------');
-    msg += encodeURIComponent('
-Forma de Pagamento: ' + (p.pagamento||''));
-    msg += encodeURIComponent('
-------------------------------');
-    msg += encodeURIComponent('
-Endereço: ') + endLine;
-    msg += encodeURIComponent('
-------------------------------');
-    msg += encodeURIComponent('
-Subtotal: R$' + parseFloat(p.subtotal||p.total||0).toFixed(2).replace('.',','));
+    var partes = [];
+    partes.push(nomeCliente + ' !');
+    partes.push('Seu pedido na *' + nomeLoja + '* foi recebido. \u{1F389}');
+    partes.push('Meu pedido #' + (p.id||''));
+    partes.push('------------------------------');
+    partes.push(linhasItens.replace(/%0A/g, '\n'));
+    partes.push('Nome: ' + nomeCliente);
+    partes.push('------------------------------');
+    partes.push('Celular: ' + (p.phone||''));
+    partes.push('------------------------------');
+    partes.push('Forma de Pagamento: ' + (p.pagamento||''));
+    partes.push('------------------------------');
+    partes.push('Endereco: ' + endLine);
+    partes.push('------------------------------');
+    partes.push('Subtotal: R$' + parseFloat(p.subtotal||p.total||0).toFixed(2).replace('.',','));
     if (parseFloat(p.taxaEntrega||0) > 0) {
-        msg += encodeURIComponent('
-Taxa de entrega: R$' + parseFloat(p.taxaEntrega).toFixed(2).replace('.',','));
+        partes.push('Taxa de entrega: R$' + parseFloat(p.taxaEntrega).toFixed(2).replace('.',','));
     }
-    msg += encodeURIComponent('
-Valor Total: R$' + parseFloat(p.total||0).toFixed(2).replace('.',','));
+    partes.push('Valor Total: R$' + parseFloat(p.total||0).toFixed(2).replace('.',','));
 
-    // Número do restaurante (do whatsapp_config se disponível, senão abre sem número)
+    var msg = encodeURIComponent(partes.join('\n'));
+
     var num = (p.phone || '').replace(/\D/g,'');
     if (num.length === 10 || num.length === 11) num = '55' + num;
 
