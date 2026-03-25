@@ -1780,20 +1780,15 @@ footer {
     </div>
   </div>
 
-<!-- ══════════════════════════════════════════════════════════════
-     RASTREAMENTO AVANÇADO — Meta Pixel (Página de Vendas)
-     Pixel ID carregado dinamicamente via tracking_config (Supabase)
-     ══════════════════════════════════════════════════════════════ -->
+<!-- PIXEL META - RASTREAMENTO ZIRA -->
 <script>
 (function() {
   var SB_URL = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
   var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE0NzcsImV4cCI6MjA4ODMxNzQ3N30.URV7NROQ0wAGG_GzrS2yn2Kksxaefy4v4JJ49yRW51A';
 
-  function injetarPixel(pixelId) {
-    if (!pixelId || pixelId.trim() === '') {
-      console.log('[Pixel Vendas] Nenhum ID configurado');
-      return;
-    }
+  function loadPixel(pixelId) {
+    if (!pixelId || String(pixelId).trim() === '') return;
+    var pid = String(pixelId).trim();
     !function(f,b,e,v,n,t,s){
       if(f.fbq)return;n=f.fbq=function(){n.callMethod?
       n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -1802,61 +1797,43 @@ footer {
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)
     }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-
-    fbq('init', pixelId);
+    fbq('init', pid);
     fbq('track', 'PageView');
-    fbq('track', 'ViewContent', {
-      content_name: 'Landing Page Zira Food',
-      content_category: 'Vendas'
-    });
-
-    // Noscript fallback
+    fbq('track', 'ViewContent', { content_name: 'Landing Page Zira Food', content_category: 'Vendas' });
     var ns = document.createElement('noscript');
-    ns.innerHTML = '<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=' + pixelId + '&ev=PageView&noscript=1"/>';
+    ns.innerHTML = '<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id='+pid+'&ev=PageView&noscript=1"/>';
     document.body.appendChild(ns);
-
-    window._ziraPixelId = pixelId;
-
-    // InitiateCheckout ao clicar em qualquer CTA que leva ao cadastro
-    document.querySelectorAll('a[href*="cadastro"]').forEach(function(el) {
-      el.addEventListener('click', function() {
-        if (window.fbq) fbq('track', 'InitiateCheckout', {
-          content_name: 'CTA Ir para Cadastro',
-          content_category: 'Vendas'
-        });
-      });
+    window._ziraPixelId = pid;
+    document.querySelectorAll('a[href*="cadastro"]').forEach(function(a){
+      a.addEventListener('click', function(){ if(window.fbq) fbq('track','InitiateCheckout',{content_name:'CTA Vendas',currency:'BRL'}); });
     });
-
-    // Lead ao rolar 70% da página
-    var leadDisparado = false;
-    window.addEventListener('scroll', function() {
-      if (leadDisparado) return;
-      var pct = (window.scrollY + window.innerHeight) / document.body.scrollHeight;
-      if (pct >= 0.70) {
-        leadDisparado = true;
-        fbq('track', 'Lead', {
-          content_name: 'Scroll 70pct Landing Page',
-          content_category: 'Engajamento'
-        });
+    var firedLead = false;
+    window.addEventListener('scroll', function(){
+      if(firedLead) return;
+      if((window.scrollY + window.innerHeight) / document.body.scrollHeight >= 0.7){
+        firedLead = true;
+        if(window.fbq) fbq('track','Lead',{content_name:'Scroll 70pct',content_category:'Vendas'});
       }
     });
-
-    console.log('[Pixel Vendas] Iniciado:', pixelId);
+    console.log('[Zira Pixel Vendas] OK -', pid);
   }
 
-  // Busca pixel_planos da tabela tracking_config
   fetch(SB_URL + '/rest/v1/tracking_config?id=eq.sistema&select=pixel_planos&limit=1', {
     headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
   })
-  .then(function(r){ return r.json(); })
-  .then(function(rows){
-    var pid = (rows && rows[0] && rows[0].pixel_planos) ? rows[0].pixel_planos.trim() : '';
-    injetarPixel(pid);
+  .then(function(r) { return r.text(); })
+  .then(function(txt) {
+    try {
+      var rows = JSON.parse(txt);
+      var pid = (Array.isArray(rows) && rows[0] && rows[0].pixel_planos) ? rows[0].pixel_planos : '';
+      loadPixel(pid);
+    } catch(e) {
+      console.warn('[Zira Pixel Vendas] Parse error:', e.message);
+    }
   })
-  .catch(function(e){ console.warn('[Pixel Vendas] Erro ao carregar config:', e); });
+  .catch(function(e) { console.warn('[Zira Pixel Vendas] Fetch error:', e.message); });
 })();
 </script>
-
 </footer>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">
@@ -1893,7 +1870,8 @@ function setFeat(el, key) {
 // FAQ
 function faqToggle(el) {
   const item = el.parentElement;
-  const was = item.classList.contains('open');
+  const was = item.classList.contains(
+'open');
   if (was) item.classList.remove('open');
   else item.classList.add('open');
 }
