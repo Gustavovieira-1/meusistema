@@ -5800,10 +5800,12 @@ function wppSalvarConfirmacao() {
     cupToast('Configurações de confirmação salvas!', '#25d366');
 }
 
-function wppEnviarConfirmacao(order) {
+async function wppEnviarConfirmacao(order) {
     // Confirmação dispara sempre que WhatsApp conectado — independente do toggle de etapas
-    var cfg = wppGetConfig();
     if (!order || !order.phone) return;
+    // Sempre busca config fresca do Supabase para garantir PIX atualizado
+    await wppCarregarSupabase();
+    var cfg = wppGetConfig();
 
     var impCfg  = impGetConfig();
     var lojaCfg = cfgGetConfig();
