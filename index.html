@@ -648,7 +648,7 @@ async function init(){
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
-    const CACHE_VER = 4; // incrementar aqui invalida cache antigo em todos os clientes
+    const CACHE_VER = 5; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
         const cacheValido = cached
@@ -674,7 +674,7 @@ async function init(){
             if (cached.db.fidelidadeCfg) {
                 try { localStorage.setItem('f_fidelidade_cfg', JSON.stringify(cached.db.fidelidadeCfg)); } catch(e) {}
             }
-            renderHeader(cached.db.fidelidadeCfg || null);
+            renderHeader();
             renderCardapio();
             pixelInicializar(db.integracoes);
             // Atualiza em background silenciosamente
@@ -807,14 +807,14 @@ async function init(){
         }
         aberta = !lojaPausada && !lojaForaHorario;
 
-        renderHeader(_fidCfgNow); renderCardapio();
+        renderHeader(); renderCardapio();
 
         // Salva cache para próxima visita instantânea
         try {
             const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
             localStorage.setItem(_cacheKey2, JSON.stringify({
                 ts: Date.now(),
-                ver: 4,
+                ver: 5,
                 restId: REST_ID,
                 db: {
                     categories: db.categories,
@@ -831,7 +831,7 @@ async function init(){
                         pontosPorReal: fidRows[0].pontos_por_real, descontoAtivo: fidRows[0].desconto_ativo,
                         pontosDesc: fidRows[0].pontos_desc, reaisDesc: fidRows[0].reais_desc,
                         produtoAtivo: fidRows[0].produto_ativo, resgates: fidRows[0].resgates || []
-                    } : null
+                    } : undefined
                 }
             }));
         } catch(e) {}
@@ -861,14 +861,14 @@ async function init(){
                     }
                 }
                 aberta = !lojaPausada && !lojaForaHorario;
-                renderHeader(fidelGetCfg());
+                renderHeader());
             } catch(e) {}
         }, 60000);
 
         // Tentar conectar ao servidor local em background (impressora/SSE)
         if (SERVIDOR) {
             fetch(SERVIDOR+'/cardapio/dados').then(r=>r.json()).then(d=>{
-                if(d&&d.cfg) { db.cfg=d.cfg; db.txCfg=d.txCfg||db.txCfg; renderHeader(fidelGetCfg()); }
+                if(d&&d.cfg) { db.cfg=d.cfg; db.txCfg=d.txCfg||db.txCfg; renderHeader()); }
             }).catch(()=>{});
         }
 
@@ -974,11 +974,11 @@ async function _initBackground(cacheKey) {
             } else if (dia && !dia.aberta) { lojaForaHorario = true; }
         }
         aberta = !lojaPausada && !lojaForaHorario;
-        renderHeader(_fidCfgBg); renderCardapio();
+        renderHeader(); renderCardapio();
         // Salva cache atualizado
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
-                ts: Date.now(), ver: 4, restId: REST_ID,
+                ts: Date.now(), ver: 5, restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
@@ -987,7 +987,7 @@ async function _initBackground(cacheKey) {
                           pontosPorReal: fidRows[0].pontos_por_real, descontoAtivo: fidRows[0].desconto_ativo,
                           pontosDesc: fidRows[0].pontos_desc, reaisDesc: fidRows[0].reais_desc,
                           produtoAtivo: fidRows[0].produto_ativo, resgates: fidRows[0].resgates || []
-                      } : null }
+                      } : undefined }
             }));
         } catch(e) {}
     } catch(e) { console.warn('[BG] Erro na atualização em background:', e.message); }
@@ -1064,7 +1064,7 @@ function atualizarContagem() {
     }
 }
 
-function renderHeader(fidCfgOverride){
+function renderHeader(){
     var c=db.cfg||{},tx=db.txCfg||{};
     var nome=c.nomeMarca||c.nome||'Restaurante';
     document.getElementById('loja-nome').textContent=nome;
@@ -1107,7 +1107,7 @@ function renderHeader(fidCfgOverride){
         taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
     }
     // Pill de fidelidade — fidCfgOverride tem prioridade, senão lê localStorage
-    var fidCfg = (fidCfgOverride && fidCfgOverride.ativo !== undefined) ? fidCfgOverride : fidelGetCfg();
+    var fidCfg = fidelGetCfg();
     if(fidCfg && fidCfg.ativo){
         var rpp=fidCfg.reaisPorPonto||1, ppr=fidCfg.pontosPorReal||1;
         document.getElementById('info-pontos-rate').textContent='R$'+rpp+' = '+ppr+'pt';
