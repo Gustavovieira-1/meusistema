@@ -648,7 +648,7 @@ async function init(){
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
-    const CACHE_VER = 5; // incrementar aqui invalida cache antigo em todos os clientes
+    const CACHE_VER = 6; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
         const cacheValido = cached
@@ -671,8 +671,9 @@ async function init(){
             lojaForaHorario = !!cached.db.lojaForaHorario;
             aberta         = !lojaPausada && !lojaForaHorario;
             // Restaura config de fidelidade para pill aparecer corretamente desde o inicio
-            if (cached.db.fidelidadeCfg) {
-                try { localStorage.setItem('f_fidelidade_cfg', JSON.stringify(cached.db.fidelidadeCfg)); } catch(e) {}
+            db.fidelidade = cached.db.fidelidadeCfg || null;
+            if (db.fidelidade) {
+                try { localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade)); } catch(e) {}
             }
             renderHeader();
             renderCardapio();
@@ -767,24 +768,17 @@ async function init(){
         db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados || {}) : {};
         pixelInicializar(db.integracoes);
 
-        // Salvar fidelidade_config no localStorage para uso offline/carrinho
-        var _fidCfgNow = null;
+        // Salvar fidelidade em db (igual à taxa) e localStorage
         if (fidRows && fidRows[0]) {
             const fr = fidRows[0];
-            _fidCfgNow = {
+            db.fidelidade = {
                 ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
                 descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
             };
-            localStorage.setItem('f_fidelidade_cfg', JSON.stringify(_fidCfgNow));
-            // Atualiza pill imediatamente sem esperar renderHeader
-            if (_fidCfgNow.ativo) {
-                var rpp = _fidCfgNow.reaisPorPonto||1, ppr = _fidCfgNow.pontosPorReal||1;
-                var el = document.getElementById('info-pontos-rate');
-                var pill = document.getElementById('info-pontos-pill');
-                if (el) el.textContent = 'R$'+rpp+' = '+ppr+'pt';
-                if (pill) pill.style.display = '';
-            }
+            localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade));
+        } else {
+            db.fidelidade = null;
         }
 
         // Verificar se loja está aberta
@@ -814,7 +808,7 @@ async function init(){
             const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
             localStorage.setItem(_cacheKey2, JSON.stringify({
                 ts: Date.now(),
-                ver: 5,
+                ver: 6,
                 restId: REST_ID,
                 db: {
                     categories: db.categories,
@@ -826,12 +820,7 @@ async function init(){
                     integracoes: db.integracoes,
                     lojaPausada: lojaPausada,
                     lojaForaHorario: lojaForaHorario,
-                    fidelidadeCfg: fidRows && fidRows[0] ? {
-                        ativo: fidRows[0].ativo, reaisPorPonto: fidRows[0].reais_por_ponto,
-                        pontosPorReal: fidRows[0].pontos_por_real, descontoAtivo: fidRows[0].desconto_ativo,
-                        pontosDesc: fidRows[0].pontos_desc, reaisDesc: fidRows[0].reais_desc,
-                        produtoAtivo: fidRows[0].produto_ativo, resgates: fidRows[0].resgates || []
-                    } : undefined
+                    fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined
                 }
             }));
         } catch(e) {}
@@ -941,23 +930,16 @@ async function _initBackground(cacheKey) {
         db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados||[]) : [];
         db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados||{}) : {};
         pixelInicializar(db.integracoes);
-        var _fidCfgBg = null;
         if (fidRows && fidRows[0]) {
             const fr = fidRows[0];
-            _fidCfgBg = {
+            db.fidelidade = {
                 ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
                 descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
             };
-            localStorage.setItem('f_fidelidade_cfg', JSON.stringify(_fidCfgBg));
-            // Atualiza pill imediatamente
-            if (_fidCfgBg.ativo) {
-                var rpp2 = _fidCfgBg.reaisPorPonto||1, ppr2 = _fidCfgBg.pontosPorReal||1;
-                var el2 = document.getElementById('info-pontos-rate');
-                var pill2 = document.getElementById('info-pontos-pill');
-                if (el2) el2.textContent = 'R$'+rpp2+' = '+ppr2+'pt';
-                if (pill2) pill2.style.display = '';
-            }
+            localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade));
+        } else {
+            db.fidelidade = null;
         }
         // Recalcula status da loja
         lojaPausada = !!cfg.pausada;
@@ -978,16 +960,11 @@ async function _initBackground(cacheKey) {
         // Salva cache atualizado
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
-                ts: Date.now(), ver: 5, restId: REST_ID,
+                ts: Date.now(), ver: 6, restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
-                      fidelidadeCfg: fidRows && fidRows[0] ? {
-                          ativo: fidRows[0].ativo, reaisPorPonto: fidRows[0].reais_por_ponto,
-                          pontosPorReal: fidRows[0].pontos_por_real, descontoAtivo: fidRows[0].desconto_ativo,
-                          pontosDesc: fidRows[0].pontos_desc, reaisDesc: fidRows[0].reais_desc,
-                          produtoAtivo: fidRows[0].produto_ativo, resgates: fidRows[0].resgates || []
-                      } : undefined }
+                      fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined }
             }));
         } catch(e) {}
     } catch(e) { console.warn('[BG] Erro na atualização em background:', e.message); }
@@ -1106,8 +1083,8 @@ function renderHeader(){
         var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
         taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
     }
-    // Pill de fidelidade — lê do localStorage
-    var fidCfg = fidelGetCfg();
+    // Pill de fidelidade — lê de db.fidelidade (igual taxa lê de db.txCfg)
+    var fidCfg = db.fidelidade || fidelGetCfg();
     if(fidCfg && fidCfg.ativo){
         var rpp=fidCfg.reaisPorPonto||1, ppr=fidCfg.pontosPorReal||1;
         document.getElementById('info-pontos-rate').textContent='R$'+rpp+' = '+ppr+'pt';
