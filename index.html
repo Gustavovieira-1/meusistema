@@ -680,6 +680,7 @@ async function init(){
             aberta         = !lojaPausada && !lojaForaHorario;
             // Restaura config de fidelidade para pill aparecer corretamente desde o inicio
             db.fidelidade = cached.db.fidelidadeCfg || null;
+            db.wppNumero  = cached.db.wppNumero || '';
             if (db.fidelidade) {
                 try { localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade)); } catch(e) {}
             }
@@ -833,7 +834,8 @@ async function init(){
                     integracoes: db.integracoes,
                     lojaPausada: lojaPausada,
                     lojaForaHorario: lojaForaHorario,
-                    fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined
+                    fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined,
+                    wppNumero: db.wppNumero || ''
                 }
             }));
         } catch(e) {}
@@ -944,6 +946,11 @@ async function _initBackground(cacheKey) {
         db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados||[]) : [];
         db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados||{}) : {};
         pixelInicializar(db.integracoes);
+        // Atualiza numero do restaurante no WhatsApp
+        if (wppRows && wppRows[0] && wppRows[0].numero_restaurante) {
+            var _n = wppRows[0].numero_restaurante.replace(/\D/g,'');
+            db.wppNumero = (_n.length === 10 || _n.length === 11) ? '55' + _n : _n;
+        }
         if (fidRows && fidRows[0]) {
             const fr = fidRows[0];
             db.fidelidade = {
@@ -978,7 +985,8 @@ async function _initBackground(cacheKey) {
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
-                      fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined }
+                      fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined,
+                      wppNumero: db.wppNumero || '' }
             }));
         } catch(e) {}
     } catch(e) { console.warn('[BG] Erro na atualização em background:', e.message); }
