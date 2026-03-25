@@ -417,6 +417,99 @@ document.getElementById('ftel').addEventListener('input', function(){
 
 ir(1);
 atualizarPreco();
+
+// ══════════════════════════════════════════════════════════════
+//  RASTREAMENTO AVANÇADO — Meta Pixel (Cadastro)
+//  Pixel ID carregado dinamicamente via tracking_config (Supabase)
+// ══════════════════════════════════════════════════════════════
+(function() {
+  var TRACKING_URL = SB_URL + '/rest/v1/tracking_config?id=eq.sistema&select=pixel_cadastro&limit=1';
+
+  function injetarPixel(pixelId) {
+    if (!pixelId) return;
+    // Snippet padrão Meta Pixel
+    !function(f,b,e,v,n,t,s){
+      if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)
+    }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+
+    fbq('init', pixelId);
+    fbq('track', 'PageView');
+    fbq('track', 'ViewContent', {
+      content_name: 'Pagina de Cadastro Zira',
+      content_category: 'Cadastro'
+    });
+
+    // Noscript fallback
+    var ns = document.createElement('noscript');
+    ns.innerHTML = '<img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=' + pixelId + '&ev=PageView&noscript=1"/>';
+    document.body.appendChild(ns);
+
+    // Expõe ID globalmente para uso nas funções do funil
+    window._ziraPixelId = pixelId;
+    console.log('[Pixel] Iniciado:', pixelId);
+  }
+
+  // Carrega pixel ID do Supabase (tabela tracking_config)
+  fetch(TRACKING_URL, {
+    headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(rows){
+    var pid = rows && rows[0] ? rows[0].pixel_cadastro : '';
+    injetarPixel(pid);
+  })
+  .catch(function(){ /* silencia erros — não bloqueia o funil */ });
+
+  // Helper seguro para disparar eventos
+  window.ziraPixelEvent = function(evento, dados) {
+    if (!window.fbq || !window._ziraPixelId) return;
+    fbq('track', evento, dados || {});
+  };
+})();
+
+// Rastreamento de eventos no funil de cadastro
+// Sobrescreve irProposta para capturar Lead + CompleteRegistration
+var _origIrProposta = irProposta;
+irProposta = function() {
+  var nome  = document.getElementById('fnome').value.trim();
+  var email = document.getElementById('femail').value.trim();
+  var tel   = document.getElementById('ftel').value.trim();
+  if (!nome || !email || !tel || email.indexOf('@') < 0) {
+    _origIrProposta(); return;
+  }
+  // Dispara Lead quando o usuário preenche os dados de contato
+  ziraPixelEvent('Lead', {
+    content_name: 'Cadastro Zira',
+    content_category: 'Lead Funil'
+  });
+  _origIrProposta();
+};
+
+// Dispara CompleteRegistration quando o lead é salvo com sucesso
+var _origSalvarLead = salvarLead;
+salvarLead = function() {
+  _origSalvarLead();
+  ziraPixelEvent('CompleteRegistration', {
+    content_name: 'Lead Salvo',
+    status: true
+  });
+};
+
+// Dispara InitiateCheckout quando clica em "Contratar agora"
+var _origContratar = contratar;
+contratar = function() {
+  ziraPixelEvent('InitiateCheckout', {
+    content_name: 'Checkout Zira',
+    value: S.cupom ? 27 : (S.tab === 'anual' ? 1497 : 147),
+    currency: 'BRL'
+  });
+  _origContratar();
+};
 </script>
 </body>
 </html>
