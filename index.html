@@ -648,7 +648,7 @@ async function init(){
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
-    const CACHE_VER = 6; // incrementar aqui invalida cache antigo em todos os clientes
+    const CACHE_VER = 7; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
         const cacheValido = cached
@@ -808,7 +808,7 @@ async function init(){
             const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
             localStorage.setItem(_cacheKey2, JSON.stringify({
                 ts: Date.now(),
-                ver: 6,
+                ver: 7,
                 restId: REST_ID,
                 db: {
                     categories: db.categories,
@@ -960,7 +960,7 @@ async function _initBackground(cacheKey) {
         // Salva cache atualizado
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
-                ts: Date.now(), ver: 6, restId: REST_ID,
+                ts: Date.now(), ver: 7, restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
