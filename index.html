@@ -1422,14 +1422,25 @@ function enviarResumoWhatsapp() {
     if (parseFloat(p.taxaEntrega||0) > 0) {
         partes.push('Taxa de entrega: R$' + parseFloat(p.taxaEntrega).toFixed(2).replace('.',','));
     }
-    partes.push('Valor Total: R$' + parseFloat(p.total||0).toFixed(2).replace('.',','));
+    var totalReal = parseFloat(p.total || 0);
+    if (totalReal === 0 && parseFloat(p.subtotal || 0) > 0) {
+        totalReal = Math.max(0, parseFloat(p.subtotal||0) + parseFloat(p.taxaEntrega||0) - parseFloat(p.descontoPontos||0) - parseFloat(p.descontoCupom||0));
+    }
+    partes.push('Valor Total: R$' + totalReal.toFixed(2).replace('.',','));
 
     var msg = encodeURIComponent(partes.join('\n'));
 
-    var num = (p.phone || '').replace(/\D/g,'');
-    if (num.length === 10 || num.length === 11) num = '55' + num;
+    // Usa número do restaurante (salvo no admin) como destino
+    var numRest = '';
+    try {
+        var _wc = JSON.parse(localStorage.getItem('f_wpp_cfg_' + REST_ID) || 'null');
+        if (_wc && _wc.numeroRestaurante) numRest = _wc.numeroRestaurante.replace(/\D/g,'');
+    } catch(e) {}
+    // Se não tem número do restaurante configurado, tenta buscar do Supabase
+    var enviarPara = numRest;
+    if (enviarPara && (enviarPara.length === 10 || enviarPara.length === 11)) enviarPara = '55' + enviarPara;
 
-    window.open('https://wa.me/' + num + '?text=' + msg, '_blank');
+    window.open('https://wa.me/' + enviarPara + '?text=' + msg, '_blank');
     novoPedido();
 }
 
