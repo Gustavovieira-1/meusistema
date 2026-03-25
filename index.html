@@ -656,7 +656,7 @@ async function init(){
             && (Date.now() - cached.ts) < CACHE_TTL
             && cached.db
             && (cached.ver || 0) >= CACHE_VER
-            && cached.db.fidelidadeCfg !== undefined;
+            && (cached.db.fidelidadeCfg !== undefined);
         if (cacheValido) {
             // Renderiza instantâneo do cache
             REST_ID = cached.restId;
@@ -671,7 +671,7 @@ async function init(){
             lojaForaHorario = !!cached.db.lojaForaHorario;
             aberta         = !lojaPausada && !lojaForaHorario;
             // Restaura config de fidelidade para pill aparecer corretamente desde o inicio
-            db.fidelidade = cached.db.fidelidadeCfg || null;
+            db.fidelidade = cached.db.fidelidadeCfg || {};
             if (db.fidelidade) {
                 try { localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade)); } catch(e) {}
             }
@@ -818,7 +818,7 @@ async function init(){
                     integracoes: db.integracoes,
                     lojaPausada: lojaPausada,
                     lojaForaHorario: lojaForaHorario,
-                    fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined
+                    fidelidadeCfg: db.fidelidade || null
                 }
             }));
         } catch(e) {}
@@ -959,7 +959,7 @@ async function _initBackground(cacheKey) {
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
-                      fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined }
+                      fidelidadeCfg: db.fidelidade || null }
             }));
         } catch(e) {}
     } catch(e) { console.warn('[BG] Erro na atualização em background:', e.message); }
@@ -1080,7 +1080,7 @@ function renderHeader(){
     }
     // Pill de fidelidade
     var fid = db.fidelidade || {};
-    if(fid.ativo === true){
+    if(fid && fid.ativo === true){
         var rpp = parseFloat(fid.reaisPorPonto) || 1;
         var ppr = parseFloat(fid.pontosPorReal) || 1;
         document.getElementById('info-pontos-rate').textContent = 'R$' + rpp + ' = ' + ppr + 'pt';
