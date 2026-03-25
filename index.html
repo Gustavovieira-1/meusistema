@@ -648,7 +648,7 @@ async function init(){
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
-    const CACHE_VER = 7; // incrementar aqui invalida cache antigo em todos os clientes
+    const CACHE_VER = 8; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
         const cacheValido = cached
@@ -656,7 +656,9 @@ async function init(){
             && (Date.now() - cached.ts) < CACHE_TTL
             && cached.db
             && (cached.ver || 0) >= CACHE_VER
-            && cached.db.fidelidadeCfg !== undefined;
+            && cached.db.fidelidadeCfg !== undefined
+            && cached.db.fidelidadeCfg !== null
+            && cached.db.fidelidadeCfg.ativo !== undefined;
         if (cacheValido) {
             // Renderiza instantâneo do cache
             REST_ID = cached.restId;
@@ -808,7 +810,7 @@ async function init(){
             const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
             localStorage.setItem(_cacheKey2, JSON.stringify({
                 ts: Date.now(),
-                ver: 7,
+                ver: 8,
                 restId: REST_ID,
                 db: {
                     categories: db.categories,
@@ -960,7 +962,7 @@ async function _initBackground(cacheKey) {
         // Salva cache atualizado
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
-                ts: Date.now(), ver: 7, restId: REST_ID,
+                ts: Date.now(), ver: 8, restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
