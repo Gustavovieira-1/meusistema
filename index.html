@@ -643,15 +643,22 @@ async function init(){
     const params = new URLSearchParams(window.location.search);
     REST_SLUG = params.get('r') || window.location.pathname.replace('/','').split('/')[0] || null;
 
-    // ── CACHE INSTANTÂNEO ────────────────────────────────────────
-    // Se já visitou antes, renderiza do cache imediatamente enquanto
-    // busca dados frescos em background (estratégia stale-while-revalidate)
+    // LIMPA TODO CACHE PARA FORCAR FETCH FRESCO DO SUPABASE
+    try {
+        var _keys = [];
+        for (var _i = 0; _i < localStorage.length; _i++) {
+            var _k = localStorage.key(_i);
+            if (_k && (_k.startsWith('zira_cache_') || _k.startsWith('zira_slug_'))) _keys.push(_k);
+        }
+        _keys.forEach(function(k){ localStorage.removeItem(k); });
+    } catch(e) {}
+
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
     const CACHE_VER = 10; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
-        const cacheValido = cached
+        const cacheValido = false && cached
             && cached.ts
             && (Date.now() - cached.ts) < CACHE_TTL
             && cached.db
