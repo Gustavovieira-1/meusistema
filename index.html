@@ -643,22 +643,12 @@ async function init(){
     const params = new URLSearchParams(window.location.search);
     REST_SLUG = params.get('r') || window.location.pathname.replace('/','').split('/')[0] || null;
 
-    // LIMPA TODO CACHE PARA FORCAR FETCH FRESCO DO SUPABASE
-    try {
-        var _keys = [];
-        for (var _i = 0; _i < localStorage.length; _i++) {
-            var _k = localStorage.key(_i);
-            if (_k && (_k.startsWith('zira_cache_') || _k.startsWith('zira_slug_'))) _keys.push(_k);
-        }
-        _keys.forEach(function(k){ localStorage.removeItem(k); });
-    } catch(e) {}
-
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
     const CACHE_VER = 10; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
-        const cacheValido = false && cached
+        const cacheValido = cached
             && cached.ts
             && (Date.now() - cached.ts) < CACHE_TTL
             && cached.db
@@ -785,18 +775,6 @@ async function init(){
             };
             localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade));
         }
-
-        // DEBUG TEMPORARIO - barra vermelha mostra o que chegou do Supabase
-        (function() {
-            try {
-                var d = document.createElement('div');
-                d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:white;font-size:11px;padding:5px 8px;z-index:99999;font-family:monospace;word-break:break-all;';
-                var info = 'REST_ID=' + REST_ID + ' | fidRows=' + JSON.stringify(fidRows && fidRows[0] ? {ativo: fidRows[0].ativo, rpp: fidRows[0].reais_por_ponto} : null) + ' | db.fidelidade.ativo=' + (db.fidelidade && db.fidelidade.ativo);
-                d.textContent = info;
-                document.body.appendChild(d);
-                setTimeout(function(){ d.remove(); }, 20000);
-            } catch(e) {}
-        })();
 
         // Verificar se loja está aberta
         lojaPausada = !!cfg.pausada;
