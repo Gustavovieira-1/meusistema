@@ -1550,7 +1550,7 @@ var fidelSaldoPts  = 0;
 var fidelResgSel   = null;  // { tipo:'desconto'|'produto', idx, pts, desconto }
 
 function fidelGetCfg() {
-    try { return JSON.parse(localStorage.getItem(IDX_FIDEL_KEY)) || {}; } catch(e){ return {}; }
+    try { return JSON.parse(localStorage.getItem('f_fidelidade_cfg')) || {}; } catch(e){ return {}; }
 }
 function fidelGetClientes() {
     try { return JSON.parse(localStorage.getItem(IDX_FIDEL_CLI_KEY)) || []; } catch(e){ return []; }
