@@ -861,14 +861,14 @@ async function init(){
                     }
                 }
                 aberta = !lojaPausada && !lojaForaHorario;
-                renderHeader());
+                renderHeader();
             } catch(e) {}
         }, 60000);
 
         // Tentar conectar ao servidor local em background (impressora/SSE)
         if (SERVIDOR) {
             fetch(SERVIDOR+'/cardapio/dados').then(r=>r.json()).then(d=>{
-                if(d&&d.cfg) { db.cfg=d.cfg; db.txCfg=d.txCfg||db.txCfg; renderHeader()); }
+                if(d&&d.cfg) { db.cfg=d.cfg; db.txCfg=d.txCfg||db.txCfg; renderHeader(); }
             }).catch(()=>{});
         }
 
@@ -1106,7 +1106,7 @@ function renderHeader(){
         var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
         taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
     }
-    // Pill de fidelidade — fidCfgOverride tem prioridade, senão lê localStorage
+    // Pill de fidelidade — lê do localStorage
     var fidCfg = fidelGetCfg();
     if(fidCfg && fidCfg.ativo){
         var rpp=fidCfg.reaisPorPonto||1, ppr=fidCfg.pontosPorReal||1;
