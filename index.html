@@ -728,7 +728,7 @@ async function init(){
             supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
-            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
+            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=ativo,reais_por_ponto,pontos_por_real&limit=1')
         ]);
 
         // Verifica pagamento com os dados que já vieram no Promise.all
@@ -907,7 +907,7 @@ async function _initBackground(cacheKey) {
             supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
-            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
+            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=ativo,reais_por_ponto,pontos_por_real&limit=1')
         ]);
 
         // Verifica bloqueio
