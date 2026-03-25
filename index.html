@@ -764,8 +764,8 @@ async function init(){
             cidade: cfg.cidade || '',
             logo: cfg.logo || '',
             capa: cfg.capa || '',
-            minPedido: parseFloat(cfg.valor_minimo || cfg.delivery_minimo) || 0,
-            taxaEntrega: parseFloat(cfg.taxa_entrega) || 0
+            minPedido: parseFloat(cfg.valor_minimo || cfg.delivery_minimo) || 0
+            // taxaEntrega removido — usa sempre db.txCfg.taxaPadrao (tabela taxas_entrega)
         };
         // taxas_entrega salva tudo dentro de dados:{...} no Supabase
         var _tx = (txRows&&txRows[0]) ? (txRows[0].dados || txRows[0]) : {};
@@ -934,8 +934,8 @@ async function _initBackground(cacheKey) {
         db.comps       = (comps||[]).map(c => ({id: c.id, title: c.titulo||c.nome||'', type: c.tipo||'check', options: c.opcoes||[]}));
         db.cfg         = { nomeMarca: cfg.nome_marca||rest.nome, nomeUnidade: cfg.nome_unidade||rest.nome,
                            cidade: cfg.cidade||'', logo: cfg.logo||'', capa: cfg.capa||'',
-                           minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0,
-                           taxaEntrega: parseFloat(cfg.taxa_entrega)||0 };
+                           minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0
+                           /* taxaEntrega removido — usa sempre db.txCfg.taxaPadrao (tabela taxas_entrega) */ };
         // taxas_entrega salva tudo dentro de dados:{...} no Supabase
         var _tx2 = (txRows&&txRows[0]) ? (txRows[0].dados || txRows[0]) : {};
         db.txCfg = {
@@ -1094,15 +1094,15 @@ function renderHeader(){
         atualizarContagem();
     }
     document.getElementById('info-entrega').textContent=(tx.tempoEntrega||40)+' min';
-    // Taxa: usa cfg.taxaEntrega (do admin) se disponível, senão tx.taxaPadrao
-    var taxa = parseFloat(c.taxaEntrega || tx.taxaPadrao || 0);
+    // Taxa: usa SEMPRE tx.taxaPadrao (tabela taxas_entrega — configurado em Taxas e Entrega)
+    var taxa = parseFloat(tx.taxaPadrao || 0);
     var taxaEl = document.getElementById('info-taxa');
     var taxaPill = document.getElementById('info-taxa-pill');
     if (taxa > 0) {
         taxaEl.textContent = money(taxa);
     } else {
-        // Só mostra "Grátis" se a taxa realmente foi carregada (não placeholder)
-        var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
+        // Só mostra "Grátis" se taxas_entrega já foi carregada
+        var taxaCarregada = (tx.taxaPadrao !== undefined);
         taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
     }
     // Pill de fidelidade — lê de db.fidelidade (igual taxa lê de db.txCfg)
@@ -1233,7 +1233,7 @@ function ajustaCarrinho(idx,d){
 }
 function atualizaResumo(){
     var sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0);
-    var taxa=tipoAtual==='Entrega'?parseFloat((db.txCfg||{}).taxaPadrao||(db.cfg||{}).taxaEntrega||0):0;
+    var taxa=tipoAtual==='Entrega'?parseFloat((db.txCfg||{}).taxaPadrao||0):0;
     var desc=fidelGetDesconto();
     var descCupom=cupomGetDesconto(sub,taxa);
     var taxaDisplay=(cupomAtual&&cupomAtual.tipo==='frete')?0:taxa;
