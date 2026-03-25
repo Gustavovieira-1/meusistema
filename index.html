@@ -312,7 +312,6 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
         var rpp = fc.reaisPorPonto || 1, ppr = fc.pontosPorReal || 1;
         document.getElementById('info-pontos-rate').textContent = 'R$' + rpp + ' = ' + ppr + 'pt';
         document.getElementById('info-pontos-pill').style.display = '';
-        // Taxa continua visível — os dois aparecem juntos
       }
     } catch(e) {}
   })();
@@ -626,16 +625,10 @@ function cupomGetDesconto(sub, taxa) {
 
 async function supaFetch(path) {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
     try {
         const r = await fetch(SUPA_URL + '/rest/v1/' + path, {
-            headers: {
-                'apikey': SUPA_KEY,
-                'Authorization': 'Bearer ' + SUPA_KEY,
-                'Accept': 'application/json',
-                'Accept-Encoding': 'gzip, deflate, br',
-                'Connection': 'keep-alive'
-            },
+            headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Connection': 'keep-alive'},
             signal: controller.signal
         });
         if (!r.ok) throw new Error('Supa ' + r.status);
@@ -654,7 +647,7 @@ async function init(){
     // Se já visitou antes, renderiza do cache imediatamente enquanto
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
-    const CACHE_TTL = 30 * 60 * 1000; // 30 minutos
+    const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
     const CACHE_VER = 4; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
@@ -717,7 +710,7 @@ async function init(){
         if (!restRows) restRows = [{ id: REST_ID, nome: '', slug: REST_SLUG, ativo: true }];
         const rest = restRows[0];
 
-        // Carrega tudo em paralelo
+        // Verificação de pagamento + cardápio em paralelo (não mais sequencial)
         const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows] = await Promise.all([
             supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
             supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
@@ -730,7 +723,7 @@ async function init(){
             supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1')
         ]);
 
-        // Verifica pagamento
+        // Verifica pagamento com os dados que já vieram no Promise.all
         if (pgtoRows && pgtoRows[0]) {
             const pgto = pgtoRows[0];
             const hoje = new Date(); hoje.setHours(0,0,0,0);
@@ -784,6 +777,14 @@ async function init(){
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
             };
             localStorage.setItem('f_fidelidade_cfg', JSON.stringify(_fidCfgNow));
+            // Atualiza pill imediatamente sem esperar renderHeader
+            if (_fidCfgNow.ativo) {
+                var rpp = _fidCfgNow.reaisPorPonto||1, ppr = _fidCfgNow.pontosPorReal||1;
+                var el = document.getElementById('info-pontos-rate');
+                var pill = document.getElementById('info-pontos-pill');
+                if (el) el.textContent = 'R$'+rpp+' = '+ppr+'pt';
+                if (pill) pill.style.display = '';
+            }
         }
 
         // Verificar se loja está aberta
@@ -917,6 +918,7 @@ async function _initBackground(cacheKey) {
         }
 
         // Atualiza db e re-renderiza se houve mudança
+        const rest = restRows[0];
         const cfg  = (cfgRows && cfgRows[0]) || {};
         db.categories  = (cats||[]).map(c => ({id: c.id, name: c.nome, active: true}));
         db.prods       = (prods||[]).map(p => {
@@ -925,8 +927,7 @@ async function _initBackground(cacheKey) {
                      desc: p.descricao||'', img: p.imagem||'', comps: p.complementos||[], active: true };
         });
         db.comps       = (comps||[]).map(c => ({id: c.id, title: c.titulo||c.nome||'', type: c.tipo||'check', options: c.opcoes||[]}));
-        var _restNome = (typeof restRows !== 'undefined' && restRows && restRows[0]) ? restRows[0].nome : (db.cfg && db.cfg.nomeMarca) || '';
-        db.cfg         = { nomeMarca: cfg.nome_marca||_restNome, nomeUnidade: cfg.nome_unidade||_restNome,
+        db.cfg         = { nomeMarca: cfg.nome_marca||rest.nome, nomeUnidade: cfg.nome_unidade||rest.nome,
                            cidade: cfg.cidade||'', logo: cfg.logo||'', capa: cfg.capa||'',
                            minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0,
                            taxaEntrega: parseFloat(cfg.taxa_entrega)||0 };
@@ -949,6 +950,14 @@ async function _initBackground(cacheKey) {
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
             };
             localStorage.setItem('f_fidelidade_cfg', JSON.stringify(_fidCfgBg));
+            // Atualiza pill imediatamente
+            if (_fidCfgBg.ativo) {
+                var rpp2 = _fidCfgBg.reaisPorPonto||1, ppr2 = _fidCfgBg.pontosPorReal||1;
+                var el2 = document.getElementById('info-pontos-rate');
+                var pill2 = document.getElementById('info-pontos-pill');
+                if (el2) el2.textContent = 'R$'+rpp2+' = '+ppr2+'pt';
+                if (pill2) pill2.style.display = '';
+            }
         }
         // Recalcula status da loja
         lojaPausada = !!cfg.pausada;
