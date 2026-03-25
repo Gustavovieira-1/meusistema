@@ -1164,7 +1164,7 @@ tr:hover td { background: rgba(255,255,255,.015); }
               </div>
               <div>
                 <div class="tr-card-title">Meta Pixel <span class="tr-badge tr-badge-blue">Facebook / Instagram Ads</span></div>
-                <div class="tr-card-sub">Troque o ID aqui e todas as páginas passam a usar o novo pixel automaticamente</div>
+                <div class="tr-card-sub">IDs salvos aqui são injetados automaticamente nas páginas — sem precisar editar código</div>
               </div>
             </div>
             <div class="tr-grid-2">
@@ -1173,17 +1173,27 @@ tr:hover td { background: rgba(255,255,255,.015); }
                   <i class="fas fa-user-plus tr-label-icon" style="color:var(--green);"></i>
                   Pixel — Página de Cadastro
                 </label>
-                <input id="tr-pixel-cadastro" class="tr-input" placeholder="Ex: 1234567890123456">
-                <div class="tr-hint"><i class="fas fa-bolt" style="opacity:.5;"></i> Eventos: PageView · ViewContent · Lead · CompleteRegistration</div>
+                <div style="position:relative;">
+                  <input id="tr-pixel-cadastro" class="tr-input" placeholder="Ex: 1234567890123456" oninput="trBadge('tr-badge-cadastro',this.value)">
+                  <span id="tr-badge-cadastro" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(22,163,74,.12);color:var(--green);display:none;">ATIVO</span>
+                </div>
+                <div class="tr-hint" style="margin-top:6px;"><i class="fas fa-bolt" style="opacity:.5;"></i> Eventos: <code class="tr-code">PageView</code> · <code class="tr-code">ViewContent</code> · <code class="tr-code">Lead</code> · <code class="tr-code">CompleteRegistration</code> · <code class="tr-code">InitiateCheckout</code></div>
               </div>
               <div>
                 <label class="tr-label">
-                  <i class="fas fa-credit-card tr-label-icon" style="color:var(--blue);"></i>
-                  Pixel — Página de Planos
+                  <i class="fas fa-store tr-label-icon" style="color:var(--blue);"></i>
+                  Pixel — Página de Vendas (Landing)
                 </label>
-                <input id="tr-pixel-planos" class="tr-input" placeholder="Ex: 9876543210987654">
-                <div class="tr-hint"><i class="fas fa-bolt" style="opacity:.5;"></i> Eventos: PageView · ViewContent · InitiateCheckout</div>
+                <div style="position:relative;">
+                  <input id="tr-pixel-planos" class="tr-input" placeholder="Ex: 9876543210987654" oninput="trBadge('tr-badge-planos',this.value)">
+                  <span id="tr-badge-planos" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:rgba(22,163,74,.12);color:var(--green);display:none;">ATIVO</span>
+                </div>
+                <div class="tr-hint" style="margin-top:6px;"><i class="fas fa-bolt" style="opacity:.5;"></i> Eventos: <code class="tr-code">PageView</code> · <code class="tr-code">ViewContent</code> · <code class="tr-code">Lead</code> (scroll 70%) · <code class="tr-code">InitiateCheckout</code> (clique CTA)</div>
               </div>
+            </div>
+            <div style="margin-top:16px;padding:14px 16px;background:rgba(24,119,242,.05);border:1px solid rgba(24,119,242,.15);border-radius:10px;display:flex;align-items:flex-start;gap:12px;">
+              <i class="fas fa-info-circle" style="color:#4e9eff;margin-top:2px;flex-shrink:0;"></i>
+              <div style="font-size:12px;color:var(--muted2);line-height:1.7;"><strong style="color:var(--text);">Como funciona:</strong> ao salvar, os pixels ficam gravados na tabela <code class="tr-code">tracking_config</code>. As páginas buscam o ID automaticamente ao carregar, iniciam o pixel e disparam os eventos. Nenhuma alteração de código nas páginas é necessária.</div>
             </div>
           </div>
 
@@ -2623,6 +2633,9 @@ async function trCarregar() {
         const set  = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
         set('tr-pixel-cadastro',  cfg.pixel_cadastro);
         set('tr-pixel-planos',    cfg.pixel_planos);
+        // Atualiza badges de status
+        trBadge('tr-badge-cadastro', cfg.pixel_cadastro);
+        trBadge('tr-badge-planos',   cfg.pixel_planos);
         set('tr-mp-mensal',       cfg.mp_link_mensal);
         set('tr-mp-trimestral',   cfg.mp_link_trimestral);
         set('tr-mp-anual',        cfg.mp_link_anual);
@@ -2697,6 +2710,13 @@ function trStatus(msg, ok) {
     el.style.color      = ok ? 'var(--green)' : 'var(--red)';
     el.textContent      = msg;
     if (ok) setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+// Mostra badge "ATIVO" ao lado do input quando há valor preenchido
+function trBadge(badgeId, val) {
+    const b = document.getElementById(badgeId);
+    if (!b) return;
+    b.style.display = val && val.trim() ? 'inline-block' : 'none';
 }
 
 // ══════════════════════════════════════════════════════════════
