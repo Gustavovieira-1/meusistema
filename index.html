@@ -772,7 +772,7 @@ async function init(){
         if (fidRows && fidRows[0]) {
             const fr = fidRows[0];
             db.fidelidade = {
-                ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
+                ativo: fr.ativo === true || fr.ativo === "true" || fr.ativo === 1, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
                 descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
             };
@@ -930,7 +930,7 @@ async function _initBackground(cacheKey) {
         if (fidRows && fidRows[0]) {
             const fr = fidRows[0];
             db.fidelidade = {
-                ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
+                ativo: fr.ativo === true || fr.ativo === "true" || fr.ativo === 1, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
                 descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
                 produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
             };
@@ -1080,7 +1080,7 @@ function renderHeader(){
     }
     // Pill de fidelidade
     var fid = db.fidelidade || {};
-    if(fid && fid.ativo === true){
+    if(fid && (fid.ativo === true || fid.ativo === "true" || fid.ativo === 1)){
         var rpp = parseFloat(fid.reaisPorPonto) || 1;
         var ppr = parseFloat(fid.pontosPorReal) || 1;
         document.getElementById('info-pontos-rate').textContent = 'R$' + rpp + ' = ' + ppr + 'pt';
