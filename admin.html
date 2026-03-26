@@ -3549,12 +3549,7 @@ function showSec(id, btn) {
     try { localStorage.setItem('f_last_sec', id); } catch(e) {}
 
     if (id === 'gestor')           renderOrders();
-    if (id === 'produtos') {
-        // Renderiza o que já tem em memória imediatamente (sem travar)
-        renderCategories(); renderProds();
-        // Busca Supabase em paralelo para atualizar se necessário
-        supaCarregarCardapio();
-    }
+    if (id === 'produtos')         { renderCategories(); renderProds(); }
     if (id === 'clientes') {
         // Filtro ativo por padrão = usa o mesmo período dos outros relatórios (relDataIni/relDataFim)
         clientesFiltroAtivo = true;
@@ -3602,12 +3597,7 @@ function openPDV() {
     document.getElementById('modal-pdv').classList.add('pdv-visivel');
     atualizarCarrinho();
     fecharDropdownClientes();
-    // Renderiza o que tem em memória; se vazio busca do Supabase
-    if (!db.prods || db.prods.length === 0) {
-        supaCarregarCardapio().then(function(){ renderPdvProducts(); });
-    } else {
-        renderPdvProducts();
-    }
+    renderPdvProducts();
 }
 
 function editarPedido(id) {
