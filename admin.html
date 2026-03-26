@@ -3238,10 +3238,23 @@ function inicializarSistema() {
 async function verificarBloqueio() {
     if (!REST_ID) return false;
     try {
-        const r = await fetch(SUPA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + REST_ID + '&select=status_pgto,vencimento&limit=1', {
-            headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_TOKEN }
-        });
-        const data = await r.json();
+        const [pgtoRes, restRes] = await Promise.all([
+            fetch(SUPA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + REST_ID + '&select=status_pgto,vencimento&limit=1', {
+                headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_TOKEN }
+            }),
+            fetch(SUPA_URL + '/rest/v1/restaurantes?id=eq.' + REST_ID + '&select=ativo&limit=1', {
+                headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_TOKEN }
+            })
+        ]);
+        const data = await pgtoRes.json();
+        const restData = await restRes.json();
+
+        // Verifica se restaurante está desativado pelo superadmin
+        if (restData && restData[0] && restData[0].ativo === false) {
+            mostrarBloqueio('Acesso suspenso');
+            return true;
+        }
+
         if (!data || data.length === 0) return false;
         const pgto = data[0];
         const hoje = new Date(); hoje.setHours(0,0,0,0);
