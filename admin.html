@@ -7736,28 +7736,21 @@ function fecharTodosCards() {
     var total = orders.length;
     if (!confirm('Fechar todos os ' + total + ' cards do painel?\n\nEles ficam salvos no histórico e relatórios — só somem da tela.')) return;
 
-    // Salva todos no histórico antes de remover
+    // Salva todos no histórico PRESERVANDO o status original de cada um
+    // NÃO força finalizado — quem estava em preparo volta em preparo ao restaurar
     orders.forEach(function(o) {
-        // Marca como finalizado se ainda não estiver (para entrar no histórico corretamente)
         var copia = JSON.parse(JSON.stringify(o));
-        if (copia.status !== 'finalizado' && copia.status !== 'cancelado') {
-            copia.status = 'finalizado';
+        // Apenas garante finalizadoEm para os que já eram finalizados
+        if (copia.status === 'finalizado') {
             copia.finalizadoEm = copia.finalizadoEm || new Date().toISOString();
-            // Atualiza status no Supabase também
-            if (copia._supa_id) {
-                supaUpdate('pedidos', copia._supa_id, {
-                    status: 'finalizado',
-                    finalizado_em: copia.finalizadoEm
-                }).catch(function(e){ console.warn('[fecharCards]', e.message); });
-            }
         }
         histRegistrar(copia);
     });
 
-    // Limpa o painel
+    // Limpa o painel sem alterar status no Supabase
+    // (o Supabase continua com o status real — preparo, entrega, etc.)
     orders = [];
     localStorage.setItem('f_orders', JSON.stringify(orders));
-    // Reseta controle de limpeza automática para não conflitar
     localStorage.removeItem('f_ultima_limpeza');
     renderOrders();
     cupToast('✅ ' + total + ' cards fechados. Tudo salvo no histórico!', '#16a34a');
