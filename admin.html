@@ -7661,7 +7661,7 @@ async function supaCarregarFinalizadosKanban() {
 
 async function supaCarregarPedidos() {
     try {
-        const rows = await supaGet('pedidos', 'status=neq.finalizado&status=neq.cancelado&order=criado_em.desc');
+        const rows = await supaGet('pedidos', 'status=neq.finalizado&status=neq.cancelado&fechado_em=is.null&order=criado_em.desc');
         if (rows && rows.length) {
             const mapped = rows.map(r => {
                 // Parse itens se for string JSON
@@ -7736,43 +7736,49 @@ function fecharTodosCards() {
     var total = orders.length;
     if (!confirm('Fechar todos os ' + total + ' cards do painel?\n\nEles ficam salvos no histórico e relatórios — só somem da tela.')) return;
 
-    // Salva todos no histórico PRESERVANDO o status original de cada um
-    // NÃO força finalizado — quem estava em preparo volta em preparo ao restaurar
+    var agora = new Date().toISOString();
+
+    // Grava fechado_em no Supabase para cada pedido (sem alterar status)
+    // Assim o polling ignora esses pedidos e o status real é preservado
     orders.forEach(function(o) {
-        var copia = JSON.parse(JSON.stringify(o));
-        // Apenas garante finalizadoEm para os que já eram finalizados
-        if (copia.status === 'finalizado') {
-            copia.finalizadoEm = copia.finalizadoEm || new Date().toISOString();
+        if (o._supa_id) {
+            supaUpdate('pedidos', o._supa_id, { fechado_em: agora })
+                .catch(function(e){ console.warn('[fecharCards]', e.message); });
         }
-        histRegistrar(copia);
     });
 
-    // Limpa o painel sem alterar status no Supabase
-    // (o Supabase continua com o status real — preparo, entrega, etc.)
+    // Guarda timestamp do último fechamento para o restaurar saber o que buscar
+    localStorage.setItem('f_ultimo_fechamento', agora);
     orders = [];
     localStorage.setItem('f_orders', JSON.stringify(orders));
     localStorage.removeItem('f_ultima_limpeza');
     renderOrders();
-    cupToast('✅ ' + total + ' cards fechados. Tudo salvo no histórico!', '#16a34a');
+    cupToast('✅ ' + total + ' cards fechados!', '#16a34a');
 }
 
 // 🔔 Recarregar pedidos finalizados do Supabase (para recuperar pedidos sumidos)
+// 🔔 Restaurar pedidos fechados manualmente (usa coluna fechado_em do Supabase)
 async function supaRecarregarFinalizadosHoje() {
     try {
-        // Pega todos os pedidos de hoje (últimas 24h) independente do status
-        var ontem = new Date();
-        ontem.setHours(0, 0, 0, 0);
-        var isoOntem = ontem.toISOString();
-
-        const rows = await supaReq('GET',
-            'pedidos?restaurante_id=eq.' + REST_ID +
-            '&criado_em=gte.' + isoOntem +
-            '&order=criado_em.desc&select=*'
-        );
-        if (!rows || !rows.length) {
-            cupToast('Nenhum pedido encontrado hoje no servidor.', '#e30613');
+        // Busca o timestamp do último fechamento
+        var ultimoFechamento = localStorage.getItem('f_ultimo_fechamento') || '';
+        if (!ultimoFechamento) {
+            cupToast('Nenhum fechamento registrado.', '#64748b');
             return;
         }
+
+        // Busca todos os pedidos fechados a partir do último fechamento
+        const rows = await supaReq('GET',
+            'pedidos?restaurante_id=eq.' + REST_ID +
+            '&fechado_em=gte.' + ultimoFechamento +
+            '&order=criado_em.desc&select=*'
+        );
+
+        if (!rows || !rows.length) {
+            cupToast('Nenhum pedido para restaurar.', '#64748b');
+            return;
+        }
+
         const mapped = rows.map(r => {
             let itens = r.itens || [];
             if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
@@ -7789,27 +7795,38 @@ async function supaRecarregarFinalizadosHoje() {
                 cupom: r.cupom || '',
                 produtoBrindeNome: r.produto_brinde_nome || '',
                 produtoBrindeId: r.produto_brinde_id || '',
-                total: r.total, status: r.status, items: itens,
+                total: r.total,
+                status: r.status, // status original preservado no Supabase
+                items: itens,
                 timestamp: r.criado_em,
-                finalizadoEm: r.finalizado_em || (r.status === 'finalizado' ? r.criado_em : null)
+                finalizadoEm: r.finalizado_em || null
             };
         });
-        // Mescla com os pedidos em memória (sem duplicar)
+
+        // Limpa fechado_em no Supabase — pedidos voltam ao painel
+        mapped.forEach(function(o) {
+            if (o._supa_id) {
+                supaUpdate('pedidos', o._supa_id, { fechado_em: null })
+                    .catch(function(e){ console.warn('[restaurar]', e.message); });
+            }
+        });
+
+        // Mescla sem duplicar
         var idsAtuais = new Set(orders.map(function(o){ return o.id; }));
         var novos = mapped.filter(function(o){ return !idsAtuais.has(o.id); });
-        // Atualiza status dos que já existem
         mapped.forEach(function(o) {
             var idx = orders.findIndex(function(x){ return x.id === o.id; });
             if (idx >= 0) orders[idx] = o;
         });
         orders = orders.concat(novos);
-        localStorage.setItem('f_orders', JSON.stringify(orders));
-        // Reseta o controle de limpeza para não sumir de novo hoje
+
+        localStorage.removeItem('f_ultimo_fechamento');
         localStorage.removeItem('f_ultima_limpeza');
+        localStorage.setItem('f_orders', JSON.stringify(orders));
         renderOrders();
-        cupToast('✅ ' + mapped.length + ' pedidos de hoje restaurados do servidor!', '#16a34a');
+        cupToast('✅ ' + mapped.length + ' pedidos restaurados nas colunas originais!', '#16a34a');
     } catch(e) {
-        cupToast('Erro ao buscar pedidos: ' + e.message, '#e30613');
+        cupToast('Erro ao restaurar: ' + e.message, '#e30613');
     }
 }
 
