@@ -734,6 +734,12 @@ async function init(){
             supaFetch('whatsapp_config?restaurante_id=eq.'+REST_ID+'&select=numero_restaurante&limit=1')
         ]);
 
+        // Verifica se restaurante está ativo
+        if (restRows && restRows[0] && restRows[0].ativo === false) {
+            document.getElementById('cardapio-bloqueio').style.display = 'flex';
+            return;
+        }
+
         // Verifica pagamento com os dados que já vieram no Promise.all
         if (pgtoRows && pgtoRows[0]) {
             const pgto = pgtoRows[0];
@@ -908,6 +914,12 @@ async function _initBackground(cacheKey) {
             supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('whatsapp_config?restaurante_id=eq.'+REST_ID+'&select=numero_restaurante&limit=1')
         ]);
+
+        // Verifica se restaurante está ativo
+        if (restRows && restRows[0] && restRows[0].ativo === false) {
+            document.getElementById('cardapio-bloqueio').style.display = 'flex';
+            return;
+        }
 
         // Verifica bloqueio
         if (pgtoRows && pgtoRows[0]) {
@@ -1783,9 +1795,17 @@ function fidelMostrarSucesso(total) {
 // Verificar se restaurante tem pagamento ativo
 async function verificarPagamentoCardapio(restId) {
     try {
-        const r = await supaFetch('pagamentos?restaurante_id=eq.' + restId + '&select=status_pgto,vencimento&limit=1');
-        if (!r || r.length === 0) return; // sem registro = libera
-        const pgto = r[0];
+        const [pgtoRows, restRows2] = await Promise.all([
+            supaFetch('pagamentos?restaurante_id=eq.' + restId + '&select=status_pgto,vencimento&limit=1'),
+            supaFetch('restaurantes?id=eq.' + restId + '&select=ativo&limit=1')
+        ]);
+        // Verifica se restaurante está ativo
+        if (restRows2 && restRows2[0] && restRows2[0].ativo === false) {
+            document.getElementById('cardapio-bloqueio').style.display = 'flex';
+            return;
+        }
+        if (!pgtoRows || pgtoRows.length === 0) return;
+        const pgto = pgtoRows[0];
         const hoje = new Date(); hoje.setHours(0,0,0,0);
         const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
         const status = pgto.status_pgto;
