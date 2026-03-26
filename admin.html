@@ -7718,23 +7718,32 @@ async function supaCarregarPedidos() {
             var _novoJson = JSON.stringify(preservados.concat(mappedFiltrado));
             var _velhoJson = localStorage.getItem('f_orders') || '[]';
             orders = preservados.concat(mappedFiltrado);
-            if (_novoJson !== _velhoJson) {
+            var _houveNovos = pedidosNovos.length > 0;
+            if (_novoJson !== _velhoJson || _houveNovos) {
                 localStorage.setItem('f_orders', _novoJson);
                 renderOrders();
             }
             // 🔊 Tocar som se chegou novo pedido em análise
             if (pedidosNovos.length > 0) {
                 tocarSomNotificacao();
+                // Guarda os IDs agora — o setTimeout busca o pedido em orders na hora certa
+                var _idsNovos = pedidosNovos.map(function(o){ return o.id; });
                 // Envia confirmação WhatsApp PRIMEIRO (300ms), antes do auto-aceitar
                 pedidosNovos.forEach(function(o) {
                     setTimeout(function() { wppEnviarConfirmacao(o); }, 300);
                 });
-                // Auto-aceitar: move para preparo DEPOIS da confirmação ser enviada (1500ms)
+                // Auto-aceitar: busca o pedido em orders no momento do timeout (não antes)
                 var cfgAceitar = impGetConfig();
                 var aceitarOn = cfgAceitar.aceitar !== false;
                 if (aceitarOn) {
-                    pedidosNovos.forEach(function(o) {
-                        setTimeout(function() { updateOrderStatus(o.id, 'preparo'); }, 1500);
+                    _idsNovos.forEach(function(pid) {
+                        setTimeout(function() {
+                            // Só avança se ainda estiver em análise (não foi movido manualmente)
+                            var ped = orders.find(function(x){ return x.id === pid; });
+                            if (ped && ped.status === 'analise') {
+                                updateOrderStatus(pid, 'preparo');
+                            }
+                        }, 1500);
                     });
                 }
             }
@@ -7788,7 +7797,6 @@ async function supaRecarregarFinalizadosHoje() {
             'pedidos?restaurante_id=eq.' + REST_ID +
             '&fechado_em=not.is.null' +
             '&restaurado_em=is.null' +
-            '&status=neq.finalizado&status=neq.cancelado' +
             '&order=fechado_em.desc&select=*'
         );
 
