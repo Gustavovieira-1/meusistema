@@ -3238,7 +3238,7 @@ function inicializarSistema() {
 async function verificarBloqueio() {
     if (!REST_ID) return false;
     try {
-        const r = await fetch(SUPA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + REST_ID + '&select=status_pgto,vencimento&limit=1', {
+        const r = await fetch(SUPA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + REST_ID + '&select=status_pgto,vencimento,ativo&limit=1', {
             headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_TOKEN }
         });
         const data = await r.json();
@@ -3247,7 +3247,7 @@ async function verificarBloqueio() {
         const hoje = new Date(); hoje.setHours(0,0,0,0);
         const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
         const status = pgto.status_pgto;
-        if (status === 'inadimplente' || status === 'cancelado') {
+        if (status === 'inadimplente' || status === 'cancelado' || pgto.ativo === false) {
             mostrarBloqueio('Pagamento pendente');
             return true;
         }
