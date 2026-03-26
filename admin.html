@@ -7663,7 +7663,13 @@ async function supaCarregarFinalizadosKanban() {
 
 async function supaCarregarPedidos() {
     try {
-        const rows = await supaGet('pedidos', 'status=neq.finalizado&status=neq.cancelado&fechado_em=is.null&order=criado_em.desc');
+        // Busca pedidos ativos OU fechados mas restaurados
+        const rows = await supaReq('GET',
+            'pedidos?restaurante_id=eq.' + REST_ID +
+            '&status=neq.finalizado&status=neq.cancelado' +
+            '&or=(fechado_em.is.null,restaurado_em.not.is.null)' +
+            '&order=criado_em.desc&select=*'
+        );
         if (rows && rows.length) {
             const mapped = rows.map(r => {
                 // Parse itens se for string JSON
@@ -7707,9 +7713,14 @@ async function supaCarregarPedidos() {
             const preservados = orders.filter(function(o) {
                 return (o.status === 'finalizado' || o.status === 'cancelado') && !idsNuvem.has(o.id);
             });
+            // Só re-renderiza se houve mudança real (evita lentidão a cada 5s)
+            var _novoJson = JSON.stringify(preservados.concat(mappedFiltrado));
+            var _velhoJson = localStorage.getItem('f_orders') || '[]';
             orders = preservados.concat(mappedFiltrado);
-            localStorage.setItem('f_orders', JSON.stringify(orders));
-            renderOrders();
+            if (_novoJson !== _velhoJson) {
+                localStorage.setItem('f_orders', _novoJson);
+                renderOrders();
+            }
             // 🔊 Tocar som se chegou novo pedido em análise
             if (pedidosNovos.length > 0) {
                 tocarSomNotificacao();
@@ -7747,7 +7758,7 @@ function fecharTodosCards() {
         if (o._supa_id) {
             _idsFechados.add(o._supa_id);
             // Grava fechado_em no Supabase (polling vai confirmar no próximo ciclo)
-            supaUpdate('pedidos', o._supa_id, { fechado_em: agora })
+            supaUpdate('pedidos', o._supa_id, { fechado_em: agora, restaurado_em: null })
                 .catch(function(e){ console.warn('[fecharCards]', e.message); });
         }
     });
@@ -7762,29 +7773,40 @@ function fecharTodosCards() {
 }
 
 // 🔔 Recarregar pedidos finalizados do Supabase (para recuperar pedidos sumidos)
-// 🔔 Restaurar pedidos fechados manualmente (usa coluna fechado_em do Supabase)
+// 🔔 Restaurar pedidos fechados manualmente
+// Lógica: busca pedidos com fechado_em preenchido e sem restaurado_em
+// Grava restaurado_em neles → polling passa a mostrá-los novamente
+// Assim funciona mesmo após limpar cache (tudo baseado no Supabase)
 async function supaRecarregarFinalizadosHoje() {
     try {
-        // Busca o timestamp do último fechamento
-        var ultimoFechamento = localStorage.getItem('f_ultimo_fechamento') || '';
-        if (!ultimoFechamento) {
-            cupToast('Nenhum fechamento registrado.', '#64748b');
-            return;
-        }
+        cupToast('Buscando pedidos...', '#64748b');
 
-        // Busca todos os pedidos fechados a partir do último fechamento
+        // Busca TODOS os pedidos deste restaurante que foram fechados
+        // mas ainda não foram restaurados (restaurado_em é null)
         const rows = await supaReq('GET',
             'pedidos?restaurante_id=eq.' + REST_ID +
-            '&fechado_em=gte.' + ultimoFechamento +
-            '&order=criado_em.desc&select=*'
+            '&fechado_em=not.is.null' +
+            '&restaurado_em=is.null' +
+            '&status=neq.finalizado&status=neq.cancelado' +
+            '&order=fechado_em.desc&select=*'
         );
 
         if (!rows || !rows.length) {
-            cupToast('Nenhum pedido para restaurar.', '#64748b');
+            cupToast('Nenhum pedido fechado para restaurar.', '#64748b');
             return;
         }
 
-        const mapped = rows.map(r => {
+        // Pega o fechado_em mais recente — restaura apenas o último lote
+        var ultimoFechamento = rows[0].fechado_em;
+        // Filtra apenas os do mesmo lote (mesmo fechado_em, com tolerância de 5s)
+        var loteMs = new Date(ultimoFechamento).getTime();
+        var lote = rows.filter(function(r) {
+            return Math.abs(new Date(r.fechado_em).getTime() - loteMs) < 5000;
+        });
+
+        var agora = new Date().toISOString();
+
+        const mapped = lote.map(r => {
             let itens = r.itens || [];
             if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
             return {
@@ -7801,22 +7823,23 @@ async function supaRecarregarFinalizadosHoje() {
                 produtoBrindeNome: r.produto_brinde_nome || '',
                 produtoBrindeId: r.produto_brinde_id || '',
                 total: r.total,
-                status: r.status, // status original preservado no Supabase
+                status: r.status, // status original preservado
                 items: itens,
                 timestamp: r.criado_em,
                 finalizadoEm: r.finalizado_em || null
             };
         });
 
-        // Limpa fechado_em no Supabase — pedidos voltam ao painel
+        // Grava restaurado_em no Supabase — polling vai buscar esses pedidos
         mapped.forEach(function(o) {
             if (o._supa_id) {
-                supaUpdate('pedidos', o._supa_id, { fechado_em: null })
+                supaUpdate('pedidos', o._supa_id, { restaurado_em: agora })
                     .catch(function(e){ console.warn('[restaurar]', e.message); });
             }
         });
 
-        // Mescla sem duplicar
+        // Adiciona ao painel imediatamente (sem esperar o polling)
+        _idsFechados.clear();
         var idsAtuais = new Set(orders.map(function(o){ return o.id; }));
         var novos = mapped.filter(function(o){ return !idsAtuais.has(o.id); });
         mapped.forEach(function(o) {
@@ -7825,8 +7848,6 @@ async function supaRecarregarFinalizadosHoje() {
         });
         orders = orders.concat(novos);
 
-        // Limpa o Set em memória — polling volta a mostrar esses pedidos
-        _idsFechados.clear();
         localStorage.removeItem('f_ultimo_fechamento');
         localStorage.removeItem('f_ultima_limpeza');
         localStorage.setItem('f_orders', JSON.stringify(orders));
