@@ -722,7 +722,7 @@ async function init(){
 
         // Verificação de pagamento + cardápio em paralelo (não mais sequencial)
         const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows, wppRows] = await Promise.all([
-            supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento,ativo&limit=1'),
+            supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
             supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=*'),
@@ -740,7 +740,7 @@ async function init(){
             const hoje = new Date(); hoje.setHours(0,0,0,0);
             const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
             const status = pgto.status_pgto;
-            if (status === 'inadimplente' || status === 'cancelado' || pgto.ativo === false ||
+            if (status === 'inadimplente' || status === 'cancelado' ||
                 (status === 'trial' && venc && hoje > venc)) {
                 document.getElementById('cardapio-bloqueio').style.display = 'flex';
                 return;
@@ -897,7 +897,7 @@ async function _initBackground(cacheKey) {
         }
 
         const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows, wppRows] = await Promise.all([
-            supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento,ativo&limit=1'),
+            supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
             supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
             supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=*'),
@@ -915,7 +915,7 @@ async function _initBackground(cacheKey) {
             const hoje = new Date(); hoje.setHours(0,0,0,0);
             const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
             const status = pgto.status_pgto;
-            if (status === 'inadimplente' || status === 'cancelado' || pgto.ativo === false ||
+            if (status === 'inadimplente' || status === 'cancelado' ||
                 (status === 'trial' && venc && hoje > venc)) {
                 document.getElementById('cardapio-bloqueio').style.display = 'flex';
                 return;
@@ -1783,13 +1783,13 @@ function fidelMostrarSucesso(total) {
 // Verificar se restaurante tem pagamento ativo
 async function verificarPagamentoCardapio(restId) {
     try {
-        const r = await supaFetch('pagamentos?restaurante_id=eq.' + restId + '&select=status_pgto,vencimento,ativo&limit=1');
+        const r = await supaFetch('pagamentos?restaurante_id=eq.' + restId + '&select=status_pgto,vencimento&limit=1');
         if (!r || r.length === 0) return; // sem registro = libera
         const pgto = r[0];
         const hoje = new Date(); hoje.setHours(0,0,0,0);
         const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
         const status = pgto.status_pgto;
-        if (status === 'inadimplente' || status === 'cancelado' || pgto.ativo === false) {
+        if (status === 'inadimplente' || status === 'cancelado') {
             document.getElementById('cardapio-bloqueio').style.display = 'flex';
             return;
         }
