@@ -3549,7 +3549,14 @@ function showSec(id, btn) {
     try { localStorage.setItem('f_last_sec', id); } catch(e) {}
 
     if (id === 'gestor')           renderOrders();
-    if (id === 'produtos')         { renderCategories(); renderProds(); }
+    if (id === 'produtos') {
+        if (!db.prods || db.prods.length === 0) {
+            // Cardápio ainda não carregou — busca do Supabase (que renderiza ao terminar)
+            supaCarregarCardapio();
+        } else {
+            renderCategories(); renderProds();
+        }
+    }
     if (id === 'clientes') {
         // Filtro ativo por padrão = usa o mesmo período dos outros relatórios (relDataIni/relDataFim)
         clientesFiltroAtivo = true;
@@ -3597,7 +3604,14 @@ function openPDV() {
     document.getElementById('modal-pdv').classList.add('pdv-visivel');
     atualizarCarrinho();
     fecharDropdownClientes();
-    renderPdvProducts();
+    // Se db.prods ainda está vazio (Supabase não terminou de carregar), busca agora
+    if (!db.prods || db.prods.length === 0) {
+        var cont = document.getElementById('pdv-lista-produtos');
+        if (cont) cont.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;"><i class="fas fa-circle-notch fa-spin"></i> Carregando produtos...</div>';
+        supaCarregarCardapio().then(function(){ renderPdvProducts(); });
+    } else {
+        renderPdvProducts();
+    }
 }
 
 function editarPedido(id) {
@@ -7546,6 +7560,13 @@ async function supaUpsert(table, obj, onConflict) {
 
 async function supaCarregarCardapio() {
     try {
+        // Mostra loading no editor de cardápio se estiver aberto e vazio
+        if (!db.prods || db.prods.length === 0) {
+            var _pl = document.getElementById('prod-list');
+            var _cl = document.getElementById('category-list');
+            if (_pl && !_pl.querySelector('.fa-spin')) _pl.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;"><i class="fas fa-circle-notch fa-spin"></i> Carregando produtos...</div>';
+            if (_cl && !_cl.querySelector('.fa-spin')) _cl.innerHTML = '<div style="padding:10px;text-align:center;color:#94a3b8;"><i class="fas fa-circle-notch fa-spin"></i></div>';
+        }
         const [cats, prods, comps] = await Promise.all([
             supaGet('categorias',   'order=ordem.asc'),
             supaGet('produtos',     'order=ordem.asc'),
