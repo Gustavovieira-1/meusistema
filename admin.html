@@ -1897,7 +1897,29 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
         </div>
 
 
+        <!-- BLOCO: LIMPEZA DE PEDIDOS FINALIZADOS -->
+        <div style="background:white; border-radius:16px; border:1.5px solid #f1f5f9; box-shadow:0 1px 6px rgba(0,0,0,.04); padding:24px 28px; margin-bottom:18px;">
+            <div style="font-size:12px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:20px;">Limpeza de Pedidos</div>
+            <div style="max-width:420px;">
+                <div style="font-size:13px; color:#475569; margin-bottom:18px; line-height:1.6;">
+                    Configure o horário em que os pedidos finalizados devem desaparecer do painel. Os dados ficarão salvos no histórico para sempre.
+                </div>
 
+                <div id="cfg-limpar-horario-div" style="margin-bottom:18px;">
+                    <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;">Horário da Limpeza</label>
+                    <input id="cfg-limpar-horario" type="time" placeholder="HH:MM" 
+                        style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                    <div style="font-size:12px; color:#94a3b8; margin-top:6px;">Todos os dias neste horário, os pedidos finalizados <strong>antes desse horário</strong> desaparecerão do painel</div>
+                </div>
+
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                        <input id="cfg-limpar-ativado" type="checkbox" style="cursor:pointer;">
+                        <span style="font-size:13px; color:#475569;">Ativar limpeza automática</span>
+                    </label>
+                </div>
+            </div>
+        </div>
 
         <!-- BLOCO: SEGURANÇA DA CONTA -->
         <div style="background:white; border-radius:16px; border:1.5px solid #f1f5f9; box-shadow:0 1px 6px rgba(0,0,0,.04); padding:24px 28px; margin-bottom:18px;">
@@ -3528,16 +3550,10 @@ function showSec(id, btn) {
 
     if (id === 'gestor')           renderOrders();
     if (id === 'produtos') {
-        if (!db.prods || db.prods.length === 0) {
-            // Mostra skeleton enquanto carrega
-            var prodList = document.getElementById('prod-list');
-            var catList  = document.getElementById('category-list');
-            if (prodList) prodList.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;"><i class="fas fa-circle-notch fa-spin"></i> Carregando cardápio...</div>';
-            if (catList)  catList.innerHTML  = '<div style="padding:10px;text-align:center;color:#94a3b8;"><i class="fas fa-circle-notch fa-spin"></i></div>';
-            supaCarregarCardapio();
-        } else {
-            renderCategories(); renderProds();
-        }
+        // Renderiza o que já tem em memória imediatamente (sem travar)
+        renderCategories(); renderProds();
+        // Busca Supabase em paralelo para atualizar se necessário
+        supaCarregarCardapio();
     }
     if (id === 'clientes') {
         // Filtro ativo por padrão = usa o mesmo período dos outros relatórios (relDataIni/relDataFim)
@@ -3586,10 +3602,8 @@ function openPDV() {
     document.getElementById('modal-pdv').classList.add('pdv-visivel');
     atualizarCarrinho();
     fecharDropdownClientes();
-    // Se db.prods ainda está vazio (Supabase não terminou de carregar), busca agora
+    // Renderiza o que tem em memória; se vazio busca do Supabase
     if (!db.prods || db.prods.length === 0) {
-        var cont = document.getElementById('pdv-lista-produtos');
-        if (cont) cont.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#94a3b8;"><i class="fas fa-circle-notch fa-spin"></i> Carregando produtos...</div>';
         supaCarregarCardapio().then(function(){ renderPdvProducts(); });
     } else {
         renderPdvProducts();
@@ -7542,13 +7556,6 @@ async function supaUpsert(table, obj, onConflict) {
 
 async function supaCarregarCardapio() {
     try {
-        // Mostra loading no editor de cardápio se estiver aberto e vazio
-        if (!db.prods || db.prods.length === 0) {
-            var _pl = document.getElementById('prod-list');
-            var _cl = document.getElementById('category-list');
-            if (_pl && !_pl.querySelector('.fa-spin')) _pl.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;"><i class="fas fa-circle-notch fa-spin"></i> Carregando produtos...</div>';
-            if (_cl && !_cl.querySelector('.fa-spin')) _cl.innerHTML = '<div style="padding:10px;text-align:center;color:#94a3b8;"><i class="fas fa-circle-notch fa-spin"></i></div>';
-        }
         const [cats, prods, comps] = await Promise.all([
             supaGet('categorias',   'order=ordem.asc'),
             supaGet('produtos',     'order=ordem.asc'),
