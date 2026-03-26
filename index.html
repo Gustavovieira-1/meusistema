@@ -717,7 +717,11 @@ async function init(){
             // Salva REST_ID no cache por 24h para pular esse roundtrip na próxima visita
             try { localStorage.setItem('zira_slug_' + REST_SLUG, JSON.stringify({id: REST_ID, ts: Date.now()})); } catch(e) {}
         }
-        if (!restRows) restRows = [{ id: REST_ID, nome: '', slug: REST_SLUG, ativo: true }];
+        // Se REST_ID veio do cache, busca o ativo atualizado do restaurante
+        if (!restRows) {
+            const restCheck = await supaFetch('restaurantes?id=eq.' + REST_ID + '&select=id,nome,slug,ativo&limit=1');
+            restRows = restCheck && restCheck[0] ? restCheck : [{ id: REST_ID, nome: '', slug: REST_SLUG, ativo: true }];
+        }
         const rest = restRows[0];
 
         // Verificação de pagamento + cardápio em paralelo (não mais sequencial)
@@ -890,9 +894,9 @@ async function init(){
 // Atualização em background — roda após renderizar do cache
 async function _initBackground(cacheKey) {
     try {
-        // REST_ID já está carregado do init principal — não precisa buscar de novo
+        // REST_ID já está carregado do init principal — busca ativo sempre para verificar bloqueio
+        let restRows;
         if (!REST_ID) {
-            let restRows;
             if (REST_SLUG) {
                 restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
             } else {
@@ -900,6 +904,8 @@ async function _initBackground(cacheKey) {
             }
             if (!restRows || !restRows[0]) return;
             REST_ID = restRows[0].id;
+        } else {
+            restRows = await supaFetch('restaurantes?id=eq.' + REST_ID + '&select=id,nome,slug,ativo&limit=1');
         }
 
         const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows, wppRows] = await Promise.all([
