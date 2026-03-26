@@ -3408,6 +3408,8 @@ if (document.readyState === "complete" || document.readyState === "interactive")
 // ── STATUS DA LOJA ─────────────────────────────────────────
 // lojaPausada = operador fechou manualmente (sobrepõe horário)
 var lojaPausada = JSON.parse(localStorage.getItem('f_loja_pausada') || 'false');
+// IDs de pedidos fechados manualmente — polling ignora enquanto fechado_em não confirmar no Supabase
+var _idsFechados = new Set();
 // lojaAberta mantido por compatibilidade
 var lojaAberta  = !lojaPausada;
 
@@ -7696,14 +7698,16 @@ async function supaCarregarPedidos() {
                     finalizadoEm: r.finalizado_em || r.finalizadoEm || (r.status === 'finalizado' ? r.criado_em : null)
                 };
             });
-            const idsNuvem = new Set(mapped.map(o => o.id));
-            const pedidosNovos = mapped.filter(o => !orders.find(ord => ord.id === o.id) && o.status === 'analise');
+            // Ignora pedidos fechados manualmente (evita race condition com o PATCH do fechado_em)
+            const mappedFiltrado = mapped.filter(function(o) { return !_idsFechados.has(o._supa_id); });
+            const idsNuvem = new Set(mappedFiltrado.map(o => o.id));
+            const pedidosNovos = mappedFiltrado.filter(o => !orders.find(ord => ord.id === o.id) && o.status === 'analise');
             // Preserva finalizados e cancelados que já estão em memória
             // (o Supabase não retorna esses status na query — eles só somem via cfgAplicarLimpeza)
             const preservados = orders.filter(function(o) {
                 return (o.status === 'finalizado' || o.status === 'cancelado') && !idsNuvem.has(o.id);
             });
-            orders = preservados.concat(mapped);
+            orders = preservados.concat(mappedFiltrado);
             localStorage.setItem('f_orders', JSON.stringify(orders));
             renderOrders();
             // 🔊 Tocar som se chegou novo pedido em análise
@@ -7738,10 +7742,11 @@ function fecharTodosCards() {
 
     var agora = new Date().toISOString();
 
-    // Grava fechado_em no Supabase para cada pedido (sem alterar status)
-    // Assim o polling ignora esses pedidos e o status real é preservado
+    // Adiciona ao Set em memória IMEDIATAMENTE — evita race condition com polling de 5s
     orders.forEach(function(o) {
         if (o._supa_id) {
+            _idsFechados.add(o._supa_id);
+            // Grava fechado_em no Supabase (polling vai confirmar no próximo ciclo)
             supaUpdate('pedidos', o._supa_id, { fechado_em: agora })
                 .catch(function(e){ console.warn('[fecharCards]', e.message); });
         }
@@ -7820,6 +7825,8 @@ async function supaRecarregarFinalizadosHoje() {
         });
         orders = orders.concat(novos);
 
+        // Limpa o Set em memória — polling volta a mostrar esses pedidos
+        _idsFechados.clear();
         localStorage.removeItem('f_ultimo_fechamento');
         localStorage.removeItem('f_ultima_limpeza');
         localStorage.setItem('f_orders', JSON.stringify(orders));
