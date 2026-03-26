@@ -741,6 +741,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     style="background:#16a34a !important; height:40px; cursor:pointer; border:none; color:white; padding:0 20px; border-radius:10px;">
                 + Novo Pedido
             </button>
+                <button onclick="supaRecarregarFinalizadosHoje()" title="Busca todos os pedidos de hoje no servidor (útil se sumiram após F5)" style="background:#f8fafc;color:#475569;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;"><i class="fas fa-rotate-right"></i> Restaurar pedidos</button>
             <button id="btn-pausar-loja" onclick="toggleLojaStatus()" class="btn-save" style="background:#dc2626; height:40px; white-space:nowrap;">⏸ Pausar Loja</button>
         </div>
 
@@ -7725,6 +7726,63 @@ async function supaCarregarPedidos() {
     } catch(e) { console.warn('[Supabase] Pedidos offline:', e.message); }
 }
 
+// 🔔 Recarregar pedidos finalizados do Supabase (para recuperar pedidos sumidos)
+async function supaRecarregarFinalizadosHoje() {
+    try {
+        // Pega todos os pedidos de hoje (últimas 24h) independente do status
+        var ontem = new Date();
+        ontem.setHours(0, 0, 0, 0);
+        var isoOntem = ontem.toISOString();
+
+        const rows = await supaReq('GET',
+            'pedidos?restaurante_id=eq.' + REST_ID +
+            '&criado_em=gte.' + isoOntem +
+            '&order=criado_em.desc&select=*'
+        );
+        if (!rows || !rows.length) {
+            cupToast('Nenhum pedido encontrado hoje no servidor.', '#e30613');
+            return;
+        }
+        const mapped = rows.map(r => {
+            let itens = r.itens || [];
+            if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
+            return {
+                id: r.numero || r.id, _supa_id: r.id,
+                client: r.cliente, phone: r.telefone,
+                address: r.endereco, bairro: r.bairro,
+                complemento: r.complemento || '', cidade: r.cidade || '',
+                tipo: r.tipo, pagamento: r.pagamento, troco: r.troco,
+                subtotal: r.subtotal || r.total,
+                taxaEntrega: r.taxa_entrega || 0,
+                descontoCupom: r.desconto_cupom || 0,
+                descontoPontos: r.desconto_pontos || 0,
+                cupom: r.cupom || '',
+                produtoBrindeNome: r.produto_brinde_nome || '',
+                produtoBrindeId: r.produto_brinde_id || '',
+                total: r.total, status: r.status, items: itens,
+                timestamp: r.criado_em,
+                finalizadoEm: r.finalizado_em || (r.status === 'finalizado' ? r.criado_em : null)
+            };
+        });
+        // Mescla com os pedidos em memória (sem duplicar)
+        var idsAtuais = new Set(orders.map(function(o){ return o.id; }));
+        var novos = mapped.filter(function(o){ return !idsAtuais.has(o.id); });
+        // Atualiza status dos que já existem
+        mapped.forEach(function(o) {
+            var idx = orders.findIndex(function(x){ return x.id === o.id; });
+            if (idx >= 0) orders[idx] = o;
+        });
+        orders = orders.concat(novos);
+        localStorage.setItem('f_orders', JSON.stringify(orders));
+        // Reseta o controle de limpeza para não sumir de novo hoje
+        localStorage.removeItem('f_ultima_limpeza');
+        renderOrders();
+        cupToast('✅ ' + mapped.length + ' pedidos de hoje restaurados do servidor!', '#16a34a');
+    } catch(e) {
+        cupToast('Erro ao buscar pedidos: ' + e.message, '#e30613');
+    }
+}
+
 // 🔊 Variável para controlar som em reprodução
 let audioNotificacao = null;
 let countRepeticoes = 0;
@@ -7870,7 +7928,6 @@ async function authLogout() {
     localStorage.removeItem('f_cfg_loja');
     localStorage.removeItem('f_orders');
     localStorage.removeItem('f_horarios');
-    localStorage.removeItem('f_ultima_limpeza');
     localStorage.removeItem('f_taxas_config');
     localStorage.removeItem('f_fidelidade_cfg');
     localStorage.removeItem('f_fidelidade_cli');
@@ -10216,47 +10273,36 @@ function cfgAplicarLimpeza() {
     if (hAgora < hLimpar) return;
 
     // ── PROTEÇÃO ANTI-VIRADA DE DIA ──────────────────────────────────────────
-    // Guarda a data (AAAA-MM-DD) em que a limpeza foi executada.
-    // Se já rodou HOJE (mesmo dia do calendário), não roda de novo.
-    // Isso impede que rode na virada da meia-noite ou múltiplas vezes.
+    // Só roda UMA VEZ POR DIA. Guarda a data da última execução.
     var hoje = agora.getFullYear() + '-' +
                String(agora.getMonth() + 1).padStart(2, '0') + '-' +
                String(agora.getDate()).padStart(2, '0');
     var ultimaLimpeza = localStorage.getItem('f_ultima_limpeza') || '';
-    if (ultimaLimpeza === hoje) {
-        console.log('[Limpeza] Já executada hoje (' + hoje + '), pulando.');
-        return;
-    }
+    if (ultimaLimpeza === hoje) return; // já rodou hoje, não repete
 
-    // Timestamp exato do horário de limpeza de HOJE
-    // Só remove pedidos finalizados ANTES desse horário
+    // Timestamp do horário de limpeza de HOJE
     var limparApartirDeMs = new Date(
         agora.getFullYear(), agora.getMonth(), agora.getDate(),
         parseInt(partes[0]), parseInt(partes[1] || 0), 0, 0
     ).getTime();
 
-    // Separa apenas os finalizados ANTES do horário de limpeza de hoje
+    // Remove apenas finalizados ANTES do horário de limpeza de hoje
     var paraRemover = orders.filter(function(o) {
         if (o.status !== 'finalizado') return false;
         var finTs = (parseDateUTC(o.finalizadoEm || o.timestamp) || new Date(0)).getTime();
         return finTs < limparApartirDeMs;
     });
 
-    if (paraRemover.length === 0) {
-        // Mesmo sem remover nada, marca que rodou hoje para não repetir
-        localStorage.setItem('f_ultima_limpeza', hoje);
-        return;
-    }
+    // Marca que rodou hoje (mesmo sem remover nada)
+    localStorage.setItem('f_ultima_limpeza', hoje);
+
+    if (paraRemover.length === 0) return;
 
     // Salva no histórico ANTES de remover
     paraRemover.forEach(function(o) { histRegistrar(o); });
 
-    // Remove só os elegíveis
     var idsRemover = new Set(paraRemover.map(function(o){ return o.id; }));
     orders = orders.filter(function(o) { return !idsRemover.has(o.id); });
-
-    // Marca que a limpeza foi executada hoje
-    localStorage.setItem('f_ultima_limpeza', hoje);
 
     console.log('[Limpeza] Removidos ' + paraRemover.length + ' pedidos. Próxima limpeza: amanhã às ' + cfg.limparHorario);
 
@@ -10765,9 +10811,6 @@ function irParaPlanos() {
     const rid = REST_ID || '';
     window.open('https://zirafood.com.br/planos?rid=' + rid, '_blank');
 }
-document.addEventListener("keydown",function(e){if(e.key==="F12"||(e.ctrlKey&&e.shiftKey&&["I","J","C"].includes(e.key))||(e.ctrlKey&&e.key==="u")||(e.ctrlKey&&e.key==="s")){e.preventDefault();return false;}});
-document.addEventListener("contextmenu",function(e){e.preventDefault();});
-document.addEventListener("selectstart",function(e){e.preventDefault();});
-document.addEventListener("copy",function(e){e.preventDefault();});
+// DevTools liberado para diagnóstico
 </script>
 </body>
