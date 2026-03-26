@@ -742,6 +742,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                 + Novo Pedido
             </button>
                 <button onclick="supaRecarregarFinalizadosHoje()" title="Busca todos os pedidos de hoje no servidor (útil se sumiram após F5)" style="background:#f8fafc;color:#475569;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;"><i class="fas fa-rotate-right"></i> Restaurar pedidos</button>
+            <button onclick="fecharTodosCards()" title="Remove todos os cards do painel. Os pedidos ficam salvos no histórico e relatórios." style="background:#f8fafc;color:#475569;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:7px;"><i class="fas fa-broom"></i> Fechar cards</button>
             <button id="btn-pausar-loja" onclick="toggleLojaStatus()" class="btn-save" style="background:#dc2626; height:40px; white-space:nowrap;">⏸ Pausar Loja</button>
         </div>
 
@@ -7724,6 +7725,42 @@ async function supaCarregarPedidos() {
             console.log('[Supabase] Pedidos:', mapped.length);
         }
     } catch(e) { console.warn('[Supabase] Pedidos offline:', e.message); }
+}
+
+// 🧹 Fechar todos os cards do painel (salva no histórico antes de remover)
+function fecharTodosCards() {
+    if (!orders.length) {
+        cupToast('Nenhum card para fechar.', '#64748b');
+        return;
+    }
+    var total = orders.length;
+    if (!confirm('Fechar todos os ' + total + ' cards do painel?\n\nEles ficam salvos no histórico e relatórios — só somem da tela.')) return;
+
+    // Salva todos no histórico antes de remover
+    orders.forEach(function(o) {
+        // Marca como finalizado se ainda não estiver (para entrar no histórico corretamente)
+        var copia = JSON.parse(JSON.stringify(o));
+        if (copia.status !== 'finalizado' && copia.status !== 'cancelado') {
+            copia.status = 'finalizado';
+            copia.finalizadoEm = copia.finalizadoEm || new Date().toISOString();
+            // Atualiza status no Supabase também
+            if (copia._supa_id) {
+                supaUpdate('pedidos', copia._supa_id, {
+                    status: 'finalizado',
+                    finalizado_em: copia.finalizadoEm
+                }).catch(function(e){ console.warn('[fecharCards]', e.message); });
+            }
+        }
+        histRegistrar(copia);
+    });
+
+    // Limpa o painel
+    orders = [];
+    localStorage.setItem('f_orders', JSON.stringify(orders));
+    // Reseta controle de limpeza automática para não conflitar
+    localStorage.removeItem('f_ultima_limpeza');
+    renderOrders();
+    cupToast('✅ ' + total + ' cards fechados. Tudo salvo no histórico!', '#16a34a');
 }
 
 // 🔔 Recarregar pedidos finalizados do Supabase (para recuperar pedidos sumidos)
