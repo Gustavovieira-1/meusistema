@@ -7870,6 +7870,7 @@ async function authLogout() {
     localStorage.removeItem('f_cfg_loja');
     localStorage.removeItem('f_orders');
     localStorage.removeItem('f_horarios');
+    localStorage.removeItem('f_ultima_limpeza');
     localStorage.removeItem('f_taxas_config');
     localStorage.removeItem('f_fidelidade_cfg');
     localStorage.removeItem('f_fidelidade_cli');
@@ -10211,32 +10212,53 @@ function cfgAplicarLimpeza() {
     var hLimpar = parseInt(partes[0]) * 60 + parseInt(partes[1] || 0);
     var hAgora  = agora.getHours() * 60 + agora.getMinutes();
 
-    // Só executa se já passou o horário configurado hoje
+    // Só executa se JÁ PASSOU o horário configurado HOJE
     if (hAgora < hLimpar) return;
 
-    // Timestamp exato do horário de limpeza de HOJE (ex: hoje às 23:59:00)
+    // ── PROTEÇÃO ANTI-VIRADA DE DIA ──────────────────────────────────────────
+    // Guarda a data (AAAA-MM-DD) em que a limpeza foi executada.
+    // Se já rodou HOJE (mesmo dia do calendário), não roda de novo.
+    // Isso impede que rode na virada da meia-noite ou múltiplas vezes.
+    var hoje = agora.getFullYear() + '-' +
+               String(agora.getMonth() + 1).padStart(2, '0') + '-' +
+               String(agora.getDate()).padStart(2, '0');
+    var ultimaLimpeza = localStorage.getItem('f_ultima_limpeza') || '';
+    if (ultimaLimpeza === hoje) {
+        console.log('[Limpeza] Já executada hoje (' + hoje + '), pulando.');
+        return;
+    }
+
+    // Timestamp exato do horário de limpeza de HOJE
+    // Só remove pedidos finalizados ANTES desse horário
     var limparApartirDeMs = new Date(
         agora.getFullYear(), agora.getMonth(), agora.getDate(),
         parseInt(partes[0]), parseInt(partes[1] || 0), 0, 0
     ).getTime();
 
-    // Separa apenas os finalizados que foram finalizados ANTES do horário de limpeza de hoje
+    // Separa apenas os finalizados ANTES do horário de limpeza de hoje
     var paraRemover = orders.filter(function(o) {
         if (o.status !== 'finalizado') return false;
         var finTs = (parseDateUTC(o.finalizadoEm || o.timestamp) || new Date(0)).getTime();
-        return finTs < limparApartirDeMs; // finalizado antes da hora → pode sumir
+        return finTs < limparApartirDeMs;
     });
 
-    if (paraRemover.length === 0) return; // nada a remover
+    if (paraRemover.length === 0) {
+        // Mesmo sem remover nada, marca que rodou hoje para não repetir
+        localStorage.setItem('f_ultima_limpeza', hoje);
+        return;
+    }
 
     // Salva no histórico ANTES de remover
     paraRemover.forEach(function(o) { histRegistrar(o); });
 
-    // Remove só os elegíveis, mantém todos os outros (inclusive finalizados de hoje após o horário)
+    // Remove só os elegíveis
     var idsRemover = new Set(paraRemover.map(function(o){ return o.id; }));
     orders = orders.filter(function(o) { return !idsRemover.has(o.id); });
 
-    console.log('[Limpeza] Removidos ' + paraRemover.length + ' pedidos finalizados antes das ' + cfg.limparHorario);
+    // Marca que a limpeza foi executada hoje
+    localStorage.setItem('f_ultima_limpeza', hoje);
+
+    console.log('[Limpeza] Removidos ' + paraRemover.length + ' pedidos. Próxima limpeza: amanhã às ' + cfg.limparHorario);
 
     localStorage.setItem('f_orders', JSON.stringify(orders));
     renderOrders();
