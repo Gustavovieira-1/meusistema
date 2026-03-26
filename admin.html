@@ -7609,6 +7609,7 @@ async function supaCarregarFinalizadosKanban() {
             'pedidos?restaurante_id=eq.' + REST_ID +
             '&status=in.(finalizado,cancelado)' +
             '&criado_em=gte.' + inicioDia +
+            '&or=(fechado_em.is.null,restaurado_em.not.is.null)' +
             '&order=criado_em.desc&select=*&limit=200'
         );
         if (!rows || !rows.length) return;
