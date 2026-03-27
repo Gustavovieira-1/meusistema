@@ -255,7 +255,7 @@ input:checked + .slider:before { transform: translateX(14px); }
 }
 .kanban-col {
     flex: 1;
-    min-width: 280px;
+    min-width: 195px;
     background: #f1f2f6;
     border-radius: 12px;
     padding: 12px;
@@ -360,31 +360,43 @@ body { margin: 0; font-family: 'Inter', sans-serif; display: flex; background: v
 .main { flex: 1; margin-left: var(--sidebar-w); padding: 40px; box-sizing: border-box; }
 
 /* ── RESPONSIVO ─────────────────────────────────────────────────────────── */
-/* Notebook / tela média: 1280px ou menos */
-@media (max-width: 1280px) {
-    :root { --sidebar-w: 210px; }
-    .sidebar-header { padding: 14px 12px 10px; }
-    .nav-container { padding: 6px 8px 8px; }
-    .nav-btn { font-size: 12px; padding: 8px 9px; }
-    .sub-nav-btn { font-size: 11.5px; }
-    .nav-section-label { font-size: 9px; }
-    .main { padding: 20px 24px; }
-    .kanban-col { min-width: 220px; }
-}
+/* kanban-col inline styles são sobrescritos aqui */
+.kanban-col[style*="min-width"] { min-width: unset !important; }
 
-/* Tela pequena: 1100px ou menos */
-@media (max-width: 1100px) {
-    :root { --sidebar-w: 185px; }
-    .nav-btn { font-size: 11.5px; padding: 7px 8px; gap: 7px; }
-    .nav-btn .nav-icon { width: 16px; font-size: 13px; }
-    .sidebar-footer .btn-indique span,
-    .sidebar-footer .btn-suporte span { display: none; }
-    .main { padding: 16px 16px; }
-    .kanban-col { min-width: 190px; }
+/* ≤ 1400px — monitores menores e notebooks grandes */
+@media (max-width: 1400px) {
+    :root { --sidebar-w: 210px; }
+    .main { padding: 20px 20px; }
+    .kanban-col { min-width: 195px !important; }
     .kanban-container { gap: 10px; }
 }
 
-/* Tela muito pequena: 960px ou menos — toolbar compacta */
+/* ≤ 1280px — notebooks comuns (1366×768) */
+@media (max-width: 1280px) {
+    :root { --sidebar-w: 185px; }
+    .sidebar-header { padding: 12px 10px 10px; }
+    .nav-container { padding: 5px 7px; }
+    .nav-btn { font-size: 11.5px; padding: 7px 8px; }
+    .sub-nav-btn { font-size: 11px; }
+    .nav-section-label { font-size: 9px; }
+    .main { padding: 14px 14px; }
+    .kanban-col { min-width: 165px !important; padding: 8px; }
+    .kanban-container { gap: 8px; }
+    .kanban-header { padding: 8px; margin-bottom: 10px; font-size: 13px; }
+    .order-card { padding: 11px 12px; }
+}
+
+/* ≤ 1100px — notebooks pequenos */
+@media (max-width: 1100px) {
+    :root { --sidebar-w: 160px; }
+    .nav-btn { font-size: 11px; padding: 6px 7px; gap: 6px; }
+    .nav-btn .nav-icon { width: 15px; font-size: 12px; }
+    .main { padding: 10px 10px; }
+    .kanban-col { min-width: 145px !important; padding: 7px; }
+    .kanban-container { gap: 6px; }
+}
+
+/* ≤ 960px — sidebar só ícones */
 @media (max-width: 960px) {
     :root { --sidebar-w: 52px; }
     .sidebar-header .loja-nome,
@@ -401,10 +413,10 @@ body { margin: 0; font-family: 'Inter', sans-serif; display: flex; background: v
     .nav-container { padding: 4px; }
     .nav-btn { justify-content: center; padding: 10px 0; width: 100%; }
     .nav-btn .nav-icon { width: auto; font-size: 16px; }
-    .main { padding: 12px; }
-    .kanban-col { min-width: 160px; padding: 8px; }
-    .kanban-container { gap: 8px; }
-    .header-flex { gap: 8px; flex-wrap: wrap; }
+    .main { padding: 10px 8px; }
+    .kanban-col { min-width: 140px !important; padding: 6px; }
+    .kanban-container { gap: 6px; }
+    .header-flex { gap: 6px; flex-wrap: wrap; }
 }
 .section { display: none; }
 .section.active { display: block; }
@@ -831,7 +843,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                 </div>
                 <div id="list-entrega"></div>
             </div>
-            <div class="kanban-col" style="min-width:200px;">
+            <div class="kanban-col">
                 <div class="kanban-header col-finalizado">
                     <div>
                         <div style="display:flex;align-items:center;gap:8px;"><span>Finalizados</span><small id="count-finalizado" style="background:rgba(255,255,255,0.3);border-radius:20px;padding:1px 8px;">0</small></div>
@@ -840,7 +852,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                 </div>
                 <div id="list-finalizado"></div>
             </div>
-            <div class="kanban-col" style="min-width:200px;">
+            <div class="kanban-col">
                 <div class="kanban-header col-cancelado">
                     <div>
                         <div style="display:flex;align-items:center;gap:8px;"><span>Cancelados</span><small id="count-cancelado" style="background:rgba(255,255,255,0.3);border-radius:20px;padding:1px 8px;">0</small></div>
