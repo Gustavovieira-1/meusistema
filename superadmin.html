@@ -1853,7 +1853,32 @@ function saFiltrarRest() {
     saRenderRestaurantes(filtrados);
 }
 
+// ── sort state ──────────────────────────────────────────────
+var _sortCol = null;
+var _sortDir = 1; // 1 = asc, -1 = desc
+
+function saSortBy(col) {
+    if (_sortCol === col) { _sortDir *= -1; } else { _sortCol = col; _sortDir = 1; }
+    saFiltrar();
+}
+
 function saRenderRestaurantes(lista) {
+    // Aplica ordenação
+    if (_sortCol) {
+        lista = lista.slice().sort((a, b) => {
+            let va, vb;
+            if (_sortCol === 'nome')      { va = (a.nome||'').toLowerCase();                    vb = (b.nome||'').toLowerCase(); }
+            if (_sortCol === 'plano')     { va = a.pgto?.plano||'';                             vb = b.pgto?.plano||''; }
+            if (_sortCol === 'status')    { va = a.pgto?.status_pgto||'';                        vb = b.pgto?.status_pgto||''; }
+            if (_sortCol === 'venc')      { va = a.pgto?.vencimento||'9999';                    vb = b.pgto?.vencimento||'9999'; }
+            if (_sortCol === 'pedidos')   { va = a.totalPedidos||0;                             vb = b.totalPedidos||0; }
+            if (_sortCol === 'receita')   { va = a.receitaTotal||0;                             vb = b.receitaTotal||0; }
+            if (va < vb) return -1 * _sortDir;
+            if (va > vb) return  1 * _sortDir;
+            return 0;
+        });
+    }
+
     const el = document.getElementById('tabela-rest-body');
     if (!lista.length) {
         el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-store"></i></div>Nenhum restaurante encontrado.</div>';
@@ -1864,10 +1889,22 @@ function saRenderRestaurantes(lista) {
         const labels = { pago:'Pago', pendente:'Pendente', trial:'Trial', cancelado:'Cancelado', inadimplente:'Inadimplente' };
         return `<span class="badge ${map[s]||'pendente'}">${labels[s]||s}</span>`;
     };
+    const sortIcon = col => {
+        if (_sortCol !== col) return '<i class="fas fa-sort" style="opacity:.3;margin-left:5px;font-size:9px;"></i>';
+        return _sortDir === 1
+            ? '<i class="fas fa-sort-up" style="opacity:.8;margin-left:5px;font-size:9px;"></i>'
+            : '<i class="fas fa-sort-down" style="opacity:.8;margin-left:5px;font-size:9px;"></i>';
+    };
+    const thStyle = 'cursor:pointer;user-select:none;white-space:nowrap;';
     el.innerHTML = `<table>
         <thead><tr>
-            <th>Restaurante</th><th>Plano</th><th>Pagamento</th><th>Vencimento</th>
-            <th>Pedidos</th><th>Receita</th><th>Ativo</th><th>Ações</th>
+            <th style="${thStyle}" onclick="saSortBy('nome')">Restaurante${sortIcon('nome')}</th>
+            <th style="${thStyle}" onclick="saSortBy('plano')">Plano${sortIcon('plano')}</th>
+            <th style="${thStyle}" onclick="saSortBy('status')">Pagamento${sortIcon('status')}</th>
+            <th style="${thStyle}" onclick="saSortBy('venc')">Vencimento${sortIcon('venc')}</th>
+            <th style="${thStyle}" onclick="saSortBy('pedidos')">Pedidos${sortIcon('pedidos')}</th>
+            <th style="${thStyle}" onclick="saSortBy('receita')">Receita${sortIcon('receita')}</th>
+            <th>Ativo</th><th>Ações</th>
         </tr></thead>
         <tbody>
         ${lista.map(r => `<tr>
@@ -1875,7 +1912,16 @@ function saRenderRestaurantes(lista) {
                 <div class="rest-nome">${r.nome}</div>
                 <div class="rest-slug"><i class="fas fa-link" style="font-size:9px;"></i>${r.slug||'—'}</div>
             </td>
-            <td><span style="font-size:12px;color:var(--muted2);">${_planoLabel(r.pgto?.plano||'trial')}</span></td>
+            <td>
+                <select onchange="saAlterarPlano('${r.id}', this.value, this)"
+                    style="background:#1e293b;border:1px solid #334155;border-radius:7px;color:#e2e8f0;font-size:11px;padding:4px 7px;font-family:inherit;cursor:pointer;max-width:140px;">
+                    <option value="trial"      ${(r.pgto?.plano||'trial')==='trial'      ?'selected':''}>15 dias (Teste Grátis)</option>
+                    <option value="mensal"     ${(r.pgto?.plano||'')==='mensal'     ?'selected':''}>Mensal</option>
+                    <option value="trimestral" ${(r.pgto?.plano||'')==='trimestral' ?'selected':''}>Trimestral</option>
+                    <option value="semestral"  ${(r.pgto?.plano||'')==='semestral'  ?'selected':''}>Semestral</option>
+                    <option value="anual"      ${(r.pgto?.plano||'')==='anual'      ?'selected':''}>Anual</option>
+                </select>
+            </td>
             <td>${badgePgto(r.pgto?.status_pgto||'pendente')}</td>
             <td>
                 <input type="date" value="${r.pgto?.vencimento||''}"
@@ -1914,10 +1960,8 @@ async function saAlterarVencimento(restId, novaData, inputEl) {
         });
         const patchData = await patchR.json();
         if (!patchData || patchData.length === 0) {
-            // Registro não existe — cria
             await saFetch('POST', 'pagamentos', { restaurante_id: restId, vencimento: novaData, status_pgto: 'trial', plano: 'trial', valor: 0 });
         }
-        // Atualiza memória
         const r = _restaurantes.find(x => x.id === restId);
         if (r) { r.pgto = r.pgto || {}; r.pgto.vencimento = novaData; }
         inputEl.style.borderColor = '#22c55e';
@@ -1926,6 +1970,29 @@ async function saAlterarVencimento(restId, novaData, inputEl) {
     } catch(e) {
         inputEl.style.borderColor = '#ef4444';
         toast('Erro ao salvar vencimento: ' + e.message, false);
+    }
+}
+
+async function saAlterarPlano(restId, novoPlano, selectEl) {
+    try {
+        selectEl.style.borderColor = '#f59e0b';
+        const patchR = await fetch(SA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + restId, {
+            method: 'PATCH',
+            headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+            body: JSON.stringify({ plano: novoPlano })
+        });
+        const patchData = await patchR.json();
+        if (!patchData || patchData.length === 0) {
+            await saFetch('POST', 'pagamentos', { restaurante_id: restId, plano: novoPlano, status_pgto: 'trial', valor: 0 });
+        }
+        const r = _restaurantes.find(x => x.id === restId);
+        if (r) { r.pgto = r.pgto || {}; r.pgto.plano = novoPlano; }
+        selectEl.style.borderColor = '#22c55e';
+        setTimeout(() => { selectEl.style.borderColor = '#334155'; }, 1500);
+        toast('✓ Plano alterado para ' + _planoLabel(novoPlano), true);
+    } catch(e) {
+        selectEl.style.borderColor = '#ef4444';
+        toast('Erro ao salvar plano: ' + e.message, false);
     }
 }
 
