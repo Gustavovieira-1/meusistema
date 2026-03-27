@@ -5892,14 +5892,15 @@ function wppEnviarConfirmacao(order) {
         headers: { 'apikey': WPP_API_KEY }
     }).then(function(r){ return r.json(); }).then(function(data) {
         var state = (data.instance && data.instance.state) || data.state || 'close';
-        if (state !== 'open') return;
+        if (state !== 'open') { console.warn('[WPP] Confirmação não enviada — WhatsApp desconectado. Estado:', state); return; }
         return fetch(WPP_API_URL + '/message/sendText/' + instancia, {
             method: 'POST',
             headers: { 'apikey': WPP_API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ number: num, text: msg })
         });
     }).then(function(r) {
-        if (r && r.ok) console.log('[WPP] Confirmação enviada para ' + num);
+        if (r && r.ok) console.log('[WPP] ✅ Confirmação enviada para ' + num);
+        else if (r) r.text().then(function(t){ console.warn('[WPP] Erro ao enviar confirmação:', t); });
     }).catch(function(e) { console.warn('[WPP] Falha confirmação:', e.message); });
 }
 
@@ -8263,6 +8264,20 @@ async function supaCarregarConfigs() {
             supaGet('taxas_entrega', ''),
             supaGet('integracoes', '')
         ]);
+        if (cfgRows && cfgRows[0] && cfgRows[0].imp_config) {
+            // Aplica imp_config (ativar, auto, aceitar) no localStorage da impressora
+            // sem precisar que o usuário abra a aba "Impressora"
+            // Isso garante que auto-aceitar e automações funcionem corretamente desde o login
+            try {
+                var ic = cfgRows[0].imp_config;
+                var _cfgImp = JSON.parse(localStorage.getItem(IMP_KEY) || '{}');
+                if (ic.ativar   !== undefined) _cfgImp.ativar   = ic.ativar;
+                if (ic.auto     !== undefined) _cfgImp.auto     = ic.auto;
+                if (ic.aceitar  !== undefined) _cfgImp.aceitar  = ic.aceitar;
+                if (ic.lojaNome !== undefined) _cfgImp.lojaNome = ic.lojaNome;
+                localStorage.setItem(IMP_KEY, JSON.stringify(_cfgImp));
+            } catch(e) { console.warn('[Configs] imp_config:', e.message); }
+        }
         if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
             var _cfgCarregada = Object.assign({}, cfgRows[0].dados_extras);
             // Injeta link_cardapio do restaurante no linkSlug (fonte de verdade)
