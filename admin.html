@@ -7520,11 +7520,13 @@ async function supaCarregarFinalizadosKanban() {
         // Início do dia de hoje em ISO para filtrar no Supabase
         var inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0, 0).toISOString();
 
+        // Pedidos com fechado_em IS NULL aparecem de qualquer data (nunca foram fechados manualmente).
+        // O filtro de data (criado_em >= hoje) só se aplica a pedidos que foram fechados+restaurados.
         const rows = await supaReq('GET',
             'pedidos?restaurante_id=eq.' + REST_ID +
             '&status=in.(finalizado,cancelado)' +
-            '&or=(fechado_em.is.null,restaurado_em.not.is.null)' +
-            '&or=(criado_em.gte.' + inicioDia + ',restaurado_em.not.is.null)' +
+            '&or=(fechado_em.is.null,and(fechado_em.not.is.null,restaurado_em.not.is.null))' +
+            '&or=(fechado_em.is.null,criado_em.gte.' + inicioDia + ',restaurado_em.not.is.null)' +
             '&order=criado_em.desc&select=*&limit=200'
         );
         if (!rows || !rows.length) return;
@@ -7537,7 +7539,9 @@ async function supaCarregarFinalizadosKanban() {
             if (idsEmMemoria.has(idPedido)) return; // já está em memória
 
             // Verifica regra de limpeza: se já passou o limiar, não mostra
-            if (limiarMs > 0) {
+            // Exceção: pedidos com fechado_em IS NULL nunca foram fechados manualmente —
+            // o dono precisa vê-los mesmo que sejam de dias anteriores (ex: troca de computador)
+            if (limiarMs > 0 && r.fechado_em) {
                 var finTs = r.finalizado_em ? parseDateUTC(r.finalizado_em) : parseDateUTC(r.criado_em);
                 var finMs = finTs ? finTs.getTime() : 0;
                 if (finMs > 0 && finMs < limiarMs) return; // seria removido pela limpeza
