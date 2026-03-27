@@ -3351,6 +3351,7 @@ async function iniciarApp() {
             inicializarSistema();
             supaCarregarCardapio();
             supaCarregarConfigs();
+            wppCarregarSupabase(); // garante cfg.ativar no localStorage para disparos funcionarem sem abrir a aba WhatsApp
             supaCarregarPedidos().then(function(){ return supaCarregarConfigs(); }).then(function(){ supaCarregarFinalizadosKanban(); });
         }
     } else {
