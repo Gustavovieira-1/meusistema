@@ -3182,6 +3182,11 @@ function inicializarSistema() {
     setInterval(function() {
         supaCarregarPedidos();
     }, 5000);
+
+    // 🔄 POLLING finalizados/cancelados a cada 15s — sincroniza fechamentos feitos em outro PC
+    setInterval(function() {
+        supaCarregarFinalizadosKanban();
+    }, 15000);
     
     // 🧹 Aplicar limpeza a cada minuto (após pedidos estarem carregados)
     setInterval(cfgAplicarLimpeza, 60000);
@@ -7531,52 +7536,74 @@ async function supaCarregarFinalizadosKanban() {
             '&or=(fechado_em.is.null,criado_em.gte.' + inicioDia + ',restaurado_em.not.is.null)' +
             '&order=criado_em.desc&select=*&limit=200'
         );
-        if (!rows || !rows.length) return;
+        // Se rows for null, é falha de rede — não altera nada para não apagar cards por erro
+        if (rows === null) return;
 
-        var idsEmMemoria = new Set(orders.map(function(o){ return o.id; }));
-        var adicionados = 0;
+        // IDs que o Supabase diz que devem aparecer agora
+        var idsPermitidos = new Set();
+        var novosParaAdicionar = [];
 
-        rows.forEach(function(r) {
-            var idPedido = r.numero || r.id;
-            if (idsEmMemoria.has(idPedido)) return; // já está em memória
+        if (rows && rows.length) {
+            rows.forEach(function(r) {
+                var idPedido = r.numero || r.id;
 
-            // Verifica regra de limpeza: se já passou o limiar, não mostra
-            // Exceção: pedidos com fechado_em IS NULL nunca foram fechados manualmente —
-            // o dono precisa vê-los mesmo que sejam de dias anteriores (ex: troca de computador)
-            if (limiarMs > 0 && r.fechado_em) {
-                var finTs = r.finalizado_em ? parseDateUTC(r.finalizado_em) : parseDateUTC(r.criado_em);
-                var finMs = finTs ? finTs.getTime() : 0;
-                if (finMs > 0 && finMs < limiarMs) return; // seria removido pela limpeza
-            }
+                // Verifica regra de limpeza: se já passou o limiar, não mostra
+                // Exceção: pedidos com fechado_em IS NULL nunca foram fechados manualmente
+                if (limiarMs > 0 && r.fechado_em) {
+                    var finTs = r.finalizado_em ? parseDateUTC(r.finalizado_em) : parseDateUTC(r.criado_em);
+                    var finMs = finTs ? finTs.getTime() : 0;
+                    if (finMs > 0 && finMs < limiarMs) return; // seria removido pela limpeza
+                }
 
-            var itens = r.itens || [];
-            if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
+                idsPermitidos.add(idPedido);
 
-            orders.push({
-                id: idPedido,
-                _supa_id: r.id,
-                client: r.cliente, phone: r.telefone,
-                address: r.endereco, bairro: r.bairro,
-                complemento: r.complemento || '', cidade: r.cidade || '',
-                tipo: r.tipo, pagamento: r.pagamento, troco: r.troco,
-                subtotal: r.subtotal || r.total,
-                taxaEntrega: r.taxa_entrega || 0,
-                descontoCupom: r.desconto_cupom || 0,
-                descontoPontos: r.desconto_pontos || 0,
-                cupom: r.cupom || '',
-                produtoBrindeNome: r.produto_brinde_nome || '',
-                produtoBrindeId:   r.produto_brinde_id   || '',
-                total: r.total, status: r.status,
-                items: itens, timestamp: r.criado_em,
-                finalizadoEm: r.finalizado_em || (r.status === 'finalizado' ? r.criado_em : null)
+                // Só adiciona se ainda não está em memória
+                if (!orders.find(function(o){ return o.id === idPedido; })) {
+                    var itens = r.itens || [];
+                    if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
+                    novosParaAdicionar.push({
+                        id: idPedido,
+                        _supa_id: r.id,
+                        client: r.cliente, phone: r.telefone,
+                        address: r.endereco, bairro: r.bairro,
+                        complemento: r.complemento || '', cidade: r.cidade || '',
+                        tipo: r.tipo, pagamento: r.pagamento, troco: r.troco,
+                        subtotal: r.subtotal || r.total,
+                        taxaEntrega: r.taxa_entrega || 0,
+                        descontoCupom: r.desconto_cupom || 0,
+                        descontoPontos: r.desconto_pontos || 0,
+                        cupom: r.cupom || '',
+                        produtoBrindeNome: r.produto_brinde_nome || '',
+                        produtoBrindeId:   r.produto_brinde_id   || '',
+                        total: r.total, status: r.status,
+                        items: itens, timestamp: r.criado_em,
+                        finalizadoEm: r.finalizado_em || (r.status === 'finalizado' ? r.criado_em : null)
+                    });
+                }
             });
-            adicionados++;
+        }
+
+        // Remove da memória os finalizados/cancelados que o Supabase não retornou mais
+        // (foram fechados por outro PC — fechado_em preenchido + restaurado_em null)
+        var antesCount = orders.length;
+        orders = orders.filter(function(o) {
+            // Pedidos ativos: gerenciados pelo polling supaCarregarPedidos, não mexer aqui
+            if (o.status !== 'finalizado' && o.status !== 'cancelado') return true;
+            // Finalizados/cancelados: mantém só os que o Supabase permite exibir
+            return idsPermitidos.has(o.id);
         });
 
-        if (adicionados > 0) {
+        // Adiciona os novos que vieram do Supabase
+        orders = orders.concat(novosParaAdicionar);
+
+        var removidos = antesCount - (orders.length - novosParaAdicionar.length);
+        var houveAlteracao = novosParaAdicionar.length > 0 || removidos > 0;
+
+        if (houveAlteracao) {
             localStorage.setItem('f_orders', JSON.stringify(orders));
             renderOrders();
-            console.log('[Kanban] ' + adicionados + ' finalizado(s)/cancelado(s) de hoje restaurados.');
+            if (novosParaAdicionar.length > 0) console.log('[Kanban] +' + novosParaAdicionar.length + ' finalizado(s)/cancelado(s) adicionados.');
+            if (removidos > 0) console.log('[Kanban] -' + removidos + ' finalizado(s)/cancelado(s) removidos (fechados remotamente).');
         }
     } catch(e) {
         console.warn('[supaCarregarFinalizadosKanban]', e.message);
