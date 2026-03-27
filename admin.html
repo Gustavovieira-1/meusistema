@@ -4724,6 +4724,7 @@ function impAtualizarChaves() {
 function impGetConfig() {
     try {
         var cfg = JSON.parse(localStorage.getItem(IMP_KEY)) || {};
+        if (cfg.aceitar === undefined) cfg.aceitar = false; // padrão: desligado — não aceita silenciosamente
         if (cfg.showCodigo   === undefined) cfg.showCodigo   = true;
         if (cfg.showData     === undefined) cfg.showData     = true;
         if (cfg.showPrevisao === undefined) cfg.showPrevisao = true;
@@ -4938,32 +4939,26 @@ function impToggle(el, chkId) {
 
 function impSalvarTogglesSupabase() {
     if (!REST_ID) return;
+    // Só executa se os divs existem no DOM (seção impressora está visível)
     var divAtivar  = document.getElementById('imp-tog-ativar');
     var divAuto    = document.getElementById('imp-tog-auto');
     var divAceitar = document.getElementById('imp-tog-aceitar');
-
+    if (!divAtivar || !divAuto || !divAceitar) return; // divs não estão no DOM agora
+    var ativar  = !divAtivar.classList.contains('off');
+    var auto    = !divAuto.classList.contains('off');
+    var aceitar = !divAceitar.classList.contains('off');
+    // Salva no localStorage
     var cfg = impGetConfig();
-
-    // Se os divs estão no DOM (aba Impressora aberta), lê o estado visual e salva no localStorage
-    if (divAtivar && divAuto && divAceitar) {
-        cfg.ativar  = !divAtivar.classList.contains('off');
-        cfg.auto    = !divAuto.classList.contains('off');
-        cfg.aceitar = !divAceitar.classList.contains('off');
-        localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
-    }
-    // Se os divs NÃO estão no DOM, usa o que está no localStorage (atualizado pelo supaCarregarConfigs)
-    // Isso garante que o Supabase sempre reflete o valor correto, mesmo sem abrir a aba Impressora
-
-    var ativar  = cfg.ativar  !== false;
-    var auto    = cfg.auto    !== false;
-    var aceitar = cfg.aceitar === true; // explicitamente true — undefined/false = desligado
-
-    // Salva no Supabase — fonte de verdade para o server.js
+    cfg.ativar  = ativar;
+    cfg.auto    = auto;
+    cfg.aceitar = aceitar;
+    localStorage.setItem(IMP_KEY, JSON.stringify(cfg));
+    // Salva no Supabase via upsert
     supaUpsert('assistente_status', {
         ativar: ativar, auto_impressao: auto, auto_aceitar: aceitar
     }, 'restaurante_id').then(function(){
-        if (divAtivar) impAddLog('✓ Automação salva', 'ok'); // só loga se aba estiver aberta
-    }).catch(function(e){ if (divAtivar) impAddLog('⚠ Erro ao salvar automação: '+e.message, 'err'); });
+        impAddLog('✓ Automação salva', 'ok');
+    }).catch(function(e){ impAddLog('⚠ Erro ao salvar automação: '+e.message, 'err'); });
 }
 
 function impSetModo(modo, btn) {
@@ -7773,7 +7768,7 @@ async function supaCarregarPedidos() {
                 });
                 // Auto-aceitar: busca o pedido em orders no momento do timeout (não antes)
                 var cfgAceitar = impGetConfig();
-                var aceitarOn = cfgAceitar.aceitar !== false;
+                var aceitarOn = cfgAceitar.aceitar === true; // só aceita se explicitamente true — undefined = desligado
                 if (aceitarOn) {
                     _idsNovos.forEach(function(pid) {
                         setTimeout(function() {
@@ -8282,9 +8277,6 @@ async function supaCarregarConfigs() {
                 if (ic.aceitar  !== undefined) _cfgImp.aceitar  = ic.aceitar;
                 if (ic.lojaNome !== undefined) _cfgImp.lojaNome = ic.lojaNome;
                 localStorage.setItem(IMP_KEY, JSON.stringify(_cfgImp));
-                // Sincroniza imediatamente com assistente_status no Supabase
-                // para que o server.js receba o valor correto mesmo sem o dono abrir a aba Impressora
-                setTimeout(impSalvarTogglesSupabase, 500);
             } catch(e) { console.warn('[Configs] imp_config:', e.message); }
         }
         if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
