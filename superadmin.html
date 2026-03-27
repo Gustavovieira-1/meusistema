@@ -1055,8 +1055,8 @@ tr:hover td { background: rgba(255,255,255,.015); }
               <select class="filtro-select" id="filtro-pgto" onchange="saFiltrarRest()">
                 <option value="">Todos os status</option>
                 <option value="pago">Pago</option>
-                <option value="trial">Teste Grátis</option>
                 <option value="pendente">Pendente</option>
+                <option value="trial">Teste Grátis</option>
                 <option value="inadimplente">Inadimplente</option>
                 <option value="cancelado">Cancelado</option>
               </select>
@@ -1854,60 +1854,46 @@ function saFiltrarRest() {
 
 // ── sort state ──────────────────────────────────────────────
 var _sortCol = null;
-var _sortDir = 1; // 1 = asc, -1 = desc
+var _sortDir = 1;
 function saSortBy(col) {
     if (_sortCol === col) { _sortDir *= -1; } else { _sortCol = col; _sortDir = 1; }
-    saFiltrarRest(); // re-filters AND re-renders with sort
+    saFiltrarRest();
 }
 
 function saRenderRestaurantes(lista) {
-    // Aplica ordenação
     if (_sortCol) {
         lista = lista.slice().sort((a, b) => {
             let va, vb;
-            if (_sortCol === 'nome')    { va = (a.nome||'').toLowerCase();      vb = (b.nome||'').toLowerCase(); }
-            if (_sortCol === 'plano')   { va = a.pgto?.plano||'';               vb = b.pgto?.plano||''; }
-            if (_sortCol === 'status')  { va = a.pgto?.status_pgto||'';         vb = b.pgto?.status_pgto||''; }
-            if (_sortCol === 'venc')    { va = a.pgto?.vencimento||'9999';      vb = b.pgto?.vencimento||'9999'; }
-            if (_sortCol === 'pedidos') { va = a.totalPedidos||0;               vb = b.totalPedidos||0; }
-            if (_sortCol === 'receita') { va = a.receitaTotal||0;               vb = b.receitaTotal||0; }
+            if (_sortCol === 'nome')    { va=(a.nome||'').toLowerCase();     vb=(b.nome||'').toLowerCase(); }
+            if (_sortCol === 'plano')   { va=a.pgto?.plano||'';              vb=b.pgto?.plano||''; }
+            if (_sortCol === 'status')  { va=a.pgto?.status_pgto||'';        vb=b.pgto?.status_pgto||''; }
+            if (_sortCol === 'venc')    { va=a.pgto?.vencimento||'9999';     vb=b.pgto?.vencimento||'9999'; }
+            if (_sortCol === 'pedidos') { va=a.totalPedidos||0;              vb=b.totalPedidos||0; }
+            if (_sortCol === 'receita') { va=a.receitaTotal||0;              vb=b.receitaTotal||0; }
             if (va < vb) return -1 * _sortDir;
             if (va > vb) return  1 * _sortDir;
             return 0;
         });
     }
-
     const el = document.getElementById('tabela-rest-body');
     if (!lista.length) {
         el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-store"></i></div>Nenhum restaurante encontrado.</div>';
         return;
     }
-
-    // Inline status selector — colorido igual ao badge
-    const statusInline = (restId, s) => {
-        const opts = [
-            { v:'pago',         l:'Pago',         c:'#3b82f6', bg:'rgba(59,130,246,.12)' },
-            { v:'pendente',     l:'Pendente',      c:'#f59e0b', bg:'rgba(245,158,11,.12)' },
-            { v:'inadimplente', l:'Inadimplente',  c:'#ef4444', bg:'rgba(239,68,68,.12)'  },
-            { v:'trial',        l:'Trial',         c:'#d97706', bg:'rgba(201,168,76,.12)' },
-            { v:'cancelado',    l:'Cancelado',     c:'#6b7280', bg:'rgba(107,114,128,.12)'}
-        ];
-        const cur = opts.find(o => o.v === s) || opts[0];
-        return opts.map(o =>
-            `<button onclick="saAlterarStatus('${restId}','${o.v}',this.closest('.status-menu').previousElementSibling)"
-                style="display:block;width:100%;padding:6px 12px;background:none;border:none;text-align:left;cursor:pointer;font-size:12px;font-weight:600;color:${o.c};font-family:inherit;border-radius:6px;"
-                onmouseover="this.style.background='${o.bg}'" onmouseout="this.style.background='none'">${o.l}</button>`
-        ).join('') ;
-    };
-
+    const statusOpts = [
+        { v:'pago',         l:'Pago',         c:'#3b82f6', bg:'rgba(59,130,246,.15)'  },
+        { v:'pendente',     l:'Pendente',      c:'#f59e0b', bg:'rgba(245,158,11,.15)'  },
+        { v:'inadimplente', l:'Inadimplente',  c:'#ef4444', bg:'rgba(239,68,68,.15)'   },
+        { v:'trial',        l:'Trial',         c:'#d97706', bg:'rgba(201,168,76,.15)'  },
+        { v:'cancelado',    l:'Cancelado',     c:'#6b7280', bg:'rgba(107,114,128,.15)' }
+    ];
     const sortIcon = col => {
         if (_sortCol !== col) return '<i class="fas fa-sort" style="opacity:.25;margin-left:4px;font-size:9px;"></i>';
-        return _sortDir === 1
+        return _sortDir===1
             ? '<i class="fas fa-sort-up" style="margin-left:4px;font-size:9px;"></i>'
             : '<i class="fas fa-sort-down" style="margin-left:4px;font-size:9px;"></i>';
     };
     const th = 'cursor:pointer;user-select:none;white-space:nowrap;';
-
     el.innerHTML = `<table>
         <thead><tr>
             <th style="${th}" onclick="saSortBy('nome')">Restaurante${sortIcon('nome')}</th>
@@ -1921,44 +1907,41 @@ function saRenderRestaurantes(lista) {
         <tbody>
         ${lista.map(r => {
             const s = r.pgto?.status_pgto || 'pendente';
-            const statusColors = {
-                pago:         { c:'#3b82f6', bg:'rgba(59,130,246,.12)'  },
-                pendente:     { c:'#f59e0b', bg:'rgba(245,158,11,.12)'  },
-                inadimplente: { c:'#ef4444', bg:'rgba(239,68,68,.12)'   },
-                trial:        { c:'#d97706', bg:'rgba(201,168,76,.12)'  },
-                cancelado:    { c:'#6b7280', bg:'rgba(107,114,128,.12)' }
-            };
-            const sc = statusColors[s] || statusColors.pendente;
-            const sLabel = { pago:'Pago', pendente:'Pendente', inadimplente:'Inadimplente', trial:'Trial', cancelado:'Cancelado' };
+            const sc = statusOpts.find(o=>o.v===s) || statusOpts[1];
+            const menuId = 'sm-' + r.id;
+            const menuItems = statusOpts.map(o =>
+                `<button onclick="saAlterarStatus('${r.id}','${o.v}')"
+                    style="display:block;width:100%;padding:6px 12px;background:none;border:none;text-align:left;cursor:pointer;font-size:12px;font-weight:700;color:${o.c};font-family:inherit;border-radius:6px;"
+                    onmouseover="this.style.background='${o.bg}'" onmouseout="this.style.background='none'">${o.l}</button>`
+            ).join('');
             return `<tr>
             <td>
                 <div class="rest-nome">${r.nome}</div>
                 <div class="rest-slug"><i class="fas fa-link" style="font-size:9px;"></i>${r.slug||'—'}</div>
             </td>
             <td>
-                <select onchange="saAlterarPlano('${r.id}', this.value, this)"
-                    style="background:#1e293b;border:1px solid #334155;border-radius:7px;color:#e2e8f0;font-size:11px;padding:4px 7px;font-family:inherit;cursor:pointer;max-width:140px;">
+                <select onchange="saAlterarPlano('${r.id}',this.value,this)"
+                    style="background:#1e293b;border:1px solid #334155;border-radius:7px;color:#e2e8f0;font-size:11px;padding:4px 7px;font-family:inherit;cursor:pointer;max-width:145px;">
                     <option value="trial"      ${(r.pgto?.plano||'trial')==='trial'      ?'selected':''}>15 dias (Teste Grátis)</option>
-                    <option value="mensal"     ${(r.pgto?.plano||'')==='mensal'     ?'selected':''}>Mensal</option>
-                    <option value="trimestral" ${(r.pgto?.plano||'')==='trimestral' ?'selected':''}>Trimestral</option>
-                    <option value="semestral"  ${(r.pgto?.plano||'')==='semestral'  ?'selected':''}>Semestral</option>
-                    <option value="anual"      ${(r.pgto?.plano||'')==='anual'      ?'selected':''}>Anual</option>
+                    <option value="mensal"     ${r.pgto?.plano==='mensal'     ?'selected':''}>Mensal</option>
+                    <option value="trimestral" ${r.pgto?.plano==='trimestral' ?'selected':''}>Trimestral</option>
+                    <option value="semestral"  ${r.pgto?.plano==='semestral'  ?'selected':''}>Semestral</option>
+                    <option value="anual"      ${r.pgto?.plano==='anual'      ?'selected':''}>Anual</option>
                 </select>
             </td>
             <td style="position:relative;">
-                <span class="badge-status-btn" data-rest="${r.id}"
-                    onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'"
-                    style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;color:${sc.c};background:${sc.bg};border:1px solid ${sc.c}33;user-select:none;">
-                    ${sLabel[s]||s} <i class="fas fa-chevron-down" style="font-size:8px;opacity:.7;"></i>
+                <span onclick="document.getElementById('${menuId}').style.display=document.getElementById('${menuId}').style.display==='block'?'none':'block';event.stopPropagation();"
+                    style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;color:${sc.c};background:${sc.bg};border:1px solid ${sc.c}44;user-select:none;">
+                    ${sc.l} <i class="fas fa-chevron-down" style="font-size:8px;opacity:.6;"></i>
                 </span>
-                <div class="status-menu" style="display:none;position:absolute;z-index:999;top:calc(100% + 4px);left:0;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:4px;min-width:140px;box-shadow:0 8px 24px rgba(0,0,0,.4);">
-                    ${statusInline(r.id, s)}
+                <div id="${menuId}" onclick="event.stopPropagation()" style="display:none;position:absolute;z-index:999;top:calc(100% + 4px);left:0;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:4px;min-width:140px;box-shadow:0 8px 24px rgba(0,0,0,.5);">
+                    ${menuItems}
                 </div>
             </td>
             <td>
                 <input type="date" value="${r.pgto?.vencimento||''}"
                     style="background:#1e293b;border:1px solid #334155;border-radius:7px;color:#e2e8f0;font-size:11px;padding:4px 7px;font-family:inherit;cursor:pointer;width:130px;"
-                    onchange="saAlterarVencimento('${r.id}', this.value, this)">
+                    onchange="saAlterarVencimento('${r.id}',this.value,this)">
             </td>
             <td><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;">${r.totalPedidos}</span></td>
             <td><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;">${money(r.receitaTotal)}</span></td>
@@ -1968,76 +1951,64 @@ function saRenderRestaurantes(lista) {
             </td>
             <td>
                 <div class="acoes">
-                    <button class="btn-acao info" onclick="saVerDetalhe('${r.id}')" title="Ver detalhes"><i class="fas fa-eye"></i></button>
-                    <button class="btn-acao" onclick="saEditarRest('${r.id}')" title="Editar"><i class="fas fa-pen"></i></button>
-                    <button class="btn-acao success" onclick="saEditarPgto('${r.id}')" title="Pagamento"><i class="fas fa-credit-card"></i></button>
-                    <button class="btn-acao" onclick="saAbrirCardapio('${r.slug}')" title="Ver cardápio"><i class="fas fa-arrow-up-right-from-square"></i></button>
-                    <button class="btn-acao danger" onclick="saDeletarRest('${r.id}','${r.nome}')" title="Excluir"><i class="fas fa-trash"></i></button>
+                    <button class="btn-acao info"    onclick="saVerDetalhe('${r.id}')"                 title="Ver detalhes"><i class="fas fa-eye"></i></button>
+                    <button class="btn-acao"         onclick="saEditarRest('${r.id}')"                 title="Editar"><i class="fas fa-pen"></i></button>
+                    <button class="btn-acao success" onclick="saEditarPgto('${r.id}')"                 title="Pagamento"><i class="fas fa-credit-card"></i></button>
+                    <button class="btn-acao"         onclick="saAbrirCardapio('${r.slug}')"            title="Ver cardápio"><i class="fas fa-arrow-up-right-from-square"></i></button>
+                    <button class="btn-acao danger"  onclick="saDeletarRest('${r.id}','${r.nome}')"   title="Excluir"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
         }).join('')}
         </tbody>
     </table>`;
-
-    // Fecha dropdown de status ao clicar fora
-    document.addEventListener('click', function _closeMenus(e) {
-        if (!e.target.closest('.badge-status-btn') && !e.target.closest('.status-menu')) {
-            document.querySelectorAll('.status-menu').forEach(m => m.style.display = 'none');
-        }
-    }, { once: true });
+    // fecha menus ao clicar fora
+    setTimeout(() => {
+        document.addEventListener('click', function _c() {
+            document.querySelectorAll('[id^="sm-"]').forEach(m=>m.style.display='none');
+            document.removeEventListener('click', _c);
+        });
+    }, 50);
 }
 
-async function saAlterarStatus(restId, novoStatus, badgeEl) {
+// ── Inline edits na tabela de restaurantes ──────────────────
+
+async function saAlterarVencimento(restId, novaData, inputEl) {
+    if (!novaData) return;
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    const venc = new Date(novaData + 'T00:00:00');
+    // Auto-status: futuro = pago, passado = pendente
+    const novoStatus = venc >= hoje ? 'pago' : 'pendente';
     try {
+        inputEl.style.borderColor = '#f59e0b';
+        const body = { vencimento: novaData, status_pgto: novoStatus };
         const patchR = await fetch(SA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + restId, {
             method: 'PATCH',
             headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-            body: JSON.stringify({ status_pgto: novoStatus })
+            body: JSON.stringify(body)
         });
         const patchData = await patchR.json();
         if (!patchData || patchData.length === 0) {
-            await saFetch('POST', 'pagamentos', { restaurante_id: restId, status_pgto: novoStatus, plano: 'trial', valor: 0 });
+            await saFetch('POST', 'pagamentos', { restaurante_id: restId, ...body, plano: 'trial', valor: 0 });
         }
-        // Bloqueia restaurante se inadimplente/cancelado, ativa se pago
-        const deveDesativar = ['inadimplente', 'cancelado'].includes(novoStatus);
-        const deveAtivar    = novoStatus === 'pago';
-        if (deveDesativar || deveAtivar) {
-            await saFetch('PATCH', `restaurantes?id=eq.${restId}`, { ativo: deveAtivar });
+        // Se pago → ativa restaurante; se pendente → não mexe na ativação
+        if (novoStatus === 'pago') {
+            await saFetch('PATCH', `restaurantes?id=eq.${restId}`, { ativo: true });
         }
         const r = _restaurantes.find(x => x.id === restId);
         if (r) {
             r.pgto = r.pgto || {};
+            r.pgto.vencimento = novaData;
             r.pgto.status_pgto = novoStatus;
-            if (deveDesativar || deveAtivar) r.ativo = deveAtivar;
+            if (novoStatus === 'pago') r.ativo = true;
         }
-        // Fecha menu e re-renderiza
-        document.querySelectorAll('.status-menu').forEach(m => m.style.display = 'none');
-        saFiltrarRest();
-        saCalcularMetricas();
-        const labels = { pago:'Pago', pendente:'Pendente', inadimplente:'Inadimplente', trial:'Trial', cancelado:'Cancelado' };
-        toast('✓ Status alterado para ' + (labels[novoStatus] || novoStatus), true);
-    } catch(e) { toast('Erro ao salvar status: ' + e.message, false); }
-}
-
-async function saAlterarVencimento(restId, novaData, inputEl) {
-    if (!novaData) return;
-    try {
-        inputEl.style.borderColor = '#f59e0b';
-        const patchR = await fetch(SA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + restId, {
-            method: 'PATCH',
-            headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-            body: JSON.stringify({ vencimento: novaData })
-        });
-        const patchData = await patchR.json();
-        if (!patchData || patchData.length === 0) {
-            await saFetch('POST', 'pagamentos', { restaurante_id: restId, vencimento: novaData, status_pgto: 'trial', plano: 'trial', valor: 0 });
-        }
-        const r = _restaurantes.find(x => x.id === restId);
-        if (r) { r.pgto = r.pgto || {}; r.pgto.vencimento = novaData; }
         inputEl.style.borderColor = '#22c55e';
         setTimeout(() => { inputEl.style.borderColor = '#334155'; }, 1500);
-        toast('✓ Vencimento atualizado para ' + new Date(novaData + 'T12:00:00').toLocaleDateString('pt-BR'), true);
+        const vencFmt = venc.toLocaleDateString('pt-BR');
+        const statusLabel = novoStatus === 'pago' ? 'Pago ✓' : 'Pendente';
+        toast(`✓ Vencimento: ${vencFmt} → status: ${statusLabel}`, true);
+        saFiltrarRest();
+        saCalcularMetricas();
     } catch(e) {
         inputEl.style.borderColor = '#ef4444';
         toast('Erro ao salvar vencimento: ' + e.message, false);
@@ -2065,6 +2036,39 @@ async function saAlterarPlano(restId, novoPlano, selectEl) {
         selectEl.style.borderColor = '#ef4444';
         toast('Erro ao salvar plano: ' + e.message, false);
     }
+}
+
+async function saAlterarStatus(restId, novoStatus) {
+    try {
+        const body = { status_pgto: novoStatus };
+        const patchR = await fetch(SA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + restId, {
+            method: 'PATCH',
+            headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+            body: JSON.stringify(body)
+        });
+        const patchData = await patchR.json();
+        if (!patchData || patchData.length === 0) {
+            await saFetch('POST', 'pagamentos', { restaurante_id: restId, status_pgto: novoStatus, plano: 'trial', valor: 0 });
+        }
+        // inadimplente/cancelado → bloqueia; pago → ativa
+        const deveBloquear = ['inadimplente', 'cancelado'].includes(novoStatus);
+        const deveAtivar   = novoStatus === 'pago';
+        if (deveBloquear || deveAtivar) {
+            await saFetch('PATCH', `restaurantes?id=eq.${restId}`, { ativo: deveAtivar });
+        }
+        const r = _restaurantes.find(x => x.id === restId);
+        if (r) {
+            r.pgto = r.pgto || {};
+            r.pgto.status_pgto = novoStatus;
+            if (deveBloquear || deveAtivar) r.ativo = deveAtivar;
+        }
+        document.querySelectorAll('[id^="sm-"]').forEach(m => m.style.display = 'none');
+        saFiltrarRest();
+        saCalcularMetricas();
+        const labels = { pago:'Pago', pendente:'Pendente', inadimplente:'Inadimplente', trial:'Trial', cancelado:'Cancelado' };
+        const bloqueioMsg = deveBloquear ? ' — restaurante bloqueado' : deveAtivar ? ' — restaurante reativado' : '';
+        toast('✓ Status: ' + (labels[novoStatus] || novoStatus) + bloqueioMsg, true);
+    } catch(e) { toast('Erro ao salvar status: ' + e.message, false); }
 }
 
 async function saToggleAtivo(id, btn) {
@@ -3221,7 +3225,7 @@ async function saAutomatizarPagamentos() {
                         obs: (p.obs ? p.obs + ' | ' : '') + 'Auto: vencido em ' + (venc ? venc.toLocaleDateString('pt-BR') : '?') + ' → pendente em ' + new Date().toLocaleDateString('pt-BR')
                     })
                 });
-                // Não bloqueia automaticamente — superadmin precisa mudar para inadimplente manualmente
+                // Não bloqueia automaticamente — superadmin muda para inadimplente manualmente para bloquear
                 atualizados++;
             }
 
