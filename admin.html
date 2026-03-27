@@ -3199,6 +3199,16 @@ function inicializarSistema() {
     setInterval(function() {
         supaCarregarPedidos();
     }, 5000);
+
+    // 🔄 POLLING finalizados/cancelados a cada 15s — sincroniza fechamentos feitos em outro PC
+    setInterval(function() {
+        supaCarregarFinalizadosKanban();
+    }, 15000);
+
+    // 👑 Atualiza pílula de dias do plano a cada 30 minutos — sem precisar de F5
+    setInterval(function() {
+        meuPlanoCarregar().then(function(dados) { meuPlanoRenderPilula(dados); });
+    }, 30 * 60 * 1000);
     
     // 🧹 Aplicar limpeza a cada minuto (após pedidos estarem carregados)
     setInterval(cfgAplicarLimpeza, 60000);
