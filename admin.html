@@ -4724,7 +4724,6 @@ function impAtualizarChaves() {
 function impGetConfig() {
     try {
         var cfg = JSON.parse(localStorage.getItem(IMP_KEY)) || {};
-        if (cfg.aceitar === undefined) cfg.aceitar = false; // padrão: desligado — não aceita silenciosamente
         if (cfg.showCodigo   === undefined) cfg.showCodigo   = true;
         if (cfg.showData     === undefined) cfg.showData     = true;
         if (cfg.showPrevisao === undefined) cfg.showPrevisao = true;
@@ -7768,7 +7767,7 @@ async function supaCarregarPedidos() {
                 });
                 // Auto-aceitar: busca o pedido em orders no momento do timeout (não antes)
                 var cfgAceitar = impGetConfig();
-                var aceitarOn = cfgAceitar.aceitar === true; // só aceita se explicitamente true — undefined = desligado
+                var aceitarOn = cfgAceitar.aceitar !== false;
                 if (aceitarOn) {
                     _idsNovos.forEach(function(pid) {
                         setTimeout(function() {
@@ -8265,20 +8264,6 @@ async function supaCarregarConfigs() {
             supaGet('taxas_entrega', ''),
             supaGet('integracoes', '')
         ]);
-        if (cfgRows && cfgRows[0] && cfgRows[0].imp_config) {
-            // Aplica imp_config (ativar, auto, aceitar) no localStorage da impressora
-            // sem precisar que o usuário abra a aba "Impressora"
-            // Isso garante que auto-aceitar e automações funcionem corretamente desde o login
-            try {
-                var ic = cfgRows[0].imp_config;
-                var _cfgImp = JSON.parse(localStorage.getItem(IMP_KEY) || '{}');
-                if (ic.ativar   !== undefined) _cfgImp.ativar   = ic.ativar;
-                if (ic.auto     !== undefined) _cfgImp.auto     = ic.auto;
-                if (ic.aceitar  !== undefined) _cfgImp.aceitar  = ic.aceitar;
-                if (ic.lojaNome !== undefined) _cfgImp.lojaNome = ic.lojaNome;
-                localStorage.setItem(IMP_KEY, JSON.stringify(_cfgImp));
-            } catch(e) { console.warn('[Configs] imp_config:', e.message); }
-        }
         if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
             var _cfgCarregada = Object.assign({}, cfgRows[0].dados_extras);
             // Injeta link_cardapio do restaurante no linkSlug (fonte de verdade)
