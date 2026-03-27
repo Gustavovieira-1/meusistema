@@ -255,7 +255,7 @@ input:checked + .slider:before { transform: translateX(14px); }
 }
 .kanban-col {
     flex: 1;
-    min-width: 195px;
+    min-width: 280px;
     background: #f1f2f6;
     border-radius: 12px;
     padding: 12px;
@@ -358,66 +358,6 @@ body { margin: 0; font-family: 'Inter', sans-serif; display: flex; background: v
 .btn-suporte { width: 100%; background: white; color: #333; border: 1.5px solid #ddd; border-radius: 9px; padding: 9px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px; font-family: inherit; transition: .15s; }
 .btn-suporte:hover { border-color: #aaa; color: #111; }
 .main { flex: 1; margin-left: var(--sidebar-w); padding: 40px; box-sizing: border-box; }
-
-/* ── RESPONSIVO ─────────────────────────────────────────────────────────── */
-/* kanban-col inline styles são sobrescritos aqui */
-.kanban-col[style*="min-width"] { min-width: unset !important; }
-
-/* ≤ 1400px — monitores menores e notebooks grandes */
-@media (max-width: 1400px) {
-    :root { --sidebar-w: 210px; }
-    .main { padding: 20px 20px; }
-    .kanban-col { min-width: 195px !important; }
-    .kanban-container { gap: 10px; }
-}
-
-/* ≤ 1280px — notebooks comuns (1366×768) */
-@media (max-width: 1280px) {
-    :root { --sidebar-w: 185px; }
-    .sidebar-header { padding: 12px 10px 10px; }
-    .nav-container { padding: 5px 7px; }
-    .nav-btn { font-size: 11.5px; padding: 7px 8px; }
-    .sub-nav-btn { font-size: 11px; }
-    .nav-section-label { font-size: 9px; }
-    .main { padding: 14px 14px; }
-    .kanban-col { min-width: 165px !important; padding: 8px; }
-    .kanban-container { gap: 8px; }
-    .kanban-header { padding: 8px; margin-bottom: 10px; font-size: 13px; }
-    .order-card { padding: 11px 12px; }
-}
-
-/* ≤ 1100px — notebooks pequenos */
-@media (max-width: 1100px) {
-    :root { --sidebar-w: 160px; }
-    .nav-btn { font-size: 11px; padding: 6px 7px; gap: 6px; }
-    .nav-btn .nav-icon { width: 15px; font-size: 12px; }
-    .main { padding: 10px 10px; }
-    .kanban-col { min-width: 145px !important; padding: 7px; }
-    .kanban-container { gap: 6px; }
-}
-
-/* ≤ 960px — sidebar só ícones */
-@media (max-width: 960px) {
-    :root { --sidebar-w: 52px; }
-    .sidebar-header .loja-nome,
-    .sidebar-header .loja-sub,
-    .sidebar-header .status-pill,
-    .nav-btn .nav-label,
-    .nav-btn .nav-arrow,
-    .nav-section-label,
-    .submenu,
-    .sidebar-footer .btn-indique,
-    .sidebar-footer .btn-suporte,
-    .sidebar-footer .user-info { display: none; }
-    .sidebar-header { padding: 10px 8px; }
-    .nav-container { padding: 4px; }
-    .nav-btn { justify-content: center; padding: 10px 0; width: 100%; }
-    .nav-btn .nav-icon { width: auto; font-size: 16px; }
-    .main { padding: 10px 8px; }
-    .kanban-col { min-width: 140px !important; padding: 6px; }
-    .kanban-container { gap: 6px; }
-    .header-flex { gap: 6px; flex-wrap: wrap; }
-}
 .section { display: none; }
 .section.active { display: block; }
 
@@ -654,6 +594,9 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             <i class="fas fa-arrow-up-right-from-square" style="font-size:12px; color:#888;"></i>
             Ver cardápio online
         </a>
+
+        <!-- Pílula de dias do plano -->
+        <div id="sidebar-plano-pill" onclick="showSec('meu-plano')" style="display:none; margin-top:8px; cursor:pointer;"></div>
     </div>
 
     <!-- Navegação -->
@@ -738,6 +681,10 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
             <button class="sub-nav-btn" onclick="showSec('financeiro')">Resumo Financeiro</button>
             <button class="sub-nav-btn" onclick="showSec('extrato')">Extrato</button>
         </div>
+
+        <button class="nav-btn" onclick="showSec('meu-plano', this)">
+            <i class="fas fa-crown nav-icon" style="color:#f59e0b;"></i> Meu Plano
+        </button>
 
         <button class="nav-btn" onclick="showSec('integracoes', this)">
             <i class="fas fa-plug nav-icon"></i> Integrações
@@ -843,7 +790,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                 </div>
                 <div id="list-entrega"></div>
             </div>
-            <div class="kanban-col">
+            <div class="kanban-col" style="min-width:200px;">
                 <div class="kanban-header col-finalizado">
                     <div>
                         <div style="display:flex;align-items:center;gap:8px;"><span>Finalizados</span><small id="count-finalizado" style="background:rgba(255,255,255,0.3);border-radius:20px;padding:1px 8px;">0</small></div>
@@ -852,7 +799,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                 </div>
                 <div id="list-finalizado"></div>
             </div>
-            <div class="kanban-col">
+            <div class="kanban-col" style="min-width:200px;">
                 <div class="kanban-header col-cancelado">
                     <div>
                         <div style="display:flex;align-items:center;gap:8px;"><span>Cancelados</span><small id="count-cancelado" style="background:rgba(255,255,255,0.3);border-radius:20px;padding:1px 8px;">0</small></div>
@@ -2804,6 +2751,16 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
         </div>
     </div>
 
+    <!-- MEU PLANO -->
+    <div id="sec-meu-plano" class="section">
+        <div class="header-flex"><h1>Meu Plano</h1></div>
+        <div id="meu-plano-conteudo">
+            <div class="card" style="text-align:center; padding:40px; color:#bbb;">
+                <i class="fas fa-circle-notch fa-spin" style="font-size:24px;"></i>
+            </div>
+        </div>
+    </div>
+
 </div><!-- fim .main -->
 
 <!-- MODAL: NOVA CATEGORIA -->
@@ -3242,11 +3199,6 @@ function inicializarSistema() {
     setInterval(function() {
         supaCarregarPedidos();
     }, 5000);
-
-    // 🔄 POLLING finalizados/cancelados a cada 15s — sincroniza fechamentos feitos em outro PC
-    setInterval(function() {
-        supaCarregarFinalizadosKanban();
-    }, 15000);
     
     // 🧹 Aplicar limpeza a cada minuto (após pedidos estarem carregados)
     setInterval(cfgAplicarLimpeza, 60000);
@@ -3341,6 +3293,100 @@ function mostrarBloqueio(msg) {
     document.getElementById('bloqueio-msg').textContent = msg;
     document.getElementById('tela-bloqueio').classList.add('ativo');
 }
+// ── MEU PLANO ──────────────────────────────────────────────
+var _meuPlanoDados = null; // cache { status, plano, vencimento, diasRestantes }
+
+async function meuPlanoCarregar() {
+    if (!REST_ID) return null;
+    try {
+        const r = await fetch(SUPA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + REST_ID + '&select=status_pgto,plano,vencimento,valor&limit=1', {
+            headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY), 'Cache-Control': 'no-cache' }
+        });
+        const rows = await r.json();
+        if (!rows || !rows[0]) return null;
+        const p = rows[0];
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const venc = p.vencimento ? new Date(p.vencimento + 'T00:00:00') : null;
+        const dias = venc ? Math.ceil((venc - hoje) / 86400000) : null;
+        _meuPlanoDados = { status: p.status_pgto || 'trial', plano: p.plano || 'trial', vencimento: p.vencimento, valor: p.valor, diasRestantes: dias };
+        return _meuPlanoDados;
+    } catch(e) { return null; }
+}
+
+function meuPlanoRenderPilula(dados) {
+    var pill = document.getElementById('sidebar-plano-pill');
+    if (!pill) return;
+    if (!dados || dados.diasRestantes === null) { pill.style.display = 'none'; return; }
+    var dias = dados.diasRestantes;
+    var cor = dias <= 7 ? '#dc2626' : '#16a34a';
+    var bg  = dias <= 7 ? '#fef2f2' : '#f0fdf4';
+    var brd = dias <= 7 ? '#fecaca' : '#bbf7d0';
+    var txt = dias > 0 ? 'Você tem ' + dias + ' dia' + (dias === 1 ? '' : 's') : dias === 0 ? 'Vence hoje!' : 'Plano vencido';
+    pill.style.display = 'flex';
+    pill.innerHTML = '<span style="display:flex;align-items:center;gap:6px;background:' + bg + ';border:1px solid ' + brd + ';border-radius:9px;padding:7px 11px;font-size:11.5px;font-weight:700;color:' + cor + ';width:100%;box-sizing:border-box;">'
+        + '<i class="fas fa-crown" style="font-size:10px;color:' + cor + ';"></i>' + txt + '<i class="fas fa-chevron-right" style="margin-left:auto;font-size:9px;opacity:.6;"></i></span>';
+}
+
+async function meuPlanoInicializar() {
+    var el = document.getElementById('meu-plano-conteudo');
+    if (!el) return;
+    el.innerHTML = '<div class="card" style="text-align:center;padding:40px;color:#bbb;"><i class="fas fa-circle-notch fa-spin" style="font-size:24px;"></i></div>';
+    var dados = await meuPlanoCarregar();
+    if (!dados) {
+        el.innerHTML = '<div class="card"><p style="color:#888;text-align:center;">Nenhum plano encontrado.</p></div>';
+        return;
+    }
+    var dias = dados.diasRestantes;
+    var corDias = dias === null ? '#888' : dias <= 7 ? '#dc2626' : '#16a34a';
+    var bgDias  = dias === null ? '#f8fafc' : dias <= 7 ? '#fef2f2' : '#f0fdf4';
+    var txtDias = dias === null ? '—' : dias > 0 ? dias + ' dia' + (dias === 1 ? '' : 's') : dias === 0 ? 'Vence hoje!' : Math.abs(dias) + ' dia(s) em atraso';
+    var planoLabels = { trial: '15 dias (Teste Grátis)', mensal: 'Mensal', trimestral: 'Trimestral', anual: 'Anual' };
+    var planoLabel = planoLabels[dados.plano] || dados.plano;
+    var statusLabels = { pago: 'Pago', trial: 'Trial', pendente: 'Pendente', inadimplente: 'Inadimplente', cancelado: 'Cancelado' };
+    var statusColor = { pago: '#16a34a', trial: '#d97706', pendente: '#2563eb', inadimplente: '#dc2626', cancelado: '#9d174d' };
+    var sc = statusColor[dados.status] || '#888';
+    var vencFmt = dados.vencimento ? new Date(dados.vencimento + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+    var planoUrl = window.location.origin + '/planos';
+    el.innerHTML = `
+    <div class="card" style="max-width:520px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
+            <div style="width:48px;height:48px;background:#fff7ed;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fas fa-crown" style="color:#f59e0b;font-size:20px;"></i>
+            </div>
+            <div>
+                <div style="font-size:18px;font-weight:800;color:#1a1a1a;letter-spacing:-.3px;">Meu Plano</div>
+                <div style="font-size:12px;color:#888;margin-top:2px;">Gerencie sua assinatura Zira</div>
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
+                <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Plano atual</div>
+                <div style="font-size:15px;font-weight:800;color:#1e293b;">${planoLabel}</div>
+            </div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
+                <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Status</div>
+                <div style="font-size:15px;font-weight:800;color:${sc};">${statusLabels[dados.status] || dados.status}</div>
+            </div>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:16px;">
+                <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Vencimento</div>
+                <div style="font-size:15px;font-weight:800;color:#1e293b;">${vencFmt}</div>
+            </div>
+            <div style="background:${bgDias};border:1px solid ${dias !== null && dias <= 7 ? '#fecaca' : '#e2e8f0'};border-radius:12px;padding:16px;">
+                <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Dias restantes</div>
+                <div style="font-size:15px;font-weight:800;color:${corDias};">${txtDias}</div>
+            </div>
+        </div>
+        <a href="${planoUrl}" target="_blank"
+           style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#e30613;color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:800;text-decoration:none;box-sizing:border-box;transition:.15s;"
+           onmouseover="this.style.background='#c00'" onmouseout="this.style.background='#e30613'">
+            <i class="fas fa-crown"></i> Renovar / Fazer Upgrade
+        </a>
+    </div>`;
+    meuPlanoRenderPilula(dados);
+}
+
+// ── FIM MEU PLANO ───────────────────────────────────────────
+
 // Inicialização: verificar sessão salva primeiro
 async function iniciarApp() {
     const temSessao = await authVerificarSessao();
@@ -3351,7 +3397,8 @@ async function iniciarApp() {
             inicializarSistema();
             supaCarregarCardapio();
             supaCarregarConfigs();
-            wppCarregarSupabase(); // garante cfg.ativar no localStorage para disparos funcionarem sem abrir a aba WhatsApp
+            wppCarregarSupabase();
+            meuPlanoCarregar().then(function(dados){ meuPlanoRenderPilula(dados); });
             supaCarregarPedidos().then(function(){ return supaCarregarConfigs(); }).then(function(){ supaCarregarFinalizadosKanban(); });
         }
     } else {
@@ -3546,6 +3593,7 @@ function showSec(id, btn) {
     if (id === 'cupons')           setTimeout(function(){ cupInicializar(); }, 80);
     if (id === 'configuracoes')    setTimeout(function(){ cfgInicializar(); }, 80);
     if (id === 'horarios')         setTimeout(function(){ horInicializar(); }, 80);
+    if (id === 'meu-plano')        setTimeout(function(){ meuPlanoInicializar(); }, 80);
 }
 
 function toggleSubmenu(id) {
@@ -5892,15 +5940,14 @@ function wppEnviarConfirmacao(order) {
         headers: { 'apikey': WPP_API_KEY }
     }).then(function(r){ return r.json(); }).then(function(data) {
         var state = (data.instance && data.instance.state) || data.state || 'close';
-        if (state !== 'open') { console.warn('[WPP] Confirmação não enviada — WhatsApp desconectado. Estado:', state); return; }
+        if (state !== 'open') return;
         return fetch(WPP_API_URL + '/message/sendText/' + instancia, {
             method: 'POST',
             headers: { 'apikey': WPP_API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ number: num, text: msg })
         });
     }).then(function(r) {
-        if (r && r.ok) console.log('[WPP] ✅ Confirmação enviada para ' + num);
-        else if (r) r.text().then(function(t){ console.warn('[WPP] Erro ao enviar confirmação:', t); });
+        if (r && r.ok) console.log('[WPP] Confirmação enviada para ' + num);
     }).catch(function(e) { console.warn('[WPP] Falha confirmação:', e.message); });
 }
 
@@ -7466,9 +7513,7 @@ async function supaReq(method, path, body) {
             'apikey':        SUPA_KEY,
             'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
             'Content-Type':  'application/json',
-            'Prefer':        method === 'POST' ? 'return=representation' : (method === 'PATCH' ? 'return=minimal' : ''),
-            'Cache-Control': 'no-cache, no-store',
-            'Pragma':        'no-cache'
+            'Prefer':        method === 'POST' ? 'return=representation' : (method === 'PATCH' ? 'return=minimal' : '')
         }
     };
     if (body) opts.body = JSON.stringify(body);
@@ -7598,74 +7643,52 @@ async function supaCarregarFinalizadosKanban() {
             '&or=(fechado_em.is.null,criado_em.gte.' + inicioDia + ',restaurado_em.not.is.null)' +
             '&order=criado_em.desc&select=*&limit=200'
         );
-        // Se rows for null, é falha de rede — não altera nada para não apagar cards por erro
-        if (rows === null) return;
+        if (!rows || !rows.length) return;
 
-        // IDs que o Supabase diz que devem aparecer agora
-        var idsPermitidos = new Set();
-        var novosParaAdicionar = [];
+        var idsEmMemoria = new Set(orders.map(function(o){ return o.id; }));
+        var adicionados = 0;
 
-        if (rows && rows.length) {
-            rows.forEach(function(r) {
-                var idPedido = r.numero || r.id;
+        rows.forEach(function(r) {
+            var idPedido = r.numero || r.id;
+            if (idsEmMemoria.has(idPedido)) return; // já está em memória
 
-                // Verifica regra de limpeza: se já passou o limiar, não mostra
-                // Exceção: pedidos com fechado_em IS NULL nunca foram fechados manualmente
-                if (limiarMs > 0 && r.fechado_em) {
-                    var finTs = r.finalizado_em ? parseDateUTC(r.finalizado_em) : parseDateUTC(r.criado_em);
-                    var finMs = finTs ? finTs.getTime() : 0;
-                    if (finMs > 0 && finMs < limiarMs) return; // seria removido pela limpeza
-                }
+            // Verifica regra de limpeza: se já passou o limiar, não mostra
+            // Exceção: pedidos com fechado_em IS NULL nunca foram fechados manualmente —
+            // o dono precisa vê-los mesmo que sejam de dias anteriores (ex: troca de computador)
+            if (limiarMs > 0 && r.fechado_em) {
+                var finTs = r.finalizado_em ? parseDateUTC(r.finalizado_em) : parseDateUTC(r.criado_em);
+                var finMs = finTs ? finTs.getTime() : 0;
+                if (finMs > 0 && finMs < limiarMs) return; // seria removido pela limpeza
+            }
 
-                idsPermitidos.add(idPedido);
+            var itens = r.itens || [];
+            if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
 
-                // Só adiciona se ainda não está em memória
-                if (!orders.find(function(o){ return o.id === idPedido; })) {
-                    var itens = r.itens || [];
-                    if (typeof itens === 'string') { try { itens = JSON.parse(itens); } catch(e) { itens = []; } }
-                    novosParaAdicionar.push({
-                        id: idPedido,
-                        _supa_id: r.id,
-                        client: r.cliente, phone: r.telefone,
-                        address: r.endereco, bairro: r.bairro,
-                        complemento: r.complemento || '', cidade: r.cidade || '',
-                        tipo: r.tipo, pagamento: r.pagamento, troco: r.troco,
-                        subtotal: r.subtotal || r.total,
-                        taxaEntrega: r.taxa_entrega || 0,
-                        descontoCupom: r.desconto_cupom || 0,
-                        descontoPontos: r.desconto_pontos || 0,
-                        cupom: r.cupom || '',
-                        produtoBrindeNome: r.produto_brinde_nome || '',
-                        produtoBrindeId:   r.produto_brinde_id   || '',
-                        total: r.total, status: r.status,
-                        items: itens, timestamp: r.criado_em,
-                        finalizadoEm: r.finalizado_em || (r.status === 'finalizado' ? r.criado_em : null)
-                    });
-                }
+            orders.push({
+                id: idPedido,
+                _supa_id: r.id,
+                client: r.cliente, phone: r.telefone,
+                address: r.endereco, bairro: r.bairro,
+                complemento: r.complemento || '', cidade: r.cidade || '',
+                tipo: r.tipo, pagamento: r.pagamento, troco: r.troco,
+                subtotal: r.subtotal || r.total,
+                taxaEntrega: r.taxa_entrega || 0,
+                descontoCupom: r.desconto_cupom || 0,
+                descontoPontos: r.desconto_pontos || 0,
+                cupom: r.cupom || '',
+                produtoBrindeNome: r.produto_brinde_nome || '',
+                produtoBrindeId:   r.produto_brinde_id   || '',
+                total: r.total, status: r.status,
+                items: itens, timestamp: r.criado_em,
+                finalizadoEm: r.finalizado_em || (r.status === 'finalizado' ? r.criado_em : null)
             });
-        }
-
-        // Remove da memória os finalizados/cancelados que o Supabase não retornou mais
-        // (foram fechados por outro PC — fechado_em preenchido + restaurado_em null)
-        var antesCount = orders.length;
-        orders = orders.filter(function(o) {
-            // Pedidos ativos: gerenciados pelo polling supaCarregarPedidos, não mexer aqui
-            if (o.status !== 'finalizado' && o.status !== 'cancelado') return true;
-            // Finalizados/cancelados: mantém só os que o Supabase permite exibir
-            return idsPermitidos.has(o.id);
+            adicionados++;
         });
 
-        // Adiciona os novos que vieram do Supabase
-        orders = orders.concat(novosParaAdicionar);
-
-        var removidos = antesCount - (orders.length - novosParaAdicionar.length);
-        var houveAlteracao = novosParaAdicionar.length > 0 || removidos > 0;
-
-        if (houveAlteracao) {
+        if (adicionados > 0) {
             localStorage.setItem('f_orders', JSON.stringify(orders));
             renderOrders();
-            if (novosParaAdicionar.length > 0) console.log('[Kanban] +' + novosParaAdicionar.length + ' finalizado(s)/cancelado(s) adicionados.');
-            if (removidos > 0) console.log('[Kanban] -' + removidos + ' finalizado(s)/cancelado(s) removidos (fechados remotamente).');
+            console.log('[Kanban] ' + adicionados + ' finalizado(s)/cancelado(s) de hoje restaurados.');
         }
     } catch(e) {
         console.warn('[supaCarregarFinalizadosKanban]', e.message);
@@ -7681,10 +7704,10 @@ async function supaCarregarPedidos() {
             '&or=(fechado_em.is.null,restaurado_em.not.is.null)' +
             '&order=criado_em.desc&select=*'
         );
-        // Mesmo com rows vazio ([] ou null), precisamos remover da memória pedidos ativos que
+        // Mesmo com rows vazio, precisamos remover da memória pedidos ativos que
         // sumiram do Supabase (ex: fechados por outro PC). Sem esse bloco, quando
         // todos os pedidos ativos são fechados remotamente a tela nunca limpa.
-        if (!rows || !rows.length) {
+        if (rows && !rows.length) {
             var _ativosEmMemoria = orders.filter(function(o) {
                 return o.status !== 'finalizado' && o.status !== 'cancelado';
             });
