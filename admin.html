@@ -7590,6 +7590,23 @@ async function supaCarregarPedidos() {
             '&or=(fechado_em.is.null,restaurado_em.not.is.null)' +
             '&order=criado_em.desc&select=*'
         );
+        // Mesmo com rows vazio, precisamos remover da memória pedidos ativos que
+        // sumiram do Supabase (ex: fechados por outro PC). Sem esse bloco, quando
+        // todos os pedidos ativos são fechados remotamente a tela nunca limpa.
+        if (rows && !rows.length) {
+            var _ativosEmMemoria = orders.filter(function(o) {
+                return o.status !== 'finalizado' && o.status !== 'cancelado';
+            });
+            if (_ativosEmMemoria.length > 0) {
+                // Mantém só os finalizados/cancelados, descarta os ativos que não voltaram
+                orders = orders.filter(function(o) {
+                    return o.status === 'finalizado' || o.status === 'cancelado';
+                });
+                localStorage.setItem('f_orders', JSON.stringify(orders));
+                renderOrders();
+                console.log('[Supabase] Pedidos ativos removidos da tela (fechados remotamente):', _ativosEmMemoria.length);
+            }
+        }
         if (rows && rows.length) {
             const mapped = rows.map(r => {
                 // Parse itens se for string JSON
@@ -7624,15 +7641,21 @@ async function supaCarregarPedidos() {
                     finalizadoEm: r.finalizado_em || r.finalizadoEm || (r.status === 'finalizado' ? r.criado_em : null)
                 };
             });
-            // Ignora pedidos fechados manualmente (evita race condition com o PATCH do fechado_em)
+            // Ignora pedidos fechados manualmente NESTE PC (evita race condition com o PATCH do fechado_em)
             const mappedFiltrado = mapped.filter(function(o) { return !_idsFechados.has(o._supa_id); });
             const idsNuvem = new Set(mappedFiltrado.map(o => o.id));
             const pedidosNovos = mappedFiltrado.filter(o => !orders.find(ord => ord.id === o.id) && o.status === 'analise');
             // Preserva finalizados e cancelados que já estão em memória
             // (o Supabase não retorna esses status na query — eles só somem via cfgAplicarLimpeza)
+            // IMPORTANTE: pedidos ATIVOS que sumiram da query (ex: fechados por outro PC)
+            // NÃO são preservados — idsNuvem não os contém e status não é finalizado/cancelado,
+            // então caem fora do concat e somem da tela corretamente.
             const preservados = orders.filter(function(o) {
                 return (o.status === 'finalizado' || o.status === 'cancelado') && !idsNuvem.has(o.id);
             });
+            // Remove da memória pedidos ativos que sumiram do Supabase (fechados por outro PC/dispositivo)
+            // Eles não estão em idsNuvem e não são finalizados/cancelados → não entram em preservados
+            // → são automaticamente descartados do concat abaixo. Nenhuma ação extra necessária.
             // Só re-renderiza se houve mudança real (evita lentidão a cada 5s)
             var _novoJson = JSON.stringify(preservados.concat(mappedFiltrado));
             var _velhoJson = localStorage.getItem('f_orders') || '[]';
