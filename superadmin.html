@@ -1866,7 +1866,7 @@ function saRenderRestaurantes(lista) {
     };
     el.innerHTML = `<table>
         <thead><tr>
-            <th>Restaurante</th><th>Plano</th><th>Pagamento</th>
+            <th>Restaurante</th><th>Plano</th><th>Pagamento</th><th>Vencimento</th>
             <th>Pedidos</th><th>Receita</th><th>Ativo</th><th>Ações</th>
         </tr></thead>
         <tbody>
@@ -1877,6 +1877,12 @@ function saRenderRestaurantes(lista) {
             </td>
             <td><span style="font-size:12px;color:var(--muted2);">${_planoLabel(r.pgto?.plano||'trial')}</span></td>
             <td>${badgePgto(r.pgto?.status_pgto||'pendente')}</td>
+            <td>
+                <input type="date" value="${r.pgto?.vencimento||''}"
+                    style="background:#1e293b;border:1px solid #334155;border-radius:7px;color:#e2e8f0;font-size:11px;padding:4px 7px;font-family:inherit;cursor:pointer;width:130px;"
+                    title="Alterar vencimento"
+                    onchange="saAlterarVencimento('${r.id}', this.value, this)">
+            </td>
             <td><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;">${r.totalPedidos}</span></td>
             <td><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;font-size:13px;">${money(r.receitaTotal)}</span></td>
             <td>
@@ -1895,6 +1901,32 @@ function saRenderRestaurantes(lista) {
         </tr>`).join('')}
         </tbody>
     </table>`;
+}
+
+async function saAlterarVencimento(restId, novaData, inputEl) {
+    if (!novaData) return;
+    try {
+        inputEl.style.borderColor = '#f59e0b';
+        const patchR = await fetch(SA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + restId, {
+            method: 'PATCH',
+            headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+            body: JSON.stringify({ vencimento: novaData })
+        });
+        const patchData = await patchR.json();
+        if (!patchData || patchData.length === 0) {
+            // Registro não existe — cria
+            await saFetch('POST', 'pagamentos', { restaurante_id: restId, vencimento: novaData, status_pgto: 'trial', plano: 'trial', valor: 0 });
+        }
+        // Atualiza memória
+        const r = _restaurantes.find(x => x.id === restId);
+        if (r) { r.pgto = r.pgto || {}; r.pgto.vencimento = novaData; }
+        inputEl.style.borderColor = '#22c55e';
+        setTimeout(() => { inputEl.style.borderColor = '#334155'; }, 1500);
+        toast('✓ Vencimento atualizado para ' + new Date(novaData + 'T12:00:00').toLocaleDateString('pt-BR'), true);
+    } catch(e) {
+        inputEl.style.borderColor = '#ef4444';
+        toast('Erro ao salvar vencimento: ' + e.message, false);
+    }
 }
 
 async function saToggleAtivo(id, btn) {
