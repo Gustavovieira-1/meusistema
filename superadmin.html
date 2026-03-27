@@ -1053,10 +1053,9 @@ tr:hover td { background: rgba(255,255,255,.015); }
                 <option value="inativo">Inativos</option>
               </select>
               <select class="filtro-select" id="filtro-pgto" onchange="saFiltrarRest()">
-                <option value="">Todos os planos</option>
+                <option value="">Todos os status</option>
                 <option value="pago">Pago</option>
                 <option value="trial">Teste Grátis</option>
-                <option value="inadimplente">Inadimplente</option>
                 <option value="pendente">Pendente</option>
                 <option value="inadimplente">Inadimplente</option>
                 <option value="cancelado">Cancelado</option>
@@ -1815,7 +1814,7 @@ async function saCarregarRestaurantes() {
         sel.innerHTML = '<option value="">Todos os restaurantes</option>' +
             _restaurantes.map(r => `<option value="${r.id}">${r.nome}</option>`).join('');
 
-        saRenderRestaurantes(_restaurantes);
+        saFiltrarRest();
     } catch(e) {
         document.getElementById('tabela-rest-body').innerHTML =
             `<div class="vazio"><div class="vazio-icon">⚠️</div>Erro: ${e.message}</div>`;
@@ -1856,10 +1855,9 @@ function saFiltrarRest() {
 // ── sort state ──────────────────────────────────────────────
 var _sortCol = null;
 var _sortDir = 1; // 1 = asc, -1 = desc
-
 function saSortBy(col) {
     if (_sortCol === col) { _sortDir *= -1; } else { _sortCol = col; _sortDir = 1; }
-    saFiltrar();
+    saFiltrarRest(); // re-filters AND re-renders with sort
 }
 
 function saRenderRestaurantes(lista) {
@@ -1867,12 +1865,12 @@ function saRenderRestaurantes(lista) {
     if (_sortCol) {
         lista = lista.slice().sort((a, b) => {
             let va, vb;
-            if (_sortCol === 'nome')      { va = (a.nome||'').toLowerCase();                    vb = (b.nome||'').toLowerCase(); }
-            if (_sortCol === 'plano')     { va = a.pgto?.plano||'';                             vb = b.pgto?.plano||''; }
-            if (_sortCol === 'status')    { va = a.pgto?.status_pgto||'';                        vb = b.pgto?.status_pgto||''; }
-            if (_sortCol === 'venc')      { va = a.pgto?.vencimento||'9999';                    vb = b.pgto?.vencimento||'9999'; }
-            if (_sortCol === 'pedidos')   { va = a.totalPedidos||0;                             vb = b.totalPedidos||0; }
-            if (_sortCol === 'receita')   { va = a.receitaTotal||0;                             vb = b.receitaTotal||0; }
+            if (_sortCol === 'nome')    { va = (a.nome||'').toLowerCase();      vb = (b.nome||'').toLowerCase(); }
+            if (_sortCol === 'plano')   { va = a.pgto?.plano||'';               vb = b.pgto?.plano||''; }
+            if (_sortCol === 'status')  { va = a.pgto?.status_pgto||'';         vb = b.pgto?.status_pgto||''; }
+            if (_sortCol === 'venc')    { va = a.pgto?.vencimento||'9999';      vb = b.pgto?.vencimento||'9999'; }
+            if (_sortCol === 'pedidos') { va = a.totalPedidos||0;               vb = b.totalPedidos||0; }
+            if (_sortCol === 'receita') { va = a.receitaTotal||0;               vb = b.receitaTotal||0; }
             if (va < vb) return -1 * _sortDir;
             if (va > vb) return  1 * _sortDir;
             return 0;
@@ -1884,30 +1882,55 @@ function saRenderRestaurantes(lista) {
         el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fas fa-store"></i></div>Nenhum restaurante encontrado.</div>';
         return;
     }
-    const badgePgto = s => {
-        const map = { pago:'pago', pendente:'pendente', trial:'trial', cancelado:'cancelado', inadimplente:'inadimplente' };
-        const labels = { pago:'Pago', pendente:'Pendente', trial:'Trial', cancelado:'Cancelado', inadimplente:'Inadimplente' };
-        return `<span class="badge ${map[s]||'pendente'}">${labels[s]||s}</span>`;
+
+    // Inline status selector — colorido igual ao badge
+    const statusInline = (restId, s) => {
+        const opts = [
+            { v:'pago',         l:'Pago',         c:'#3b82f6', bg:'rgba(59,130,246,.12)' },
+            { v:'pendente',     l:'Pendente',      c:'#f59e0b', bg:'rgba(245,158,11,.12)' },
+            { v:'inadimplente', l:'Inadimplente',  c:'#ef4444', bg:'rgba(239,68,68,.12)'  },
+            { v:'trial',        l:'Trial',         c:'#d97706', bg:'rgba(201,168,76,.12)' },
+            { v:'cancelado',    l:'Cancelado',     c:'#6b7280', bg:'rgba(107,114,128,.12)'}
+        ];
+        const cur = opts.find(o => o.v === s) || opts[0];
+        return opts.map(o =>
+            `<button onclick="saAlterarStatus('${restId}','${o.v}',this.closest('.status-menu').previousElementSibling)"
+                style="display:block;width:100%;padding:6px 12px;background:none;border:none;text-align:left;cursor:pointer;font-size:12px;font-weight:600;color:${o.c};font-family:inherit;border-radius:6px;"
+                onmouseover="this.style.background='${o.bg}'" onmouseout="this.style.background='none'">${o.l}</button>`
+        ).join('') ;
     };
+
     const sortIcon = col => {
-        if (_sortCol !== col) return '<i class="fas fa-sort" style="opacity:.3;margin-left:5px;font-size:9px;"></i>';
+        if (_sortCol !== col) return '<i class="fas fa-sort" style="opacity:.25;margin-left:4px;font-size:9px;"></i>';
         return _sortDir === 1
-            ? '<i class="fas fa-sort-up" style="opacity:.8;margin-left:5px;font-size:9px;"></i>'
-            : '<i class="fas fa-sort-down" style="opacity:.8;margin-left:5px;font-size:9px;"></i>';
+            ? '<i class="fas fa-sort-up" style="margin-left:4px;font-size:9px;"></i>'
+            : '<i class="fas fa-sort-down" style="margin-left:4px;font-size:9px;"></i>';
     };
-    const thStyle = 'cursor:pointer;user-select:none;white-space:nowrap;';
+    const th = 'cursor:pointer;user-select:none;white-space:nowrap;';
+
     el.innerHTML = `<table>
         <thead><tr>
-            <th style="${thStyle}" onclick="saSortBy('nome')">Restaurante${sortIcon('nome')}</th>
-            <th style="${thStyle}" onclick="saSortBy('plano')">Plano${sortIcon('plano')}</th>
-            <th style="${thStyle}" onclick="saSortBy('status')">Pagamento${sortIcon('status')}</th>
-            <th style="${thStyle}" onclick="saSortBy('venc')">Vencimento${sortIcon('venc')}</th>
-            <th style="${thStyle}" onclick="saSortBy('pedidos')">Pedidos${sortIcon('pedidos')}</th>
-            <th style="${thStyle}" onclick="saSortBy('receita')">Receita${sortIcon('receita')}</th>
+            <th style="${th}" onclick="saSortBy('nome')">Restaurante${sortIcon('nome')}</th>
+            <th style="${th}" onclick="saSortBy('plano')">Plano${sortIcon('plano')}</th>
+            <th style="${th}" onclick="saSortBy('status')">Pagamento${sortIcon('status')}</th>
+            <th style="${th}" onclick="saSortBy('venc')">Vencimento${sortIcon('venc')}</th>
+            <th style="${th}" onclick="saSortBy('pedidos')">Pedidos${sortIcon('pedidos')}</th>
+            <th style="${th}" onclick="saSortBy('receita')">Receita${sortIcon('receita')}</th>
             <th>Ativo</th><th>Ações</th>
         </tr></thead>
         <tbody>
-        ${lista.map(r => `<tr>
+        ${lista.map(r => {
+            const s = r.pgto?.status_pgto || 'pendente';
+            const statusColors = {
+                pago:         { c:'#3b82f6', bg:'rgba(59,130,246,.12)'  },
+                pendente:     { c:'#f59e0b', bg:'rgba(245,158,11,.12)'  },
+                inadimplente: { c:'#ef4444', bg:'rgba(239,68,68,.12)'   },
+                trial:        { c:'#d97706', bg:'rgba(201,168,76,.12)'  },
+                cancelado:    { c:'#6b7280', bg:'rgba(107,114,128,.12)' }
+            };
+            const sc = statusColors[s] || statusColors.pendente;
+            const sLabel = { pago:'Pago', pendente:'Pendente', inadimplente:'Inadimplente', trial:'Trial', cancelado:'Cancelado' };
+            return `<tr>
             <td>
                 <div class="rest-nome">${r.nome}</div>
                 <div class="rest-slug"><i class="fas fa-link" style="font-size:9px;"></i>${r.slug||'—'}</div>
@@ -1922,11 +1945,19 @@ function saRenderRestaurantes(lista) {
                     <option value="anual"      ${(r.pgto?.plano||'')==='anual'      ?'selected':''}>Anual</option>
                 </select>
             </td>
-            <td>${badgePgto(r.pgto?.status_pgto||'pendente')}</td>
+            <td style="position:relative;">
+                <span class="badge-status-btn" data-rest="${r.id}"
+                    onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'"
+                    style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;color:${sc.c};background:${sc.bg};border:1px solid ${sc.c}33;user-select:none;">
+                    ${sLabel[s]||s} <i class="fas fa-chevron-down" style="font-size:8px;opacity:.7;"></i>
+                </span>
+                <div class="status-menu" style="display:none;position:absolute;z-index:999;top:calc(100% + 4px);left:0;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:4px;min-width:140px;box-shadow:0 8px 24px rgba(0,0,0,.4);">
+                    ${statusInline(r.id, s)}
+                </div>
+            </td>
             <td>
                 <input type="date" value="${r.pgto?.vencimento||''}"
                     style="background:#1e293b;border:1px solid #334155;border-radius:7px;color:#e2e8f0;font-size:11px;padding:4px 7px;font-family:inherit;cursor:pointer;width:130px;"
-                    title="Alterar vencimento"
                     onchange="saAlterarVencimento('${r.id}', this.value, this)">
             </td>
             <td><span style="font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;">${r.totalPedidos}</span></td>
@@ -1944,9 +1975,49 @@ function saRenderRestaurantes(lista) {
                     <button class="btn-acao danger" onclick="saDeletarRest('${r.id}','${r.nome}')" title="Excluir"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
-        </tr>`).join('')}
+        </tr>`;
+        }).join('')}
         </tbody>
     </table>`;
+
+    // Fecha dropdown de status ao clicar fora
+    document.addEventListener('click', function _closeMenus(e) {
+        if (!e.target.closest('.badge-status-btn') && !e.target.closest('.status-menu')) {
+            document.querySelectorAll('.status-menu').forEach(m => m.style.display = 'none');
+        }
+    }, { once: true });
+}
+
+async function saAlterarStatus(restId, novoStatus, badgeEl) {
+    try {
+        const patchR = await fetch(SA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + restId, {
+            method: 'PATCH',
+            headers: { 'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY), 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+            body: JSON.stringify({ status_pgto: novoStatus })
+        });
+        const patchData = await patchR.json();
+        if (!patchData || patchData.length === 0) {
+            await saFetch('POST', 'pagamentos', { restaurante_id: restId, status_pgto: novoStatus, plano: 'trial', valor: 0 });
+        }
+        // Bloqueia restaurante se inadimplente/cancelado, ativa se pago
+        const deveDesativar = ['inadimplente', 'cancelado'].includes(novoStatus);
+        const deveAtivar    = novoStatus === 'pago';
+        if (deveDesativar || deveAtivar) {
+            await saFetch('PATCH', `restaurantes?id=eq.${restId}`, { ativo: deveAtivar });
+        }
+        const r = _restaurantes.find(x => x.id === restId);
+        if (r) {
+            r.pgto = r.pgto || {};
+            r.pgto.status_pgto = novoStatus;
+            if (deveDesativar || deveAtivar) r.ativo = deveAtivar;
+        }
+        // Fecha menu e re-renderiza
+        document.querySelectorAll('.status-menu').forEach(m => m.style.display = 'none');
+        saFiltrarRest();
+        saCalcularMetricas();
+        const labels = { pago:'Pago', pendente:'Pendente', inadimplente:'Inadimplente', trial:'Trial', cancelado:'Cancelado' };
+        toast('✓ Status alterado para ' + (labels[novoStatus] || novoStatus), true);
+    } catch(e) { toast('Erro ao salvar status: ' + e.message, false); }
 }
 
 async function saAlterarVencimento(restId, novaData, inputEl) {
@@ -2092,7 +2163,7 @@ async function saSalvarRest() {
             if (r) { r.nome = nome; r.slug = slug; r.obs = obs; if(r.pgto){r.pgto.plano=plano;r.pgto.valor=valor;} }
             ok.textContent = '✓ Restaurante atualizado!';
             ok.style.display = 'block';
-            saRenderRestaurantes(_restaurantes);
+            saFiltrarRest();
             toast('✓ Restaurante atualizado!');
             setTimeout(saFecharModalRest, 1200);
         } else {
@@ -2165,7 +2236,7 @@ async function saDeletarRest(id, nome) {
     try {
         await saFetch('DELETE', `restaurantes?id=eq.${id}`);
         _restaurantes = _restaurantes.filter(r => r.id !== id);
-        saRenderRestaurantes(_restaurantes);
+        saFiltrarRest();
         saCalcularMetricas();
         toast('Restaurante excluído.');
     } catch(e) { toast('Erro: ' + e.message, false); }
@@ -2682,7 +2753,7 @@ async function saSalvarPgto() {
 
         saFecharModalPgto();
         saCarregarPagamentos();
-        saRenderRestaurantes(_restaurantes);
+        saFiltrarRest();
         saCalcularMetricas();
         toast('✓ Pagamento atualizado!');
     } catch(e) {
@@ -3137,7 +3208,7 @@ async function saAutomatizarPagamentos() {
             const venc = p.vencimento ? new Date(p.vencimento + 'T12:00:00') : null;
             const vencido = venc && venc < hoje;
 
-            // Caso 1: pago ou trial com vencimento passado → inadimplente + desativa restaurante
+            // Caso 1: pago ou trial com vencimento passado → pendente (superadmin decide se bloqueia)
             if ((p.status_pgto === 'pago' || p.status_pgto === 'trial') && vencido) {
                 await fetch(SA_URL + '/rest/v1/pagamentos?restaurante_id=eq.' + p.restaurante_id, {
                     method: 'PATCH',
@@ -3146,18 +3217,11 @@ async function saAutomatizarPagamentos() {
                         'Content-Type': 'application/json', 'Prefer': 'return=minimal'
                     },
                     body: JSON.stringify({
-                        status_pgto: 'inadimplente',
-                        obs: (p.obs ? p.obs + ' | ' : '') + 'Auto: vencido em ' + (venc ? venc.toLocaleDateString('pt-BR') : '?') + ' → inadimplente em ' + new Date().toLocaleDateString('pt-BR')
+                        status_pgto: 'pendente',
+                        obs: (p.obs ? p.obs + ' | ' : '') + 'Auto: vencido em ' + (venc ? venc.toLocaleDateString('pt-BR') : '?') + ' → pendente em ' + new Date().toLocaleDateString('pt-BR')
                     })
                 });
-                await fetch(SA_URL + '/rest/v1/restaurantes?id=eq.' + p.restaurante_id, {
-                    method: 'PATCH',
-                    headers: {
-                        'apikey': SA_KEY, 'Authorization': 'Bearer ' + (SA_TOKEN || SA_KEY),
-                        'Content-Type': 'application/json', 'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({ ativo: false })
-                });
+                // Não bloqueia automaticamente — superadmin precisa mudar para inadimplente manualmente
                 atualizados++;
             }
 
