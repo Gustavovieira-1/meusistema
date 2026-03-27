@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+=<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta http-equiv="origin-trial-disabled-features" content="BlockInsecurePrivateNetworkRequests">
@@ -7399,7 +7399,9 @@ async function supaReq(method, path, body) {
             'apikey':        SUPA_KEY,
             'Authorization': 'Bearer ' + (SUPA_TOKEN || SUPA_KEY),
             'Content-Type':  'application/json',
-            'Prefer':        method === 'POST' ? 'return=representation' : (method === 'PATCH' ? 'return=minimal' : '')
+            'Prefer':        method === 'POST' ? 'return=representation' : (method === 'PATCH' ? 'return=minimal' : ''),
+            'Cache-Control': 'no-cache, no-store',
+            'Pragma':        'no-cache'
         }
     };
     if (body) opts.body = JSON.stringify(body);
@@ -7590,10 +7592,10 @@ async function supaCarregarPedidos() {
             '&or=(fechado_em.is.null,restaurado_em.not.is.null)' +
             '&order=criado_em.desc&select=*'
         );
-        // Mesmo com rows vazio, precisamos remover da memória pedidos ativos que
+        // Mesmo com rows vazio ([] ou null), precisamos remover da memória pedidos ativos que
         // sumiram do Supabase (ex: fechados por outro PC). Sem esse bloco, quando
         // todos os pedidos ativos são fechados remotamente a tela nunca limpa.
-        if (rows && !rows.length) {
+        if (!rows || !rows.length) {
             var _ativosEmMemoria = orders.filter(function(o) {
                 return o.status !== 'finalizado' && o.status !== 'cancelado';
             });
