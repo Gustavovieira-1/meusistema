@@ -978,6 +978,9 @@ tr:hover td { background: rgba(255,255,255,.015); }
         <button class="nav-item" id="nav-cupons" onclick="saAba('cupons',this)">
           <i class="fas fa-ticket"></i> Cupons de Venda
         </button>
+        <button class="nav-item" id="nav-tutoriais" onclick="saAba('tutoriais',this)">
+          <i class="fab fa-youtube"></i> Tutoriais
+        </button>
       </nav>
 
       <div class="sidebar-bottom">
@@ -1297,6 +1300,24 @@ ON CONFLICT (id) DO NOTHING;</pre>
           </div>
         </div><!-- /sec-rastreamento -->
 
+        <!-- ══ ABA TUTORIAIS ══ -->
+        <div class="secao" id="sec-tutoriais">
+          <div class="sec-header">
+            <div>
+              <div class="sec-titulo">Tutoriais para os clientes</div>
+              <div class="sec-sub">Gerencie as aulas que aparecem no painel de cada restaurante</div>
+            </div>
+            <button class="btn-primary" onclick="tutAbrirModal(null)">
+              <i class="fas fa-plus"></i> Nova Aula
+            </button>
+          </div>
+          <div class="tabela-wrap">
+            <div id="tabela-tutoriais-body">
+              <div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando tutoriais...</span></div>
+            </div>
+          </div>
+        </div><!-- /sec-tutoriais -->
+
         <!-- ══ ABA CUPONS ══ -->
         <div class="secao" id="sec-cupons">
           <div class="sec-header">
@@ -1545,6 +1566,45 @@ ON CONFLICT (id) DO NOTHING;</pre>
       <button class="btn-secondary" onclick="cpFecharModal()">Cancelar</button>
       <button class="btn-primary" id="modal-cupom-btn" onclick="cpSalvar()">
         <i class="fas fa-check"></i> Salvar Cupom
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TUTORIAL -->
+<div class="modal-overlay" id="modal-tutorial">
+  <div class="modal">
+    <div class="modal-titulo" id="modal-tutorial-titulo">Nova Aula</div>
+    <div class="modal-sub">Cole o link do YouTube e configure o título da aula</div>
+    <input type="hidden" id="mt-id">
+
+    <div class="campo"><label>Título da aula *</label>
+      <input id="mt-titulo" type="text" placeholder="Ex: 01 - Gestor de Pedidos">
+    </div>
+
+    <div class="campo"><label>Descrição curta (opcional)</label>
+      <input id="mt-desc" type="text" placeholder="Ex: Como gerenciar seus pedidos no kanban">
+    </div>
+
+    <div class="campo"><label>URL do YouTube *</label>
+      <input id="mt-url" type="url" placeholder="https://www.youtube.com/watch?v=..." oninput="tutPreviewUrl(this.value)">
+      <div id="mt-preview" style="margin-top:10px;display:none;">
+        <iframe id="mt-iframe" width="100%" height="180" frameborder="0" allowfullscreen
+          style="border-radius:10px;background:#000;"></iframe>
+      </div>
+    </div>
+
+    <div class="campo"><label>Ordem de exibição</label>
+      <input id="mt-ordem" type="number" min="1" placeholder="1" value="1">
+    </div>
+
+    <div class="modal-erro" id="modal-tutorial-erro"></div>
+    <div class="modal-ok"   id="modal-tutorial-ok"></div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="tutFecharModal()">Cancelar</button>
+      <button class="btn-primary" id="modal-tutorial-btn" onclick="tutSalvar()">
+        <i class="fas fa-check"></i> Salvar Aula
       </button>
     </div>
   </div>
@@ -2786,7 +2846,8 @@ const tabTitles = {
     pedidos: 'Pedidos',
     pagamentos: 'Pagamentos',
     rastreamento: 'Rastreamento',
-    cupons: 'Cupons de Venda'
+    cupons: 'Cupons de Venda',
+    tutoriais: 'Tutoriais'
 };
 
 function saAba(id, btn) {
@@ -2802,6 +2863,7 @@ function saAba(id, btn) {
     if (id === 'usuarios')     saCarregarUsuarios();
     if (id === 'rastreamento') trCarregar();
     if (id === 'cupons')       cpCarregar();
+    if (id === 'tutoriais')    tutCarregar();
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -3265,6 +3327,139 @@ async function saAutomatizarPagamentos() {
 // ══════════════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// TUTORIAIS — gerenciamento das aulas para os clientes
+// ══════════════════════════════════════════════════════════════
+var _tutoriais = [];
+
+function tutYoutubeId(url) {
+    // Extrai o ID do YouTube de qualquer formato de URL
+    var m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+    return m ? m[1] : null;
+}
+
+function tutPreviewUrl(url) {
+    var id = tutYoutubeId(url);
+    var preview = document.getElementById('mt-preview');
+    var iframe  = document.getElementById('mt-iframe');
+    if (id) {
+        iframe.src = 'https://www.youtube.com/embed/' + id;
+        preview.style.display = 'block';
+    } else {
+        iframe.src = '';
+        preview.style.display = 'none';
+    }
+}
+
+async function tutCarregar() {
+    document.getElementById('tabela-tutoriais-body').innerHTML =
+        '<div class="loading"><i class="fas fa-circle-notch spin" style="font-size:24px;color:var(--gold);"></i><span>Carregando tutoriais...</span></div>';
+    try {
+        const rows = await saFetch('GET', 'tutoriais?select=*&order=ordem.asc,criado_em.asc') || [];
+        _tutoriais = rows;
+        tutRenderTabela(rows);
+    } catch(e) {
+        document.getElementById('tabela-tutoriais-body').innerHTML =
+            '<div class="vazio"><div class="vazio-icon">⚠️</div>Erro: ' + e.message + '</div>';
+    }
+}
+
+function tutRenderTabela(lista) {
+    const el = document.getElementById('tabela-tutoriais-body');
+    if (!lista.length) {
+        el.innerHTML = '<div class="vazio"><div class="vazio-icon"><i class="fab fa-youtube"></i></div>Nenhuma aula cadastrada ainda.</div>';
+        return;
+    }
+    el.innerHTML = `<table>
+        <thead><tr>
+            <th style="width:50px;">Ordem</th>
+            <th>Título</th>
+            <th>Descrição</th>
+            <th>Preview</th>
+            <th>Ações</th>
+        </tr></thead>
+        <tbody>
+        ${lista.map(t => {
+            const vid = tutYoutubeId(t.url || '');
+            const thumb = vid ? `<img src="https://img.youtube.com/vi/${vid}/mqdefault.jpg"
+                style="width:120px;height:68px;object-fit:cover;border-radius:8px;border:1px solid var(--border2);">` : '—';
+            return `<tr>
+                <td style="text-align:center;font-weight:800;color:var(--gold);">${t.ordem||'—'}</td>
+                <td><div style="font-weight:700;font-size:13px;">${t.titulo||'—'}</div></td>
+                <td><div style="font-size:12px;color:var(--muted2);max-width:200px;">${t.descricao||'—'}</div></td>
+                <td>${thumb}</td>
+                <td>
+                    <div class="acoes">
+                        <button class="btn-acao" onclick="tutAbrirModal('${t.id}')" title="Editar"><i class="fas fa-pen"></i></button>
+                        <button class="btn-acao danger" onclick="tutDeletar('${t.id}','${(t.titulo||'').replace(/'/g,'')}')" title="Excluir"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('')}
+        </tbody>
+    </table>`;
+}
+
+function tutAbrirModal(id) {
+    const t = id ? _tutoriais.find(x => x.id === id) : null;
+    document.getElementById('mt-id').value      = t ? t.id : '';
+    document.getElementById('mt-titulo').value  = t ? (t.titulo || '') : '';
+    document.getElementById('mt-desc').value    = t ? (t.descricao || '') : '';
+    document.getElementById('mt-url').value     = t ? (t.url || '') : '';
+    document.getElementById('mt-ordem').value   = t ? (t.ordem || 1) : (_tutoriais.length + 1);
+    document.getElementById('modal-tutorial-titulo').textContent = t ? 'Editar Aula' : 'Nova Aula';
+    document.getElementById('modal-tutorial-erro').textContent = '';
+    document.getElementById('modal-tutorial-ok').textContent   = '';
+    if (t && t.url) tutPreviewUrl(t.url); else { document.getElementById('mt-preview').style.display='none'; }
+    document.getElementById('modal-tutorial').classList.add('active');
+}
+
+function tutFecharModal() {
+    document.getElementById('modal-tutorial').classList.remove('active');
+}
+
+async function tutSalvar() {
+    const id     = document.getElementById('mt-id').value;
+    const titulo = document.getElementById('mt-titulo').value.trim();
+    const url    = document.getElementById('mt-url').value.trim();
+    const desc   = document.getElementById('mt-desc').value.trim();
+    const ordem  = parseInt(document.getElementById('mt-ordem').value) || 1;
+
+    const erro = document.getElementById('modal-tutorial-erro');
+    const ok   = document.getElementById('modal-tutorial-ok');
+    erro.textContent = ''; ok.textContent = '';
+
+    if (!titulo) { erro.textContent = 'Informe o título da aula.'; return; }
+    if (!url || !tutYoutubeId(url)) { erro.textContent = 'URL do YouTube inválida.'; return; }
+
+    const btn = document.getElementById('modal-tutorial-btn');
+    btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Salvando...';
+
+    try {
+        const dados = { titulo, url, descricao: desc, ordem };
+        if (id) {
+            await saFetch('PATCH', `tutoriais?id=eq.${id}`, dados);
+        } else {
+            await saFetch('POST', 'tutoriais', dados);
+        }
+        ok.textContent = '✓ Aula salva!';
+        setTimeout(() => { tutFecharModal(); tutCarregar(); }, 800);
+    } catch(e) {
+        erro.textContent = 'Erro: ' + e.message;
+    } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Salvar Aula';
+    }
+}
+
+async function tutDeletar(id, titulo) {
+    if (!confirm('Excluir a aula "' + titulo + '"?')) return;
+    try {
+        await saFetch('DELETE', `tutoriais?id=eq.${id}`);
+        toast('✓ Aula excluída');
+        tutCarregar();
+    } catch(e) { toast('Erro: ' + e.message, false); }
+}
+
 (async function init() {
     const temSessao = await saVerificarSessao();
     if (temSessao) {
