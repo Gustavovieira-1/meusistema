@@ -3406,16 +3406,16 @@ function tutAbrirModal(id) {
     document.getElementById('mt-titulo').value  = t ? (t.titulo || '') : '';
     document.getElementById('mt-desc').value    = t ? (t.descricao || '') : '';
     document.getElementById('mt-url').value     = t ? (t.url || '') : '';
-    document.getElementById('mt-ordem').value   = t ? (t.ordem || 1) : (_tutoriais.length + 1);
+    document.getElementById('mt-ordem').value   = t ? (t.ordem || 1) : ((Array.isArray(_tutoriais) ? _tutoriais.length : 0) + 1);
     document.getElementById('modal-tutorial-titulo').textContent = t ? 'Editar Aula' : 'Nova Aula';
     document.getElementById('modal-tutorial-erro').textContent = '';
     document.getElementById('modal-tutorial-ok').textContent   = '';
     if (t && t.url) tutPreviewUrl(t.url); else { document.getElementById('mt-preview').style.display='none'; }
-    document.getElementById('modal-tutorial').classList.add('active');
+    document.getElementById('modal-tutorial').classList.add('open');
 }
 
 function tutFecharModal() {
-    document.getElementById('modal-tutorial').classList.remove('active');
+    document.getElementById('modal-tutorial').classList.remove('open');
 }
 
 async function tutSalvar() {
