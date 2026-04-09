@@ -282,6 +282,8 @@ function ir(n) {
     if (!nr || !ci || !es) { document.getElementById('err3').classList.add('show'); return; }
     document.getElementById('err3').classList.remove('show');
     S.nomeRest = nr; S.cidade = ci; S.estado = es;
+    // Salva dados do restaurante
+    salvarOuAtualizarLead({ nome_rest: S.nomeRest, cidade: S.cidade, estado: S.estado, tipo_negocio: S.tipo, faturamento: S.fat, status: 'dados_restaurante' });
   }
   for (var i = 1; i <= 5; i++) document.getElementById('step'+i).style.display = 'none';
   document.getElementById('step'+n).style.display = 'block';
@@ -320,6 +322,9 @@ function selecionarOpt(el, campo, btnId) {
   S[campo] = el.dataset.val;
   var btn = document.getElementById(btnId);
   if (btn) btn.disabled = false;
+  // Salva progressivamente ao selecionar
+  if (campo === 'tipo') salvarOuAtualizarLead({ tipo_negocio: S.tipo, status: 'tipo_selecionado' });
+  if (campo === 'fat') salvarOuAtualizarLead({ faturamento: S.fat, status: 'fat_selecionado' });
 }
 
 function setTab(tab, el) {
@@ -385,17 +390,27 @@ function contratar() {
   window.location.href = url;
 }
 
+function salvarOuAtualizarLead(campos) {
+  if (S.leadId) {
+    // Já existe lead — só atualiza
+    atualizarLead(campos);
+  } else {
+    // Ainda não tem lead — cria novo
+    fetch(SB_URL + '/rest/v1/leads_zira', {
+      method: 'POST',
+      headers: { 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=representation' },
+      body: JSON.stringify(campos)
+    }).then(function(r){ return r.text().then(function(t){ return {s:r.status,b:t}; }); })
+    .then(function(r){
+      if (r.s >= 200 && r.s < 300) {
+        try { var d = JSON.parse(r.b); if (Array.isArray(d) && d[0]) S.leadId = d[0].id; } catch(e){}
+      }
+    }).catch(function(){});
+  }
+}
+
 function salvarLead() {
-  fetch(SB_URL + '/rest/v1/leads_zira', {
-    method: 'POST',
-    headers: { 'apikey':SB_KEY, 'Authorization':'Bearer '+SB_KEY, 'Content-Type':'application/json', 'Prefer':'return=representation' },
-    body: JSON.stringify({ nome:S.nome, email:S.email, telefone:S.tel, nome_rest:S.nomeRest, cidade:S.cidade, estado:S.estado, tipo_negocio:S.tipo, faturamento:S.fat, status:'proposta_visualizada' })
-  }).then(function(r){ return r.text().then(function(t){ return {s:r.status,b:t}; }); })
-  .then(function(r){
-    if (r.s >= 200 && r.s < 300) {
-      try { var d = JSON.parse(r.b); if (Array.isArray(d) && d[0]) S.leadId = d[0].id; } catch(e){}
-    }
-  }).catch(function(){});
+  salvarOuAtualizarLead({ nome:S.nome, email:S.email, telefone:S.tel, nome_rest:S.nomeRest, cidade:S.cidade, estado:S.estado, tipo_negocio:S.tipo, faturamento:S.fat, status:'proposta_visualizada' });
 }
 
 function atualizarLead(campos) {
