@@ -478,16 +478,6 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       <div class="suc-pontos-val">+<span id="suc-pontos-val">0</span> pontos</div>
       <div class="suc-pontos-lbl">adicionados à sua conta de fidelidade</div>
     </div>
-    <!-- Bloco PIX — exibido só quando pagamento for Pix e chave estiver cadastrada -->
-    <div id="suc-pix-wrap" style="display:none; background:#f0fdf4; border:1.5px solid #86efac; border-radius:12px; padding:14px 16px; margin-bottom:12px; text-align:left;">
-      <div style="font-size:11px; font-weight:700; color:#15803d; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">💳 Pague com PIX</div>
-      <div style="font-size:13px; color:#166534; font-weight:600; word-break:break-all;" id="suc-pix-chave">—</div>
-      <div id="suc-pix-titular" style="font-size:11px; color:#16a34a; margin-top:2px;"></div>
-      <button onclick="copiarChavePix()" id="suc-pix-btn"
-        style="margin-top:10px; width:100%; background:#16a34a; color:#fff; border:none; border-radius:8px; padding:10px; font-family:'Inter',sans-serif; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
-        📋 Copiar chave PIX
-      </button>
-    </div>
     <button class="btn-wpp" onclick="enviarResumoWhatsapp()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
       Enviar resumo no WhatsApp
@@ -642,18 +632,11 @@ function cupomGetDesconto(sub, taxa) {
 }
 
 async function supaFetch(path) {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
-    try {
-        const r = await fetch(SUPA_URL + '/rest/v1/' + path, {
-            headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Connection': 'keep-alive'},
-            signal: controller.signal
-        });
-        if (!r.ok) throw new Error('Supa ' + r.status);
-        return r.json();
-    } finally {
-        clearTimeout(timeout);
-    }
+    const r = await fetch(SUPA_URL + '/rest/v1/' + path, {
+        headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY}
+    });
+    if (!r.ok) throw new Error('Supa ' + r.status);
+    return r.json();
 }
 
 async function init(){
@@ -665,7 +648,7 @@ async function init(){
     // Se já visitou antes, renderiza do cache imediatamente enquanto
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
-    const CACHE_TTL = 10 * 60 * 1000; // 10 minutos
+    const CACHE_TTL = 120 * 60 * 1000; // 2 horas — reduz requests ao Supabase
     const CACHE_VER = 15; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
@@ -690,17 +673,15 @@ async function init(){
             aberta         = !lojaPausada && !lojaForaHorario;
             // Restaura config de fidelidade para pill aparecer corretamente desde o inicio
             db.fidelidade = cached.db.fidelidadeCfg || null;
-            db.wppNumero  = cached.db.wppNumero  || '';
-            db.pixChave   = cached.db.pixChave   || '';
-            db.pixTitular = cached.db.pixTitular || '';
+            db.wppNumero  = cached.db.wppNumero || '';
             if (db.fidelidade) {
                 try { localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade)); } catch(e) {}
             }
             renderHeader();
             renderCardapio();
             pixelInicializar(db.integracoes);
-            // Atualiza em background silenciosamente
-            _initBackground(CACHE_KEY);
+            // Background desativado para economizar egress do Supabase
+            // _initBackground(CACHE_KEY);
             return;
         }
         // Cache desatualizado — remove para forcar recarregamento limpo
@@ -729,11 +710,7 @@ async function init(){
             // Salva REST_ID no cache por 24h para pular esse roundtrip na próxima visita
             try { localStorage.setItem('zira_slug_' + REST_SLUG, JSON.stringify({id: REST_ID, ts: Date.now()})); } catch(e) {}
         }
-        // Se REST_ID veio do cache, busca o ativo atualizado do restaurante
-        if (!restRows) {
-            const restCheck = await supaFetch('restaurantes?id=eq.' + REST_ID + '&select=id,nome,slug,ativo&limit=1');
-            restRows = restCheck && restCheck[0] ? restCheck : [{ id: REST_ID, nome: '', slug: REST_SLUG, ativo: true }];
-        }
+        if (!restRows) restRows = [{ id: REST_ID, nome: '', slug: REST_SLUG, ativo: true }];
         const rest = restRows[0];
 
         // Verificação de pagamento + cardápio em paralelo (não mais sequencial)
@@ -747,14 +724,8 @@ async function init(){
             supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
             supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
-            supaFetch('whatsapp_config?restaurante_id=eq.'+REST_ID+'&select=numero_restaurante,pix_chave,pix_titular&limit=1')
+            supaFetch('whatsapp_config?restaurante_id=eq.'+REST_ID+'&select=numero_restaurante&limit=1')
         ]);
-
-        // Verifica se restaurante está ativo
-        if (restRows && restRows[0] && restRows[0].ativo === false) {
-            document.getElementById('cardapio-bloqueio').style.display = 'flex';
-            return;
-        }
 
         // Verifica pagamento com os dados que já vieram no Promise.all
         if (pgtoRows && pgtoRows[0]) {
@@ -786,8 +757,8 @@ async function init(){
             cidade: cfg.cidade || '',
             logo: cfg.logo || '',
             capa: cfg.capa || '',
-            minPedido: parseFloat(cfg.valor_minimo || cfg.delivery_minimo) || 0
-            // taxaEntrega removido — usa sempre db.txCfg.taxaPadrao (tabela taxas_entrega)
+            minPedido: parseFloat(cfg.valor_minimo || cfg.delivery_minimo) || 0,
+            taxaEntrega: parseFloat(cfg.taxa_entrega) || 0
         };
         // taxas_entrega salva tudo dentro de dados:{...} no Supabase
         var _tx = (txRows&&txRows[0]) ? (txRows[0].dados || txRows[0]) : {};
@@ -803,8 +774,6 @@ async function init(){
         // Salvar numero_restaurante do WhatsApp em db
         db.wppNumero = (wppRows && wppRows[0] && wppRows[0].numero_restaurante) ? wppRows[0].numero_restaurante.replace(/\D/g,'') : '';
         if (db.wppNumero.length === 10 || db.wppNumero.length === 11) db.wppNumero = '55' + db.wppNumero;
-        db.pixChave   = (wppRows && wppRows[0] && wppRows[0].pix_chave)   || '';
-        db.pixTitular = (wppRows && wppRows[0] && wppRows[0].pix_titular) || '';
 
         // Salvar fidelidade em db (igual à taxa) e localStorage
         if (fidRows && fidRows[0]) {
@@ -859,9 +828,7 @@ async function init(){
                     lojaPausada: lojaPausada,
                     lojaForaHorario: lojaForaHorario,
                     fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined,
-                    wppNumero: db.wppNumero || '',
-                    pixChave: db.pixChave || '',
-                    pixTitular: db.pixTitular || ''
+                    wppNumero: db.wppNumero || ''
                 }
             }));
         } catch(e) {}
@@ -893,7 +860,7 @@ async function init(){
                 aberta = !lojaPausada && !lojaForaHorario;
                 renderHeader();
             } catch(e) {}
-        }, 60000);
+        }, 300000);
 
         // Tentar conectar ao servidor local em background (impressora/SSE)
         if (SERVIDOR) {
@@ -910,9 +877,9 @@ async function init(){
 // Atualização em background — roda após renderizar do cache
 async function _initBackground(cacheKey) {
     try {
-        // REST_ID já está carregado do init principal — busca ativo sempre para verificar bloqueio
-        let restRows;
+        // REST_ID já está carregado do init principal — não precisa buscar de novo
         if (!REST_ID) {
+            let restRows;
             if (REST_SLUG) {
                 restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
             } else {
@@ -920,8 +887,6 @@ async function _initBackground(cacheKey) {
             }
             if (!restRows || !restRows[0]) return;
             REST_ID = restRows[0].id;
-        } else {
-            restRows = await supaFetch('restaurantes?id=eq.' + REST_ID + '&select=id,nome,slug,ativo&limit=1');
         }
 
         const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows, wppRows] = await Promise.all([
@@ -934,14 +899,8 @@ async function _initBackground(cacheKey) {
             supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
             supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
             supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
-            supaFetch('whatsapp_config?restaurante_id=eq.'+REST_ID+'&select=numero_restaurante,pix_chave,pix_titular&limit=1')
+            supaFetch('whatsapp_config?restaurante_id=eq.'+REST_ID+'&select=numero_restaurante&limit=1')
         ]);
-
-        // Verifica se restaurante está ativo
-        if (restRows && restRows[0] && restRows[0].ativo === false) {
-            document.getElementById('cardapio-bloqueio').style.display = 'flex';
-            return;
-        }
 
         // Verifica bloqueio
         if (pgtoRows && pgtoRows[0]) {
@@ -968,8 +927,8 @@ async function _initBackground(cacheKey) {
         db.comps       = (comps||[]).map(c => ({id: c.id, title: c.titulo||c.nome||'', type: c.tipo||'check', options: c.opcoes||[]}));
         db.cfg         = { nomeMarca: cfg.nome_marca||rest.nome, nomeUnidade: cfg.nome_unidade||rest.nome,
                            cidade: cfg.cidade||'', logo: cfg.logo||'', capa: cfg.capa||'',
-                           minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0
-                           /* taxaEntrega removido — usa sempre db.txCfg.taxaPadrao (tabela taxas_entrega) */ };
+                           minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0,
+                           taxaEntrega: parseFloat(cfg.taxa_entrega)||0 };
         // taxas_entrega salva tudo dentro de dados:{...} no Supabase
         var _tx2 = (txRows&&txRows[0]) ? (txRows[0].dados || txRows[0]) : {};
         db.txCfg = {
@@ -982,8 +941,6 @@ async function _initBackground(cacheKey) {
         pixelInicializar(db.integracoes);
         // Atualiza numero do restaurante no WhatsApp
         if (wppRows && wppRows[0] && wppRows[0].numero_restaurante) {
-            db.pixChave   = wppRows[0].pix_chave   || '';
-            db.pixTitular = wppRows[0].pix_titular || '';
             var _n = wppRows[0].numero_restaurante.replace(/\D/g,'');
             db.wppNumero = (_n.length === 10 || _n.length === 11) ? '55' + _n : _n;
         }
@@ -1022,9 +979,7 @@ async function _initBackground(cacheKey) {
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
                       fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined,
-                      wppNumero: db.wppNumero || '',
-                      pixChave: db.pixChave || '',
-                      pixTitular: db.pixTitular || '' }
+                      wppNumero: db.wppNumero || '' }
             }));
         } catch(e) {}
     } catch(e) { console.warn('[BG] Erro na atualização em background:', e.message); }
@@ -1132,15 +1087,15 @@ function renderHeader(){
         atualizarContagem();
     }
     document.getElementById('info-entrega').textContent=(tx.tempoEntrega||40)+' min';
-    // Taxa: usa SEMPRE tx.taxaPadrao (tabela taxas_entrega — configurado em Taxas e Entrega)
-    var taxa = parseFloat(tx.taxaPadrao || 0);
+    // Taxa: usa cfg.taxaEntrega (do admin) se disponível, senão tx.taxaPadrao
+    var taxa = parseFloat(c.taxaEntrega || tx.taxaPadrao || 0);
     var taxaEl = document.getElementById('info-taxa');
     var taxaPill = document.getElementById('info-taxa-pill');
     if (taxa > 0) {
         taxaEl.textContent = money(taxa);
     } else {
-        // Só mostra "Grátis" se taxas_entrega já foi carregada
-        var taxaCarregada = (tx.taxaPadrao !== undefined);
+        // Só mostra "Grátis" se a taxa realmente foi carregada (não placeholder)
+        var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
         taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
     }
     // Pill de fidelidade — lê de db.fidelidade (igual taxa lê de db.txCfg)
@@ -1271,7 +1226,7 @@ function ajustaCarrinho(idx,d){
 }
 function atualizaResumo(){
     var sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0);
-    var taxa=tipoAtual==='Entrega'?parseFloat((db.txCfg||{}).taxaPadrao||0):0;
+    var taxa=tipoAtual==='Entrega'?parseFloat((db.txCfg||{}).taxaPadrao||(db.cfg||{}).taxaEntrega||0):0;
     var desc=fidelGetDesconto();
     var descCupom=cupomGetDesconto(sub,taxa);
     var taxaDisplay=(cupomAtual&&cupomAtual.tipo==='frete')?0:taxa;
@@ -1415,44 +1370,11 @@ async function finalizarPedido(){
     fidelMostrarSucesso(pedido.total);
     // Disparar evento de compra no Pixel da Meta
     pixelPurchase(pedido);
-    // Mostra bloco PIX se pagamento for Pix e chave estiver cadastrada
-    var pixWrap = document.getElementById('suc-pix-wrap');
-    if (pixWrap) {
-        if ((pedido.pagamento||'').toLowerCase() === 'pix' && db.pixChave) {
-            document.getElementById('suc-pix-chave').textContent = db.pixChave;
-            var titEl = document.getElementById('suc-pix-titular');
-            if (titEl) titEl.textContent = db.pixTitular ? 'Titular: ' + db.pixTitular : '';
-            pixWrap.style.display = 'block';
-        } else {
-            pixWrap.style.display = 'none';
-        }
-    }
     document.getElementById('sucesso-overlay').classList.add('open');
     btn.disabled=false;btn.textContent='Fazer pedido';
 }
 
 function novoPedido(){carrinho=[];cupomRemover();atualizaFab();document.getElementById('sucesso-overlay').classList.remove('open');document.body.style.overflow='';_pedidoAtualResumo=null;}
-
-function copiarChavePix() {
-    var chave = db.pixChave || '';
-    if (!chave) return;
-    var btn = document.getElementById('suc-pix-btn');
-    try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(chave).then(function() {
-                if (btn) { btn.textContent = '✅ Chave copiada!'; setTimeout(function(){ btn.innerHTML = '📋 Copiar chave PIX'; }, 2500); }
-            });
-        } else {
-            // Fallback para iOS Safari
-            var el = document.createElement('textarea');
-            el.value = chave; el.style.position = 'fixed'; el.style.opacity = '0';
-            document.body.appendChild(el); el.focus(); el.select();
-            document.execCommand('copy');
-            document.body.removeChild(el);
-            if (btn) { btn.textContent = '✅ Chave copiada!'; setTimeout(function(){ btn.innerHTML = '📋 Copiar chave PIX'; }, 2500); }
-        }
-    } catch(e) { if (btn) btn.textContent = 'Chave: ' + chave; }
-}
 
 var _pedidoAtualResumo = null;
 
@@ -1513,13 +1435,6 @@ function enviarResumoWhatsapp() {
         totalReal = Math.max(0, parseFloat(p.subtotal||0) + parseFloat(p.taxaEntrega||0) - parseFloat(p.descontoPontos||0) - parseFloat(p.descontoCupom||0));
     }
     partes.push('Valor Total: R$' + totalReal.toFixed(2).replace('.',','));
-
-    // PIX — só adiciona se pagamento for Pix e chave estiver cadastrada
-    if ((p.pagamento||'').toLowerCase() === 'pix' && db.pixChave) {
-        partes.push('------------------------------');
-        partes.push('\uD83D\uDCB3 PIX para pagamento:');
-        partes.push('Chave: ' + db.pixChave + (db.pixTitular ? ' (' + db.pixTitular + ')' : ''));
-    }
 
     var msg = encodeURIComponent(partes.join('\n'));
 
@@ -1861,17 +1776,9 @@ function fidelMostrarSucesso(total) {
 // Verificar se restaurante tem pagamento ativo
 async function verificarPagamentoCardapio(restId) {
     try {
-        const [pgtoRows, restRows2] = await Promise.all([
-            supaFetch('pagamentos?restaurante_id=eq.' + restId + '&select=status_pgto,vencimento&limit=1'),
-            supaFetch('restaurantes?id=eq.' + restId + '&select=ativo&limit=1')
-        ]);
-        // Verifica se restaurante está ativo
-        if (restRows2 && restRows2[0] && restRows2[0].ativo === false) {
-            document.getElementById('cardapio-bloqueio').style.display = 'flex';
-            return;
-        }
-        if (!pgtoRows || pgtoRows.length === 0) return;
-        const pgto = pgtoRows[0];
+        const r = await supaFetch('pagamentos?restaurante_id=eq.' + restId + '&select=status_pgto,vencimento&limit=1');
+        if (!r || r.length === 0) return; // sem registro = libera
+        const pgto = r[0];
         const hoje = new Date(); hoje.setHours(0,0,0,0);
         const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
         const status = pgto.status_pgto;
