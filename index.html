@@ -61,7 +61,8 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
 
 /* INFO PILLS */
-.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 24px 20px;}
+.info-grid{display:flex;gap:8px;padding:0 24px 20px;}
+.info-grid .info-pill{flex:1;}
 .info-pill{background:#f7f7f7;border-radius:10px;padding:10px 8px;text-align:center;border:1px solid var(--border);}
 .info-val{font-size:13px;font-weight:700;color:var(--text);}
 .info-lbl{font-size:10px;color:var(--sub);margin-top:2px;font-weight:500;}
@@ -214,9 +215,14 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 
 /* AUTOCOMPLETE */
 .campo-rel{position:relative;}
-.sug-list{position:absolute;left:0;right:0;top:100%;background:var(--white);border:1.5px solid var(--border);border-top:none;border-radius:0 0 10px 10px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:999;max-height:180px;overflow-y:auto;}
-.sug-item{padding:10px 13px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text);}
+.cep-status{font-size:11px;color:#64748b;margin-top:5px;min-height:14px;}
+.cep-status.ok{color:#15803d;}
+.cep-status.err{color:#dc2626;}
+.sug-list{position:absolute;left:0;right:0;top:100%;background:var(--white);border:1.5px solid var(--border);border-top:none;border-radius:0 0 10px 10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:2000;max-height:220px;overflow-y:auto;}
+.sug-item{padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text);}
 .sug-item:hover{background:#f7f7f7;}
+.sug-item-rua{font-size:13px;font-weight:600;color:var(--text);}
+.sug-item-sub{font-size:11px;color:var(--sub);margin-top:2px;}
 
 /* SUCESSO */
 .sucesso-box{background:var(--white);border-radius:20px;padding:38px 28px;text-align:center;max-width:320px;width:88%;animation:popIn .3s cubic-bezier(.22,.68,0,1.2);}
@@ -295,10 +301,10 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
     </div>
   </div>
 
-  <!-- Info pills: Entrega | Taxa | Pontos (pontos oculto se fidelidade inativa) -->
+  <!-- Info pills: Entrega | Pontos (pontos oculto se fidelidade inativa). Taxa some daqui: depende do endereço. -->
   <div class="info-grid" id="info-grid">
     <div class="info-pill"><div class="info-val" id="info-entrega">-- min</div><div class="info-lbl">Entrega</div></div>
-    <div class="info-pill" id="info-taxa-pill">
+    <div class="info-pill" id="info-taxa-pill" style="display:none;">
       <div class="info-val" id="info-taxa">R$ --</div>
       <div class="info-lbl">Taxa</div>
     </div>
@@ -412,16 +418,22 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       <div class="campo"><label class="campo-lbl">WhatsApp</label><input id="ch-tel" type="tel" placeholder="(00) 00000-0000" oninput="fidelAtualizaSaldo()"></div>
       <div id="wrap-end">
         <div class="sec-title" style="margin-top:6px;">Endereço</div>
+        <div class="campo">
+          <label class="campo-lbl">CEP</label>
+          <input id="ch-cep" type="tel" inputmode="numeric" placeholder="00000-000" maxlength="9" autocomplete="postal-code" oninput="onCepInput()">
+          <div class="cep-status" id="ch-cep-status">Não sabe o CEP? Digite a rua abaixo</div>
+        </div>
         <div class="campo campo-rel">
           <label class="campo-lbl">Rua / Avenida</label>
-          <input id="ch-rua" type="text" placeholder="Nome da rua" oninput="buscaEnd()" autocomplete="off">
+          <input id="ch-rua" type="text" placeholder="Digite a rua ou avenida" oninput="buscaEnd()" onblur="onRuaBlur()" autocomplete="off">
           <div class="sug-list" id="ch-sugs" style="display:none;"></div>
         </div>
         <div class="campo-row">
-          <div class="campo"><label class="campo-lbl">Nº</label><input id="ch-num" type="text" placeholder="Nº"></div>
+          <div class="campo"><label class="campo-lbl">Nº</label><input id="ch-num" type="text" placeholder="Nº" onblur="onNumBlur()"></div>
           <div class="campo"><label class="campo-lbl">Bairro</label><input id="ch-bairro" type="text" placeholder="Bairro"></div>
         </div>
         <div class="campo"><label class="campo-lbl">Complemento</label><input id="ch-comp" type="text" placeholder="Apto, casa..."></div>
+        <div class="campo"><label class="campo-lbl">Cidade</label><input id="ch-cidade" type="text" placeholder="Cidade"></div>
       </div>
       <div class="sec-title" style="margin-top:6px;">Pagamento</div>
       <div class="pgto-grid">
@@ -438,7 +450,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       <div class="cupom-wrap">
         <div class="sec-title">Cupom de desconto</div>
         <div class="cupom-row">
-          <input class="cupom-input" id="cupom-input" type="text" placeholder="Ã³digo do cupom" maxlength="20">
+          <input class="cupom-input" id="cupom-input" type="text" placeholder="Código do cupom" maxlength="20">
           <button class="cupom-btn" onclick="cupomAplicar()">Aplicar</button>
         </div>
         <div id="cupom-tag" style="display:none;">
@@ -498,6 +510,244 @@ var carrinho=[],prodAtual=null,qtdAtual=1,compsAtual={},tipoAtual='Entrega',pgto
 var lojaPausada=false,lojaForaHorario=false; // separados para banner diferente
 var REST_SLUG = null;
 var REST_ID   = null;
+var _statusPollTimer = null;
+var _horarioTimer = null;
+
+function montarTxCfg(raw) {
+    var _tx = raw || {};
+    var raios = Array.isArray(_tx.raios) ? _tx.raios : [];
+    var taxaPadrao = parseFloat(_tx.taxaPadrao || _tx.taxa_padrao);
+    if (isNaN(taxaPadrao)) taxaPadrao = 0;
+    var taxasRaio = raios.map(function(r){ return parseFloat(r.taxa); }).filter(function(n){ return !isNaN(n) && n >= 0; });
+    // Com raios: mostra a menor taxa (a partir de). Sem raios: taxa padrão da tela Taxas e Entrega.
+    var taxaBase = taxasRaio.length ? Math.min.apply(null, taxasRaio) : taxaPadrao;
+    return {
+        tempoEntrega:  parseInt(_tx.tempoEntrega  || _tx.tempo_entrega  || 40, 10) || 40,
+        tempoRetirada: parseInt(_tx.tempoRetirada || _tx.tempo_retirada || 20, 10) || 20,
+        taxaPadrao:    taxaPadrao,
+        raios:         raios,
+        pedidoMinimo:  parseFloat(_tx.pedidoMinimo) || 0,
+        taxaBase:      taxaBase,
+        centroLat:     parseFloat(_tx.centroLat) || null,
+        centroLng:     parseFloat(_tx.centroLng) || null
+    };
+}
+function taxaEntregaCardapio() {
+    if (tipoAtual !== 'Entrega') return 0;
+    if (_taxaCalculada) return taxaEntregaAtual;
+    return 0;
+}
+
+var taxaEntregaAtual = 0;
+var _taxaCalculada = false;
+var _cepBuscando = false;
+
+function setCepStatus(txt, tipo) {
+    var el = document.getElementById('ch-cep-status');
+    if (!el) return;
+    el.textContent = txt || '';
+    el.className = 'cep-status' + (tipo ? ' ' + tipo : '');
+}
+function setTaxaCalculada(valor) {
+    taxaEntregaAtual = parseFloat(valor) || 0;
+    _taxaCalculada = true;
+    atualizaResumo();
+}
+function aplicarTaxaPadrao() {
+    var tx = db.txCfg || {};
+    var taxa = parseFloat(tx.taxaPadrao) || 0;
+    setTaxaCalculada(taxa);
+}
+function resetTaxaCep() {
+    taxaEntregaAtual = 0;
+    _taxaCalculada = false;
+    atualizaResumo();
+}
+
+function onCepInput() {
+    var el = document.getElementById('ch-cep');
+    if (!el) return;
+    var d = String(el.value || '').replace(/\D/g, '').slice(0, 8);
+    el.value = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d;
+    if (d.length < 8) {
+        if (!_cepBuscando) {
+            if (!d.length) {
+                setCepStatus('Não sabe o CEP? Digite a rua abaixo');
+            } else {
+                resetTaxaCep();
+                setCepStatus('');
+            }
+        }
+        return;
+    }
+    buscarCep(d);
+}
+
+function preencherEnderecoCep(d) {
+    var rua = document.getElementById('ch-rua');
+    var bairro = document.getElementById('ch-bairro');
+    var cidade = document.getElementById('ch-cidade');
+    if (rua && d.rua) rua.value = d.rua;
+    if (bairro && d.bairro) bairro.value = d.bairro;
+    if (cidade && d.cidade) cidade.value = d.cidade + (d.uf ? ' - ' + d.uf : '');
+    var sugs = document.getElementById('ch-sugs');
+    if (sugs) sugs.style.display = 'none';
+}
+
+function chHaversine(lat1, lng1, lat2, lng2) {
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLng = (lng2 - lng1) * Math.PI / 180;
+    var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+            Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+            Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function calcularTaxaComCoords(lat, lng) {
+    var tx = db.txCfg || {};
+    var raios = (tx.raios || []).slice().sort(function(a,b){ return parseFloat(a.km) - parseFloat(b.km); });
+    var cLat = parseFloat(tx.centroLat);
+    var cLng = parseFloat(tx.centroLng);
+    if (!raios.length || !cLat || !cLng) {
+        aplicarTaxaPadrao(raios.length ? 'Taxa padrão' : 'Taxa padrão');
+        return;
+    }
+    var dist = chHaversine(cLat, cLng, lat, lng);
+    for (var i = 0; i < raios.length; i++) {
+        if (dist <= parseFloat(raios[i].km)) {
+            var taxa = parseFloat(raios[i].taxa) || 0;
+            setTaxaCalculada(taxa);
+            return;
+        }
+    }
+    aplicarTaxaPadrao('Fora dos raios (' + dist.toFixed(1).replace('.', ',') + ' km) · taxa padrão');
+}
+
+function geocodificarEndereco() {
+    var rua = (document.getElementById('ch-rua') || {}).value || '';
+    if (!String(rua).trim()) return;
+    chGaranteLojaGeo().then(function(){
+        var num = (document.getElementById('ch-num') || {}).value || '';
+        var q = chNormalizaRua(rua) + (num ? ', ' + num : '');
+        var cidade = chCidadeLoja();
+        if (cidade) q += ', ' + cidade;
+        return Promise.all([chBuscaPhoton(q), chBuscaViaCep(rua)]);
+    }).then(function(res){
+        var photon = res[0] || [];
+        var viacep = res[1] || [];
+        if (photon[0] && photon[0].lat != null) {
+            calcularTaxaComCoords(photon[0].lat, photon[0].lng);
+            if (photon[0].cep) chPreencheCep(photon[0].cep);
+            setCepStatus('Taxa calculada pelo endereço', 'ok');
+            return;
+        }
+        if (viacep.length === 1 && viacep[0].cep) {
+            preencheEndSug(viacep[0]);
+            return;
+        }
+        if (viacep.length > 1) {
+            chMostraSugs(viacep);
+            setCepStatus('Selecione a rua na lista para calcular a taxa');
+            return;
+        }
+        setCepStatus('Não encontramos essa rua. Confira o nome ou informe o CEP.', 'err');
+    }).catch(function(){
+        setCepStatus('Não encontramos essa rua. Confira o nome ou informe o CEP.', 'err');
+    });
+}
+
+function buscarCep(cep) {
+    if (_cepBuscando) return;
+    _cepBuscando = true;
+    setCepStatus('Buscando endereço...');
+    fetch('https://brasilapi.com.br/api/cep/v2/' + cep)
+        .then(function(r){ if (!r.ok) throw new Error('cep'); return r.json(); })
+        .then(function(d){
+            preencherEnderecoCep({ rua: d.street, bairro: d.neighborhood, cidade: d.city, uf: d.state });
+            setCepStatus((d.city || '') + (d.state ? ' — ' + d.state : ''), 'ok');
+            var coords = d.location && d.location.coordinates;
+            var lat, lng;
+            if (coords) {
+                if (coords.latitude != null) { lat = coords.latitude; lng = coords.longitude; }
+                else if (Array.isArray(coords) && coords.length >= 2) { lng = coords[0]; lat = coords[1]; }
+            }
+            if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+                calcularTaxaComCoords(parseFloat(lat), parseFloat(lng));
+            } else {
+                geocodificarEndereco();
+            }
+        })
+        .catch(function(){
+            return fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    if (d.erro) { setCepStatus('CEP não encontrado', 'err'); aplicarTaxaPadrao('CEP não encontrado · taxa padrão'); return; }
+                    preencherEnderecoCep({ rua: d.logradouro, bairro: d.bairro, cidade: d.localidade, uf: d.uf });
+                    setCepStatus((d.localidade || '') + (d.uf ? ' — ' + d.uf : ''), 'ok');
+                    geocodificarEndereco();
+                });
+        })
+        .catch(function(){ setCepStatus('Não foi possível buscar o CEP', 'err'); aplicarTaxaPadrao('Taxa padrão'); })
+        .then(function(){ _cepBuscando = false; });
+}
+
+function _horToMin(s) {
+    var p = String(s || '00:00').split(':');
+    return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+}
+function _periodoAtivo(p, minAtual) {
+    var ini = _horToMin(p.ini);
+    var fim = _horToMin(p.fim || '23:59');
+    if (fim <= ini) return minAtual >= ini || minAtual < fim; // 18:00–02:00
+    return minAtual >= ini && minAtual < fim;
+}
+function calcularForaHorario(horarios) {
+    if (!horarios || !horarios.length) return false;
+    var agora = new Date();
+    var diaSem = agora.getDay();
+    var minAtual = agora.getHours() * 60 + agora.getMinutes();
+    var dia = horarios[diaSem];
+    if (dia && dia.aberta && dia.periodos && dia.periodos.length) {
+        if (dia.periodos.some(function(p){ return _periodoAtivo(p, minAtual); })) return false;
+    }
+    var prev = horarios[(diaSem + 6) % 7];
+    if (prev && prev.aberta && prev.periodos && prev.periodos.length) {
+        var aindaOntem = prev.periodos.some(function(p) {
+            var ini = _horToMin(p.ini), fim = _horToMin(p.fim || '23:59');
+            return fim <= ini && minAtual < fim;
+        });
+        if (aindaOntem) return false;
+    }
+    if (dia && dia.aberta && dia.periodos && dia.periodos.length) return true;
+    if (dia && !dia.aberta) return true;
+    return false;
+}
+function aplicarStatusCardapio() {
+    lojaForaHorario = calcularForaHorario(db.horarios);
+    aberta = !lojaPausada && !lojaForaHorario;
+}
+function iniciarSyncStatusLoja() {
+    if (!REST_ID) return;
+    if (!_horarioTimer) {
+        _horarioTimer = setInterval(function() {
+            aplicarStatusCardapio();
+            renderHeader();
+        }, 30000);
+    }
+    async function puxarStatus() {
+        try {
+            var cfgRows = await supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=pausada&limit=1');
+            var horRows = await supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1');
+            if (horRows && horRows[0] && horRows[0].dados) db.horarios = horRows[0].dados;
+            lojaPausada = !!(cfgRows && cfgRows[0] && cfgRows[0].pausada);
+            aplicarStatusCardapio();
+            renderHeader();
+        } catch(e) {}
+    }
+    puxarStatus();
+    if (!_statusPollTimer) _statusPollTimer = setInterval(puxarStatus, 15000);
+}
 
 // ── CUPOM ──
 var cupomAtual = null;
@@ -649,7 +899,7 @@ async function init(){
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
     const CACHE_TTL = 120 * 60 * 1000; // 2 horas — reduz requests ao Supabase
-    const CACHE_VER = 15; // incrementar aqui invalida cache antigo em todos os clientes
+    const CACHE_VER = 20; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
         const cacheValido = cached
@@ -669,8 +919,7 @@ async function init(){
             db.horarios    = cached.db.horarios;
             db.integracoes = cached.db.integracoes;
             lojaPausada    = !!cached.db.lojaPausada;
-            lojaForaHorario = !!cached.db.lojaForaHorario;
-            aberta         = !lojaPausada && !lojaForaHorario;
+            aplicarStatusCardapio(); // horário sempre pelo relógio atual, não pelo boolean cacheado
             // Restaura config de fidelidade para pill aparecer corretamente desde o inicio
             db.fidelidade = cached.db.fidelidadeCfg || null;
             db.wppNumero  = cached.db.wppNumero || '';
@@ -680,8 +929,7 @@ async function init(){
             renderHeader();
             renderCardapio();
             pixelInicializar(db.integracoes);
-            // Background desativado para economizar egress do Supabase
-            // _initBackground(CACHE_KEY);
+            iniciarSyncStatusLoja();
             return;
         }
         // Cache desatualizado — remove para forcar recarregamento limpo
@@ -757,16 +1005,11 @@ async function init(){
             cidade: cfg.cidade || '',
             logo: cfg.logo || '',
             capa: cfg.capa || '',
-            minPedido: parseFloat(cfg.valor_minimo || cfg.delivery_minimo) || 0,
-            taxaEntrega: parseFloat(cfg.taxa_entrega) || 0
+            minPedido: parseFloat(cfg.valor_minimo || cfg.delivery_minimo) || 0
         };
-        // taxas_entrega salva tudo dentro de dados:{...} no Supabase
+        // Fonte da taxa: tela Taxas e Entrega (tabela taxas_entrega)
         var _tx = (txRows&&txRows[0]) ? (txRows[0].dados || txRows[0]) : {};
-        db.txCfg  = {
-            tempoEntrega:  _tx.tempoEntrega  || _tx.tempo_entrega  || 40,
-            tempoRetirada: _tx.tempoRetirada || _tx.tempo_retirada || 20,
-            taxaPadrao:    parseFloat(_tx.taxaPadrao || _tx.taxa_padrao || 0)
-        };
+        db.txCfg  = montarTxCfg(_tx);
         db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados || []) : [];
         db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados || {}) : {};
         pixelInicializar(db.integracoes);
@@ -788,25 +1031,9 @@ async function init(){
             db.fidelidade = null;
         }
 
-        // Verificar se loja está aberta
+        // Verificar se loja está aberta (horário agora + pausa no servidor)
         lojaPausada = !!cfg.pausada;
-        lojaForaHorario = false;
-        if (db.horarios && db.horarios.length) {
-            const agora = new Date();
-            const dia = db.horarios[agora.getDay()];
-            if (dia && dia.aberta && dia.periodos && dia.periodos.length) {
-                const min = agora.getHours()*60+agora.getMinutes();
-                const dentroHorario = dia.periodos.some(p => {
-                    const [ah,am] = (p.ini||'00:00').split(':').map(Number);
-                    const [fh,fm] = (p.fim||'23:59').split(':').map(Number);
-                    return min >= ah*60+am && min < fh*60+fm;
-                });
-                if (!dentroHorario) lojaForaHorario = true;
-            } else if (dia && !dia.aberta) {
-                lojaForaHorario = true;
-            }
-        }
-        aberta = !lojaPausada && !lojaForaHorario;
+        aplicarStatusCardapio();
 
         renderHeader(); renderCardapio();
 
@@ -815,7 +1042,7 @@ async function init(){
             const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
             localStorage.setItem(_cacheKey2, JSON.stringify({
                 ts: Date.now(),
-                ver: 15,
+                ver: 20,
                 restId: REST_ID,
                 db: {
                     categories: db.categories,
@@ -833,39 +1060,18 @@ async function init(){
             }));
         } catch(e) {}
 
-        // Polling leve a cada 60s para atualizar status da loja em tempo real
-        setInterval(async function() {
-            try {
-                var cfgRows = await supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=pausada&limit=1');
-                var horRows = await supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1');
-                var cfg2 = (cfgRows && cfgRows[0]) || {};
-                db.horarios = (horRows && horRows[0]) ? (horRows[0].dados || []) : db.horarios;
-                lojaPausada = !!cfg2.pausada;
-                lojaForaHorario = false;
-                if (db.horarios && db.horarios.length) {
-                    var agora2 = new Date();
-                    var dia2 = db.horarios[agora2.getDay()];
-                    if (dia2 && dia2.aberta && dia2.periodos && dia2.periodos.length) {
-                        var min2 = agora2.getHours()*60 + agora2.getMinutes();
-                        var dentro2 = dia2.periodos.some(function(p) {
-                            var ah = parseInt((p.ini||'00:00').split(':')[0]), am = parseInt((p.ini||'00:00').split(':')[1]);
-                            var fh = parseInt((p.fim||'23:59').split(':')[0]), fm = parseInt((p.fim||'23:59').split(':')[1]);
-                            return min2 >= ah*60+am && min2 < fh*60+fm;
-                        });
-                        if (!dentro2) lojaForaHorario = true;
-                    } else if (dia2 && !dia2.aberta) {
-                        lojaForaHorario = true;
-                    }
-                }
-                aberta = !lojaPausada && !lojaForaHorario;
-                renderHeader();
-            } catch(e) {}
-        }, 300000);
+        // Polling de pausa/horário — o cache não pode congelar o status
+        iniciarSyncStatusLoja();
 
         // Tentar conectar ao servidor local em background (impressora/SSE)
         if (SERVIDOR) {
             fetch(SERVIDOR+'/cardapio/dados').then(r=>r.json()).then(d=>{
-                if(d&&d.cfg) { db.cfg=d.cfg; db.txCfg=d.txCfg||db.txCfg; renderHeader(); }
+                if(d&&d.cfg) {
+                    if (d.cfg.nomeMarca) db.cfg.nomeMarca = d.cfg.nomeMarca;
+                    if (d.cfg.logo) db.cfg.logo = d.cfg.logo;
+                    if (d.cfg.capa) db.cfg.capa = d.cfg.capa;
+                    renderHeader();
+                }
             }).catch(()=>{});
         }
 
@@ -927,15 +1133,9 @@ async function _initBackground(cacheKey) {
         db.comps       = (comps||[]).map(c => ({id: c.id, title: c.titulo||c.nome||'', type: c.tipo||'check', options: c.opcoes||[]}));
         db.cfg         = { nomeMarca: cfg.nome_marca||rest.nome, nomeUnidade: cfg.nome_unidade||rest.nome,
                            cidade: cfg.cidade||'', logo: cfg.logo||'', capa: cfg.capa||'',
-                           minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0,
-                           taxaEntrega: parseFloat(cfg.taxa_entrega)||0 };
-        // taxas_entrega salva tudo dentro de dados:{...} no Supabase
+                           minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0 };
         var _tx2 = (txRows&&txRows[0]) ? (txRows[0].dados || txRows[0]) : {};
-        db.txCfg = {
-            tempoEntrega:  _tx2.tempoEntrega  || _tx2.tempo_entrega  || 40,
-            tempoRetirada: _tx2.tempoRetirada || _tx2.tempo_retirada || 20,
-            taxaPadrao:    parseFloat(_tx2.taxaPadrao || _tx2.taxa_padrao || 0)
-        };
+        db.txCfg = montarTxCfg(_tx2);
         db.horarios    = (horRows&&horRows[0]) ? (horRows[0].dados||[]) : [];
         db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados||{}) : {};
         pixelInicializar(db.integracoes);
@@ -957,24 +1157,12 @@ async function _initBackground(cacheKey) {
         }
         // Recalcula status da loja
         lojaPausada = !!cfg.pausada;
-        lojaForaHorario = false;
-        if (db.horarios && db.horarios.length) {
-            var agora = new Date(), dia = db.horarios[agora.getDay()];
-            if (dia && dia.aberta && dia.periodos && dia.periodos.length) {
-                var min = agora.getHours()*60+agora.getMinutes();
-                if (!dia.periodos.some(function(p){
-                    var ah=parseInt((p.ini||'00:00').split(':')[0]),am=parseInt((p.ini||'00:00').split(':')[1]);
-                    var fh=parseInt((p.fim||'23:59').split(':')[0]),fm=parseInt((p.fim||'23:59').split(':')[1]);
-                    return min>=ah*60+am && min<fh*60+fm;
-                })) lojaForaHorario = true;
-            } else if (dia && !dia.aberta) { lojaForaHorario = true; }
-        }
-        aberta = !lojaPausada && !lojaForaHorario;
+        aplicarStatusCardapio();
         renderHeader(); renderCardapio();
         // Salva cache atualizado
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
-                ts: Date.now(), ver: 15, restId: REST_ID,
+                ts: Date.now(), ver: 20, restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
@@ -1087,27 +1275,15 @@ function renderHeader(){
         atualizarContagem();
     }
     document.getElementById('info-entrega').textContent=(tx.tempoEntrega||40)+' min';
-    // Taxa: usa cfg.taxaEntrega (do admin) se disponível, senão tx.taxaPadrao
-    var taxa = parseFloat(c.taxaEntrega || tx.taxaPadrao || 0);
-    var taxaEl = document.getElementById('info-taxa');
     var taxaPill = document.getElementById('info-taxa-pill');
-    if (taxa > 0) {
-        taxaEl.textContent = money(taxa);
-    } else {
-        // Só mostra "Grátis" se a taxa realmente foi carregada (não placeholder)
-        var taxaCarregada = (c.taxaEntrega !== undefined) || (tx.taxaPadrao !== undefined);
-        taxaEl.textContent = taxaCarregada ? 'Grátis' : 'R$ --';
-    }
-    // Pill de fidelidade — lê de db.fidelidade (igual taxa lê de db.txCfg)
+    if (taxaPill) taxaPill.style.display = 'none';
     var fidCfg = db.fidelidade || fidelGetCfg();
     if(fidCfg && fidCfg.ativo){
         var rpp=fidCfg.reaisPorPonto||1, ppr=fidCfg.pontosPorReal||1;
         document.getElementById('info-pontos-rate').textContent='R$'+rpp+' = '+ppr+'pt';
         document.getElementById('info-pontos-pill').style.display='';
-        taxaPill.style.display='';
     } else {
         document.getElementById('info-pontos-pill').style.display='none';
-        taxaPill.style.display='';
     }
 }
 
@@ -1194,6 +1370,13 @@ function abrirCarrinho(){
     _cuponsCache=null;
     renderCarrinho();
     fidelIniciarCarrinho();
+    chGaranteLojaGeo().then(function(){
+        var cid=document.getElementById('ch-cidade');
+        if(cid && !cid.value.trim()){
+            var c=chCidadeLoja(), uf=chUfLoja();
+            if(c) cid.value=c+(uf?' - '+uf:'');
+        }
+    });
     document.getElementById('cart-overlay').classList.add('open');
     document.body.style.overflow='hidden';
 }
@@ -1226,7 +1409,7 @@ function ajustaCarrinho(idx,d){
 }
 function atualizaResumo(){
     var sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0);
-    var taxa=tipoAtual==='Entrega'?parseFloat((db.txCfg||{}).taxaPadrao||(db.cfg||{}).taxaEntrega||0):0;
+    var taxa=tipoAtual==='Entrega'?taxaEntregaCardapio():0;
     var desc=fidelGetDesconto();
     var descCupom=cupomGetDesconto(sub,taxa);
     var taxaDisplay=(cupomAtual&&cupomAtual.tipo==='frete')?0:taxa;
@@ -1249,12 +1432,218 @@ function atualizaResumo(){
         document.getElementById('res-cupom-val').textContent='-R$ '+descCupom.toFixed(2).replace('.',',');
     } else { clinha.style.display='none'; }
 }
-function setTipo(tipo,el){tipoAtual=tipo;document.querySelectorAll('.tipo-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');document.getElementById('wrap-end').style.display=tipo==='Entrega'?'':'none';atualizaResumo();}
+function setTipo(tipo,el){tipoAtual=tipo;document.querySelectorAll('.tipo-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');document.getElementById('wrap-end').style.display=tipo==='Entrega'?'':'none';if(tipo!=='Entrega'){taxaEntregaAtual=0;_taxaCalculada=false;}atualizaResumo();}
 function setPgto(pgto,el){pgtoAtual=pgto;document.querySelectorAll('.pgto-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');document.getElementById('wrap-troco').style.display=pgto==='Dinheiro'?'':'none';}
 
 var _endT=null;
-function buscaEnd(){clearTimeout(_endT);var v=document.getElementById('ch-rua').value;if(v.length<4){document.getElementById('ch-sugs').style.display='none';return;}_endT=setTimeout(function(){var cidade=(db.cfg&&(db.cfg.cidade||db.cfg.nomeUnidade))||'';fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&q='+encodeURIComponent(v+(cidade?','+cidade:''))).then(function(r){return r.json();}).then(function(data){var s=document.getElementById('ch-sugs');if(!data.length){s.style.display='none';return;}s.innerHTML=data.map(function(d){return'<div class="sug-item" onclick="preencheEnd(\''+encodeURIComponent(d.display_name)+'\')">'+d.display_name+'</div>';}).join('');s.style.display='block';}).catch(function(){});},400);}
-function preencheEnd(enc){var full=decodeURIComponent(enc),parts=full.split(',');document.getElementById('ch-rua').value=parts[0]?parts[0].trim():full;if(parts[1])document.getElementById('ch-bairro').value=parts[1].trim();document.getElementById('ch-sugs').style.display='none';}
+var _endSugs=[];
+var _endEscolhendo=false;
+var _lojaGeo={cidade:'',uf:'',ok:false,buscando:false};
+var _UF_MAP={acre:'AC',alagoas:'AL',amapa:'AP',amazonas:'AM',bahia:'BA',ceara:'CE','distrito federal':'DF','espirito santo':'ES',goias:'GO',maranhao:'MA','mato grosso':'MT','mato grosso do sul':'MS','minas gerais':'MG',para:'PA',paraiba:'PB',parana:'PR',pernambuco:'PE',piaui:'PI','rio de janeiro':'RJ','rio grande do norte':'RN','rio grande do sul':'RS',rondonia:'RO',roraima:'RR','santa catarina':'SC','sao paulo':'SP',sergipe:'SE',tocantins:'TO'};
+
+function chUfDeEstado(est){
+    var s=String(est||'').trim();
+    if(/^[A-Za-z]{2}$/.test(s)) return s.toUpperCase();
+    var k=s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return _UF_MAP[k]||'';
+}
+function chCidadeLoja(){
+    var el=document.getElementById('ch-cidade');
+    var typed=el&&el.value?String(el.value).replace(/\s*[-–]\s*[A-Za-z]{2}\s*$/,'').trim():'';
+    if(typed) return typed;
+    if(db.cfg&&db.cfg.cidade) return String(db.cfg.cidade).replace(/\s*[-–]\s*[A-Za-z]{2}\s*$/,'').trim();
+    return _lojaGeo.cidade||'';
+}
+function chUfLoja(){
+    var el=document.getElementById('ch-cidade');
+    var v=(el&&el.value)||(db.cfg&&db.cfg.cidade)||'';
+    var m=String(v).match(/[-–\s]([A-Za-z]{2})\s*$/);
+    if(m) return m[1].toUpperCase();
+    return _lojaGeo.uf||'';
+}
+function chNormalizaRua(s){
+    return String(s||'')
+        .replace(/^\s*(av\.?|avenida)\s+/i,'Avenida ')
+        .replace(/^\s*(r\.?|rua)\s+/i,'Rua ')
+        .replace(/^\s*(al\.?|alameda)\s+/i,'Alameda ')
+        .replace(/^\s*(tv\.?|travessa)\s+/i,'Travessa ')
+        .replace(/^\s*(p[cç]\.?|pra[cç]a)\s+/i,'Praça ')
+        .trim();
+}
+function chEscHtml(s){
+    return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function chPreencheCep(cep){
+    var el=document.getElementById('ch-cep');
+    var d=String(cep||'').replace(/\D/g,'');
+    if(el && d.length===8) el.value=d.slice(0,5)+'-'+d.slice(5);
+}
+function chGaranteLojaGeo(){
+    if(_lojaGeo.ok) return Promise.resolve();
+    if(_lojaGeo.buscando){
+        return new Promise(function(resolve){
+            var n=0, t=setInterval(function(){ if(_lojaGeo.ok||++n>20){ clearInterval(t); resolve(); } },100);
+        });
+    }
+    var tx=db.txCfg||{};
+    if(!tx.centroLat||!tx.centroLng){ _lojaGeo.ok=true; return Promise.resolve(); }
+    _lojaGeo.buscando=true;
+    return fetch('https://photon.komoot.io/reverse?lon='+tx.centroLng+'&lat='+tx.centroLat)
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            var p=(d.features&&d.features[0]&&d.features[0].properties)||{};
+            if(!_lojaGeo.cidade) _lojaGeo.cidade=p.city||p.town||p.village||'';
+            _lojaGeo.uf=chUfDeEstado(p.state);
+            _lojaGeo.ok=true; _lojaGeo.buscando=false;
+        })
+        .catch(function(){ _lojaGeo.ok=true; _lojaGeo.buscando=false; });
+}
+function chBuscaPhoton(q){
+    var url='https://photon.komoot.io/api/?limit=8&q='+encodeURIComponent(q);
+    var tx=db.txCfg||{};
+    if(tx.centroLat&&tx.centroLng) url+='&lat='+tx.centroLat+'&lon='+tx.centroLng;
+    return fetch(url).then(function(r){ return r.json(); }).then(function(data){
+        var feats=(data&&data.features)||[];
+        var lista=feats.map(function(f){
+            var p=f.properties||{};
+            var c=(f.geometry&&f.geometry.coordinates)||[];
+            var lat=c.length>=2?c[1]:null, lng=c.length>=2?c[0]:null;
+            return {
+                fonte:'photon',
+                rua:p.street||p.name||'',
+                bairro:p.district||p.neighbourhood||p.locality||'',
+                cidade:p.city||p.town||p.village||'',
+                uf:chUfDeEstado(p.state),
+                cep:String(p.postcode||'').replace(/\D/g,''),
+                lat:lat, lng:lng
+            };
+        }).filter(function(s){ return s.rua; });
+        if(tx.centroLat&&tx.centroLng){
+            lista.forEach(function(s){
+                s._dist=(s.lat!=null)?chHaversine(tx.centroLat,tx.centroLng,s.lat,s.lng):999;
+            });
+            lista.sort(function(a,b){ return a._dist-b._dist; });
+            var perto=lista.filter(function(s){ return s._dist<=30; });
+            if(perto.length) lista=perto;
+        }
+        return lista;
+    }).catch(function(){ return []; });
+}
+function chBuscaViaCep(rua){
+    var uf=chUfLoja(), cidade=chCidadeLoja();
+    if(!uf||!cidade) return Promise.resolve([]);
+    function consultar(log){
+        if(!log||log.length<3) return Promise.resolve([]);
+        var url='https://viacep.com.br/ws/'+encodeURIComponent(uf)+'/'+encodeURIComponent(cidade)+'/'+encodeURIComponent(log)+'/json/';
+        return fetch(url).then(function(r){ return r.json(); }).then(function(data){
+            if(!Array.isArray(data)) data=(data&&!data.erro)?[data]:[];
+            return data.filter(function(d){ return d&&d.logradouro&&!d.erro; }).map(function(d){
+                return {
+                    fonte:'viacep',
+                    rua:d.logradouro,
+                    bairro:d.bairro||'',
+                    cidade:d.localidade||'',
+                    uf:d.uf||'',
+                    cep:String(d.cep||'').replace(/\D/g,''),
+                    lat:null, lng:null
+                };
+            });
+        }).catch(function(){ return []; });
+    }
+    var log=chNormalizaRua(rua);
+    return consultar(log).then(function(lista){
+        if(lista.length) return lista;
+        var semTipo=log.replace(/^(Rua|Avenida|Alameda|Travessa|Praça)\s+/i,'');
+        if(semTipo!==log && semTipo.length>=3) return consultar(semTipo);
+        return lista;
+    });
+}
+function chDedupaSugs(lista){
+    var seen={};
+    return lista.filter(function(s){
+        var k=(s.cep||'')+'|'+(s.rua||'').toLowerCase()+'|'+(s.bairro||'').toLowerCase();
+        if(seen[k]) return false;
+        seen[k]=1;
+        return true;
+    });
+}
+function chMostraSugs(lista){
+    _endSugs=lista||[];
+    var s=document.getElementById('ch-sugs');
+    if(!s) return;
+    if(!_endSugs.length){ s.style.display='none'; return; }
+    s.innerHTML=_endSugs.map(function(d,i){
+        var sub=[d.bairro, d.cidade, d.uf].filter(Boolean).join(' · ');
+        if(d.cep&&d.cep.length===8) sub+=(sub?' · ':'')+d.cep.slice(0,5)+'-'+d.cep.slice(5);
+        return '<div class="sug-item" onmousedown="preencheEndIdx('+i+');return false;">'+
+            '<div class="sug-item-rua">'+chEscHtml(d.rua)+'</div>'+
+            (sub?'<div class="sug-item-sub">'+chEscHtml(sub)+'</div>':'')+
+            '</div>';
+    }).join('');
+    s.style.display='block';
+}
+function buscaEnd(){
+    clearTimeout(_endT);
+    var v=(document.getElementById('ch-rua').value||'').trim();
+    var s=document.getElementById('ch-sugs');
+    if(_taxaCalculada){ taxaEntregaAtual=0; _taxaCalculada=false; atualizaResumo(); }
+    if(v.length<3){ if(s) s.style.display='none'; return; }
+    _endT=setTimeout(function(){
+        setCepStatus('Buscando rua...');
+        chGaranteLojaGeo().then(function(){
+            var q=chNormalizaRua(v);
+            var cidade=chCidadeLoja();
+            if(cidade) q+=', '+cidade;
+            return Promise.all([chBuscaViaCep(v), chBuscaPhoton(q)]);
+        }).then(function(res){
+            var lista=chDedupaSugs((res[0]||[]).concat(res[1]||[])).slice(0,8);
+            chMostraSugs(lista);
+            if(!lista.length) setCepStatus('Não encontramos essa rua. Tente o nome completo ou o CEP.', 'err');
+            else setCepStatus('Selecione a rua na lista para calcular a taxa');
+        }).catch(function(){
+            setCepStatus('Não encontramos essa rua. Tente o nome completo ou o CEP.', 'err');
+        });
+    },350);
+}
+function preencheEndSug(d){
+    if(!d) return;
+    _endEscolhendo=true;
+    document.getElementById('ch-rua').value=d.rua||'';
+    if(d.bairro) document.getElementById('ch-bairro').value=d.bairro;
+    var cidEl=document.getElementById('ch-cidade');
+    if(cidEl && d.cidade) cidEl.value=d.cidade+(d.uf?' - '+d.uf:'');
+    if(d.cep) chPreencheCep(d.cep);
+    var sugs=document.getElementById('ch-sugs');
+    if(sugs) sugs.style.display='none';
+    if(d.lat!=null && d.lng!=null){
+        calcularTaxaComCoords(parseFloat(d.lat), parseFloat(d.lng));
+        setCepStatus('Taxa calculada pelo endereço', 'ok');
+    } else if(d.cep && d.cep.length===8){
+        buscarCep(d.cep);
+    } else {
+        geocodificarEndereco();
+    }
+    setTimeout(function(){ _endEscolhendo=false; },400);
+}
+function preencheEndIdx(i){ preencheEndSug(_endSugs[i]); }
+function onRuaBlur(){
+    setTimeout(function(){
+        if(_endEscolhendo) return;
+        var s=document.getElementById('ch-sugs');
+        var v=(document.getElementById('ch-rua')||{}).value||'';
+        if(v.trim().length>=3 && !_taxaCalculada){
+            if(_endSugs.length===1){ preencheEndIdx(0); return; }
+            if(s) s.style.display='none';
+            geocodificarEndereco();
+            return;
+        }
+        if(s) s.style.display='none';
+    },220);
+}
+function onNumBlur(){
+    var v=(document.getElementById('ch-rua')||{}).value||'';
+    if(v.trim().length>=3) geocodificarEndereco();
+}
 
 async function finalizarPedido(){
     console.log('[PEDIDO] Iniciando finalizarPedido...');
@@ -1262,7 +1651,10 @@ async function finalizarPedido(){
     
     var nome=document.getElementById('ch-nome').value.trim(),tel=document.getElementById('ch-tel').value.trim();
     if(!nome){alert('Informe seu nome.');return;}if(!tel){alert('Informe seu celular.');return;}
-    if(tipoAtual==='Entrega'&&!document.getElementById('ch-rua').value.trim()){alert('Informe o endereço.');return;}
+    if(tipoAtual==='Entrega'){
+        if(!document.getElementById('ch-rua').value.trim()){alert('Informe o CEP ou o nome da rua.');return;}
+        if(!_taxaCalculada){alert('Selecione o endereço na lista ou informe o CEP para calcular a taxa de entrega.');return;}
+    }
     
     // ✅ VERIFICAR SE REST_ID ESTÁ CARREGADO
     if (!REST_ID) {
@@ -1272,12 +1664,13 @@ async function finalizarPedido(){
     }
     
     console.log('[PEDIDO] ✅ REST_ID validado, prosseguindo...');
-    var cfg=db.cfg||{},tx=db.txCfg||{},sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0),taxa=tipoAtual==='Entrega'?parseFloat(tx.taxaPadrao||cfg.taxaEntrega||0):0,troco=pgtoAtual==='Dinheiro'?parseFloat(document.getElementById('ch-troco').value||0):0;
+    var cfg=db.cfg||{},tx=db.txCfg||{},sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0),taxa=tipoAtual==='Entrega'?taxaEntregaCardapio():0,troco=pgtoAtual==='Dinheiro'?parseFloat(document.getElementById('ch-troco').value||0):0;
     var desc=fidelGetDesconto();
     var taxaFinal=tipoAtual==='Entrega'?(cupomAtual&&cupomAtual.tipo==='frete'?0:taxa):0;
     var descCupom=cupomGetDesconto(sub,taxa);
     var _totalFinal = Math.max(0, sub + taxaFinal - desc - descCupom);
-    var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value:'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:cfg.cidade||'',subtotal:sub,taxaEntrega:taxaFinal,descontoPontos:desc,descontoCupom:descCupom,cupom:cupomAtual?cupomAtual.codigo:'',produtoBrindeNome:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoNome:''),produtoBrindeId:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoId:''),resgPontos:fidelResgSel,total:_totalFinal,items:carrinho.slice()};
+    var cepVal=tipoAtual==='Entrega'?((document.getElementById('ch-cep')||{}).value||''):'';
+    var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?(document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value+(cepVal?' · CEP '+cepVal:'')).trim():'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:tipoAtual==='Entrega'?((document.getElementById('ch-cidade')||{}).value||cfg.cidade||''):(cfg.cidade||''),cep:cepVal,subtotal:sub,taxaEntrega:taxaFinal,descontoPontos:desc,descontoCupom:descCupom,cupom:cupomAtual?cupomAtual.codigo:'',produtoBrindeNome:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoNome:''),produtoBrindeId:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoId:''),resgPontos:fidelResgSel,total:_totalFinal,items:carrinho.slice()};
     var btn=document.getElementById('btn-fin');btn.disabled=true;btn.textContent='Enviando...';
     // Gerar número do pedido localmente
     const _numPed = 'B-' + Math.floor(100000 + Math.random() * 900000);

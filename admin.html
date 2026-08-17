@@ -394,6 +394,17 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
 .opt-row button { background: none; border: none; color: #999; cursor: pointer; font-size: 18px; padding: 5px; }
 .opt-row button:hover { color: var(--primary); }
 
+/* Campos de valor em R$: sem setas, digitação decimal */
+input.input-money {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+input.input-money::-webkit-outer-spin-button,
+input.input-money::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 .list-card { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #eee; }
 .list-card:hover { border-color: #ddd; }
 .btn-edit { background: var(--gray-light); border: none; padding: 8px 15px; border-radius: 8px; font-weight: 600; color: #555; cursor: pointer; }
@@ -1446,7 +1457,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                         <label style="display:block; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.4px; margin-bottom:7px;" id="cup-f-valor-label">Percentual de desconto (%)</label>
                         <div style="position:relative;">
                             <span id="cup-f-valor-prefix" style="position:absolute; left:13px; top:50%; transform:translateY(-50%); font-size:14px; font-weight:700; color:#64748b;">%</span>
-                            <input id="cup-f-valor" type="number" min="0" step="0.01" placeholder="0"
+                            <input id="cup-f-valor" type="text" inputmode="decimal" placeholder="0,00"
                                 style="width:100%; padding:10px 13px 10px 32px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-weight:700;
                                        color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;"
                                 onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
@@ -1488,7 +1499,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
                         <div>
                             <label style="display:block; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.4px; margin-bottom:7px;">Pedido mínimo (R$)</label>
-                            <input id="cup-f-minimo" type="number" min="0" step="0.50" value="0" placeholder="0"
+                            <input id="cup-f-minimo" type="text" inputmode="decimal" class="input-money" value="0,00" placeholder="0,00"
                                 style="width:100%; padding:10px 13px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:13px;
                                        color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;"
                                 onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
@@ -1590,7 +1601,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <div>
                         <label style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">A cada R$</label>
                         <div style="display:flex;align-items:center;gap:8px;">
-                            <input type="number" id="fidel-reais-por-ponto" min="1" value="1" step="1"
+                            <input type="text" inputmode="decimal" class="input-money" id="fidel-reais-por-ponto" value="1,00" placeholder="0,00"
                                 style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;outline:none;color:#1e293b;">
                             <span style="font-size:13px;color:#64748b;white-space:nowrap;">reais gastos</span>
                         </div>
@@ -1641,7 +1652,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                             <div>
                                 <label style="font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">Equivalem a</label>
                                 <div style="display:flex;align-items:center;gap:8px;">
-                                    <input type="number" id="fidel-reais-desc" min="0.01" value="1" step="0.01"
+                                    <input type="text" inputmode="decimal" class="input-money" id="fidel-reais-desc" value="1,00" placeholder="0,00"
                                         style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;outline:none;color:#1e293b;">
                                     <span style="font-size:13px;color:#64748b;white-space:nowrap;">R$ desconto</span>
                                 </div>
@@ -1827,7 +1838,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
                         <div>
                             <label style="display:block; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.4px; margin-bottom:7px;">Pedido mínimo (R$)</label>
-                            <input id="cfg-delivery-minimo" type="number" min="0" step="0.50" placeholder="0,00"
+                            <input id="cfg-delivery-minimo" type="text" inputmode="decimal" class="input-money" placeholder="0,00"
                                 style="width:100%; height:38px; padding:0 12px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:13px; color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;"
                                 onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
                             <div style="font-size:10px; color:#94a3b8; margin-top:3px;">0 = sem pedido mínimo</div>
@@ -1839,7 +1850,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                                     style="width:36px; height:20px; border-radius:10px; background:#cbd5e1; cursor:pointer; position:relative; transition:.2s; flex-shrink:0;">
                                     <div style="position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:white; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.2);"></div>
                                 </div>
-                                <input id="cfg-frete-gratis-valor" type="number" min="0" step="1" placeholder="Ex: 50"
+                                <input id="cfg-frete-gratis-valor" type="text" inputmode="decimal" class="input-money" placeholder="Ex: 50,00"
                                     style="flex:1; height:38px; padding:0 12px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:13px; color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;"
                                     onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
                             </div>
@@ -2095,14 +2106,14 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <div style="padding:14px 18px; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                         <div>
                             <label style="display:block; font-size:10px; font-weight:700; color:#475569; margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px;">Pedido mínimo (R$)</label>
-                            <input id="tx-pedido-minimo" type="number" min="0" step="1" value="0"
+                            <input id="tx-pedido-minimo" type="text" inputmode="decimal" class="input-money" value="0,00" placeholder="0,00"
                                 style="width:100%; padding:9px 11px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:13px; color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;"
                                 onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
                             <div style="font-size:10px; color:#94a3b8; margin-top:3px;">0 = sem mínimo</div>
                         </div>
                         <div>
                             <label style="display:block; font-size:10px; font-weight:700; color:#475569; margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px;">Taxa padrão (R$)</label>
-                            <input id="tx-taxa-padrao" type="number" min="0" step="0.50" value="5"
+                            <input id="tx-taxa-padrao" type="text" inputmode="decimal" class="input-money" value="0,00" placeholder="0,00"
                                 style="width:100%; padding:9px 11px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:13px; color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;"
                                 onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
                         </div>
@@ -2141,7 +2152,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <!-- Taxa -->
                     <div>
                         <label style="display:block; font-size:11px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;">Taxa de entrega (R$)</label>
-                        <input id="tx-modal-taxa" type="number" min="0" step="0.50" value="5"
+                        <input id="tx-modal-taxa" type="text" inputmode="decimal" class="input-money" value="5,00" placeholder="0,00"
                             style="width:100%; padding:10px 12px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:13px; color:#1e293b; font-family:inherit; outline:none; box-sizing:border-box;"
                             onfocus="this.style.borderColor='#e30613'" onblur="this.style.borderColor='#e2e8f0'">
                     </div>
@@ -2834,7 +2845,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                 <label>Código PDV <i class="fas fa-info-circle" style="font-size:12px; color:#999"></i></label>
                 <input type="text" id="p-pdv" placeholder="Digite o código PDV">
                 <label>Preço</label>
-                <input type="text" id="p-preco" placeholder="R$ 0,00">
+                <input type="text" inputmode="decimal" class="input-money" id="p-preco" placeholder="R$ 0,00">
                 <div style="display:flex; gap:20px;">
                     <div style="flex:1">
                         <label>Tamanho da porção</label>
@@ -3043,7 +3054,7 @@ input:focus { border-color: var(--primary); outline: none; background: #fff; }
                     <!-- Troco: aparece só quando Dinheiro selecionado -->
                     <div id="pdv-secao-troco" style="display:none; margin-top:8px;">
                         <label style="font-size:12px; font-weight:700; color:#475569; display:block; margin-bottom:4px;">Troco para quanto? (R$)</label>
-                        <input type="number" id="pdv-troco" placeholder="Ex: 100.00" min="0" step="0.50" style="margin-bottom:0; width:100%; box-sizing:border-box;">
+                        <input type="text" inputmode="decimal" class="input-money" id="pdv-troco" placeholder="Ex: 100,00" style="margin-bottom:0; width:100%; box-sizing:border-box;" >
                     </div>
                     <!-- Cupom de desconto -->
                     <div style="margin-top:10px;">
@@ -3477,18 +3488,35 @@ function horStrToMin(s) {
     return parseInt(p[0] || 0) * 60 + parseInt(p[1] || 0);
 }
 
+function horPeriodoAtivo(p, minAtual) {
+    var ini = horStrToMin(p.ini);
+    var fim = horStrToMin(p.fim);
+    if (fim <= ini) return minAtual >= ini || minAtual < fim;
+    return minAtual >= ini && minAtual < fim;
+}
+
 function horDentroDoHorario() {
     try {
         var dias = JSON.parse(localStorage.getItem('f_horarios'));
-        if (!dias || !dias.length) return null; // sem horários = não sabe
+        if (!dias || !dias.length) return null;
         var agora    = new Date();
-        var diaSem   = agora.getDay(); // 0=Dom, 1=Seg ... 6=Sáb
-        var dia      = dias[diaSem];
-        if (!dia || !dia.aberta || !dia.periodos || !dia.periodos.length) return false;
+        var diaSem   = agora.getDay();
         var minAtual = agora.getHours() * 60 + agora.getMinutes();
-        return dia.periodos.some(function(p) {
-            return minAtual >= horStrToMin(p.ini) && minAtual < horStrToMin(p.fim);
-        });
+        var dia      = dias[diaSem];
+        if (dia && dia.aberta && dia.periodos && dia.periodos.length) {
+            if (dia.periodos.some(function(p){ return horPeriodoAtivo(p, minAtual); })) return true;
+        }
+        var prev = dias[(diaSem + 6) % 7];
+        if (prev && prev.aberta && prev.periodos && prev.periodos.length) {
+            var aindaOntem = prev.periodos.some(function(p) {
+                var ini = horStrToMin(p.ini), fim = horStrToMin(p.fim);
+                return fim <= ini && minAtual < fim;
+            });
+            if (aindaOntem) return true;
+        }
+        if (dia && dia.aberta && dia.periodos && dia.periodos.length) return false;
+        if (dia && !dia.aberta) return false;
+        return null;
     } catch(e) { return null; }
 }
 
@@ -3541,32 +3569,10 @@ function toggleLojaStatus() {
     lojaPausada = !lojaPausada;
     localStorage.setItem('f_loja_pausada', JSON.stringify(lojaPausada));
     aplicarStatusLoja();
-    // Salva pausada no Supabase para o site (index.html) ler
+    // Grava pausada no Supabase para o cardápio (index.html) ler
     if (REST_ID) {
-        fetch(SUPA_URL + '/rest/v1/configuracoes?restaurante_id=eq.' + REST_ID, {
-            method: 'PATCH',
-            headers: {
-                'apikey': SUPA_KEY,
-                'Authorization': 'Bearer ' + SUPA_KEY,
-                'Content-Type': 'application/json',
-                'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({ pausada: lojaPausada })
-        }).then(function(r) {
-            if (!r.ok) {
-                // Se não existe registro ainda, faz INSERT
-                return fetch(SUPA_URL + '/rest/v1/configuracoes', {
-                    method: 'POST',
-                    headers: {
-                        'apikey': SUPA_KEY,
-                        'Authorization': 'Bearer ' + SUPA_KEY,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'return=minimal'
-                    },
-                    body: JSON.stringify({ restaurante_id: REST_ID, pausada: lojaPausada })
-                });
-            }
-        }).catch(function(e) { console.warn('[Loja] Erro ao salvar status:', e.message); });
+        supaUpsert('configuracoes', { pausada: lojaPausada }, 'restaurante_id')
+            .catch(function(e) { console.warn('[Loja] Erro ao salvar status:', e.message); });
     }
 }
 
@@ -4479,7 +4485,7 @@ function salvarPedidoPDV() {
     }
 
     const pagamento = document.getElementById('pdv-pagamento').value || 'Pix';
-    const trocoVal  = pagamento === 'Dinheiro' ? parseFloat(document.getElementById('pdv-troco')?.value || 0) || 0 : 0;
+    const trocoVal  = pagamento === 'Dinheiro' ? parseMoney(document.getElementById('pdv-troco')?.value) : 0;
 
     // Taxa de entrega: usa o valor já calculado pelo raio (pdvTaxaEntregaAtual)
     var taxaEntrega = tipoPedidoSelecionado === 'Entrega' ? pdvTaxaEntregaAtual : 0;
@@ -6181,6 +6187,36 @@ function intFecharModal() {
 //  TAXAS & ENTREGA — mapa Leaflet + raios de cobertura
 // ══════════════════════════════════════════════════════
 var TX_KEY = 'f_taxas_config';
+function parseMoney(v) {
+    if (v == null || v === '') return 0;
+    var s = String(v).trim().replace(/[R$\s]/gi, '');
+    if (!s) return 0;
+    if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+    var n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+}
+function formatMoneyDisplay(n) {
+    var v = Math.round((parseFloat(n) || 0) * 100);
+    var neg = v < 0;
+    v = Math.abs(v);
+    var s = String(v);
+    while (s.length < 3) s = '0' + s;
+    var cents = s.slice(-2);
+    var ints = s.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (neg ? '-' : '') + ints + ',' + cents;
+}
+function maskMoneyInput(el) {
+    var digits = String(el.value || '').replace(/\D/g, '');
+    if (!digits) { el.value = ''; return; }
+    digits = digits.replace(/^0+/, '') || '0';
+    while (digits.length < 3) digits = '0' + digits;
+    var cents = digits.slice(-2);
+    var ints = digits.slice(0, -2).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    el.value = ints + ',' + cents;
+}
+document.addEventListener('input', function(e) {
+    if (e.target && e.target.classList && e.target.classList.contains('input-money')) maskMoneyInput(e.target);
+});
 function txGetConfig() {
     try { return JSON.parse(localStorage.getItem(TX_KEY)) || {}; } catch(e) { return {}; }
 }
@@ -6201,8 +6237,8 @@ function txInicializar() {
     var set = function(id,v){ var e=document.getElementById(id); if(e&&v!=null) e.value=v; };
     set('tx-tempo-entrega',  cfg.tempoEntrega  || 40);
     set('tx-tempo-retirada', cfg.tempoRetirada || 20);
-    set('tx-pedido-minimo',  cfg.pedidoMinimo  || 0);
-    set('tx-taxa-padrao',    cfg.taxaPadrao    || 5);
+    set('tx-pedido-minimo',  formatMoneyDisplay(cfg.pedidoMinimo || 0));
+    set('tx-taxa-padrao',    formatMoneyDisplay(cfg.taxaPadrao != null ? cfg.taxaPadrao : 0));
     txRenderListaRaios();
     setTimeout(txMapaIniciar, 120);
 }
@@ -6347,8 +6383,10 @@ function txRenderListaRaios() {
     }
     if (vazio) vazio.style.display = 'none';
     lista.innerHTML = raios
-        .slice().sort(function(a,b){ return a.km - b.km; })
-        .map(function(r, i){
+        .map(function(r, origIdx){ return { r: r, origIdx: origIdx }; })
+        .sort(function(a,b){ return a.r.km - b.r.km; })
+        .map(function(item){
+            var r = item.r, i = item.origIdx;
             return '<div style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 13px;">' +
                 '<span style="width:14px;height:14px;border-radius:4px;background:'+(r.cor||'#3b82f6')+';flex-shrink:0;"></span>' +
                 '<div style="flex:1;">' +
@@ -6380,7 +6418,7 @@ function txAbrirModalRaio(idx) {
     document.getElementById('tx-modal-km').value = km;
     document.getElementById('tx-modal-km-label').textContent = km + ' km';
     document.getElementById('tx-modal-tempo').value = tmp;
-    document.getElementById('tx-modal-taxa').value  = taxa;
+    document.getElementById('tx-modal-taxa').value  = formatMoneyDisplay(taxa);
 
     var coresEl = document.getElementById('tx-modal-cores');
     if (coresEl) {
@@ -6416,7 +6454,7 @@ function txSalvarRaio() {
     var idx  = parseInt(document.getElementById('tx-modal-idx').value);
     var km   = parseFloat(document.getElementById('tx-modal-km').value)    || 5;
     var tmp  = parseInt(document.getElementById('tx-modal-tempo').value)   || 40;
-    var taxa = parseFloat(document.getElementById('tx-modal-taxa').value)  || 0;
+    var taxa = parseMoney(document.getElementById('tx-modal-taxa').value);
     var cor  = txGetCorSelecionada();
 
     var cfg = txGetConfig();
@@ -6439,8 +6477,8 @@ function txSalvarConfigs() {
     var cfg = txGetConfig();
     cfg.tempoEntrega  = parseInt((document.getElementById('tx-tempo-entrega') ||{}).value) || 40;
     cfg.tempoRetirada = parseInt((document.getElementById('tx-tempo-retirada')||{}).value) || 20;
-    cfg.pedidoMinimo  = parseFloat((document.getElementById('tx-pedido-minimo')||{}).value)|| 0;
-    cfg.taxaPadrao    = parseFloat((document.getElementById('tx-taxa-padrao')  ||{}).value)|| 5;
+    cfg.pedidoMinimo  = parseMoney((document.getElementById('tx-pedido-minimo')||{}).value);
+    cfg.taxaPadrao    = parseMoney((document.getElementById('tx-taxa-padrao')  ||{}).value);
     txSalvarConfig(cfg);
     var btn = document.getElementById('tx-btn-salvar');
     if (btn) { var orig=btn.innerHTML; btn.innerHTML='<i class="fas fa-check"></i> Salvo!'; btn.style.background='#16a34a';
@@ -6933,7 +6971,7 @@ function editProd(id) {
     openProdForm();
     currentId = id;
     document.getElementById('p-nome').value  = p.name  || '';
-    document.getElementById('p-preco').value = p.price || '';
+    document.getElementById('p-preco').value = p.price ? formatMoneyDisplay(p.price) : '';
     document.getElementById('p-desc').value  = p.desc  || '';
     document.getElementById('p-pdv').value   = p.pdv   || '';
     setTimeout(() => {
@@ -6974,7 +7012,7 @@ function salvarProdutoGeral() {
     const produtoData = {
         id:       currentId || Date.now(),
         name:     nome,
-        price:    preco.toString().replace('R$','').replace(',','.').trim(),
+        price:    parseMoney(preco),
         category: categoria,
         desc:     desc,
         img:      tempImg || 'https://via.placeholder.com/50',
@@ -7153,7 +7191,7 @@ function addOptRow(n="", p="") {
     const div = document.createElement('div');
     div.className = 'opt-row';
     div.innerHTML = `<input type="text" placeholder="Nome (Ex: Bacon)" value="${n}" class="o-n">
-                     <input type="number" placeholder="R$ 0.00" value="${p}" class="o-p" style="width:100px;">
+                     <input type="text" inputmode="decimal" placeholder="R$ 0,00" value="${p===''||p==null?'':formatMoneyDisplay(p)}" class="o-p input-money" style="width:100px;">
                      <button onclick="this.parentElement.remove()">✕</button>`;
     document.getElementById('c-options').appendChild(div);
 }
@@ -7164,7 +7202,7 @@ function saveComp() {
     const opts = [];
     document.querySelectorAll('#c-options .opt-row').forEach(r => {
         const n = r.querySelector('.o-n').value.trim();
-        if (n) opts.push({ n, p: r.querySelector('.o-p').value || 0 });
+        if (n) opts.push({ n, p: parseMoney(r.querySelector('.o-p').value) });
     });
     const obj = {
         id:      currentCompId || Date.now(),
@@ -8121,7 +8159,9 @@ async function authLogout() {
     localStorage.removeItem('f_cfg_loja');
     localStorage.removeItem('f_orders');
     localStorage.removeItem('f_horarios');
+    localStorage.removeItem('f_loja_pausada');
     localStorage.removeItem('f_taxas_config');
+    lojaPausada = false;
     localStorage.removeItem('f_fidelidade_cfg');
     localStorage.removeItem('f_fidelidade_cli');
     localStorage.removeItem('f_cupons');
@@ -8232,10 +8272,11 @@ async function authVerificarSessao() {
             _histCache = null;
             _histCarregadoEm = 0;
             ['f_orders','f_cats','f_prods','f_comps','f_cfg_loja',
-             'f_horarios','f_taxas_config','f_fidelidade_cfg','f_fidelidade_cli',
+             'f_horarios','f_loja_pausada','f_taxas_config','f_fidelidade_cfg','f_fidelidade_cli',
              'f_cupons','f_integracoes','f_hist_pedidos','f_last_sec'].forEach(function(k){
                 localStorage.removeItem(k);
             });
+            lojaPausada = false;
         }
         localStorage.setItem('f_rest_id_ativo', REST_ID);
 
@@ -8288,7 +8329,9 @@ async function authFazerLogin() {
         localStorage.removeItem('f_comps');
         localStorage.removeItem('f_cfg_loja');
         localStorage.removeItem('f_horarios');
+        localStorage.removeItem('f_loja_pausada');
         localStorage.removeItem('f_taxas_config');
+        lojaPausada = false;
         localStorage.removeItem('f_fidelidade_cfg');
         localStorage.removeItem('f_fidelidade_cli');
         localStorage.removeItem('f_cupons');
@@ -8340,6 +8383,11 @@ async function supaCarregarConfigs() {
             supaGet('taxas_entrega', ''),
             supaGet('integracoes', '')
         ]);
+        if (cfgRows && cfgRows[0]) {
+            lojaPausada = !!cfgRows[0].pausada;
+            localStorage.setItem('f_loja_pausada', JSON.stringify(lojaPausada));
+            aplicarStatusLoja();
+        }
         if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
             var _cfgCarregada = Object.assign({}, cfgRows[0].dados_extras);
             // Injeta link_cardapio do restaurante no linkSlug (fonte de verdade)
@@ -8369,6 +8417,7 @@ async function supaCarregarConfigs() {
         }
         if (horRows && horRows[0] && horRows[0].dados) {
             localStorage.setItem('f_horarios', JSON.stringify(horRows[0].dados));
+            aplicarStatusLoja();
             // Re-renderiza horários se estiver aberto
             if (document.getElementById('sec-horarios') && document.getElementById('sec-horarios').classList.contains('active')) {
                 try { horInicializar(); } catch(e) {}
@@ -9969,8 +10018,8 @@ function cupAbrirModal(idx) {
         var c = cupGetAll()[idx];
         if (!c) return;
         document.getElementById('cup-f-codigo').value  = c.codigo;
-        document.getElementById('cup-f-valor').value   = c.valor || '';
-        document.getElementById('cup-f-minimo').value  = c.minimo || 0;
+        document.getElementById('cup-f-valor').value   = (c.tipo === 'fixo') ? formatMoneyDisplay(c.valor) : (c.valor || '');
+        document.getElementById('cup-f-minimo').value  = formatMoneyDisplay(c.minimo || 0);
         document.getElementById('cup-f-limite').value  = c.limite || 0;
         document.getElementById('cup-f-ativo').value   = c.ativo ? '1' : '0';
         document.getElementById('cup-f-idx').value     = idx;
@@ -9996,7 +10045,7 @@ function cupAbrirModal(idx) {
     } else {
         document.getElementById('cup-f-codigo').value  = '';
         document.getElementById('cup-f-valor').value   = '';
-        document.getElementById('cup-f-minimo').value  = '0';
+        document.getElementById('cup-f-minimo').value  = '0,00';
         document.getElementById('cup-f-limite').value  = '0';
         document.getElementById('cup-f-ativo').value   = '1';
         document.getElementById('cup-f-idx').value     = '-1';
@@ -10042,6 +10091,7 @@ function cupSelecionarTipo(tipo) {
     var prodWrap= document.getElementById('cup-f-produto-wrap');
     var label   = document.getElementById('cup-f-valor-label');
     var pfx     = document.getElementById('cup-f-valor-prefix');
+    var valorEl = document.getElementById('cup-f-valor');
     // Esconde tudo primeiro
     if (wrap)     wrap.style.display     = 'none';
     if (prodWrap) prodWrap.style.display = 'none';
@@ -10049,12 +10099,17 @@ function cupSelecionarTipo(tipo) {
         if (wrap)  wrap.style.display = 'block';
         if (label) label.textContent  = 'Percentual de desconto (%)';
         if (pfx)   pfx.textContent    = '%';
+        if (valorEl) valorEl.classList.remove('input-money');
     } else if (tipo === 'fixo') {
         if (wrap)  wrap.style.display = 'block';
         if (label) label.textContent  = 'Valor do desconto (R$)';
         if (pfx)   pfx.textContent    = 'R$';
+        if (valorEl) valorEl.classList.add('input-money');
     } else if (tipo === 'produto') {
         if (prodWrap) { prodWrap.style.display = 'block'; cupCarregarProdutos(); }
+        if (valorEl) valorEl.classList.remove('input-money');
+    } else if (valorEl) {
+        valorEl.classList.remove('input-money');
     }
     // frete: nada exibe
 }
@@ -10092,8 +10147,8 @@ function cupGerarCodigo() {
 
 function cupSalvar() {
     var codigo  = (document.getElementById('cup-f-codigo').value || '').trim().toUpperCase();
-    var valor   = parseFloat(document.getElementById('cup-f-valor').value || 0);
-    var minimo  = parseFloat(document.getElementById('cup-f-minimo').value || 0);
+    var valor   = parseMoney(document.getElementById('cup-f-valor').value);
+    var minimo  = parseMoney(document.getElementById('cup-f-minimo').value);
     var limite  = parseInt(document.getElementById('cup-f-limite').value || 0);
     var ativo   = document.getElementById('cup-f-ativo').value === '1';
     var valSemPrazo = document.getElementById('cup-f-sem-validade').checked;
@@ -10302,8 +10357,8 @@ function cfgInicializar() {
     el('cfg-body-retirada').style.display = c.aceitaRetirada ? 'block' : 'none';
 
     // Valores
-    el('cfg-delivery-minimo').value   = c.deliveryMinimo   || '';
-    el('cfg-frete-gratis-valor').value= c.freteGratisValor || '';
+    el('cfg-delivery-minimo').value   = (c.deliveryMinimo !== '' && c.deliveryMinimo != null) ? formatMoneyDisplay(c.deliveryMinimo) : '';
+    el('cfg-frete-gratis-valor').value= (c.freteGratisValor !== '' && c.freteGratisValor != null) ? formatMoneyDisplay(c.freteGratisValor) : '';
     el('cfg-retirada-min').value      = c.retiradaMin      || '';
     el('cfg-retirada-max').value      = c.retiradaMax      || '';
 
@@ -10405,9 +10460,9 @@ function cfgSalvar() {
         nomeUnidade:     el('cfg-nome-unidade').value.trim(),
         linkSlug:        el('cfg-link-slug').value.trim() || cfgGetConfig().linkSlug || '',
         aceitaDelivery:  el('cfg-sw-delivery').dataset.on === '1',
-        deliveryMinimo:  parseFloat(el('cfg-delivery-minimo').value||0),
+        deliveryMinimo:  parseMoney(el('cfg-delivery-minimo').value),
         freteGratis:     el('cfg-sw-frete-gratis').dataset.on === '1',
-        freteGratisValor:parseFloat(el('cfg-frete-gratis-valor').value||0),
+        freteGratisValor:parseMoney(el('cfg-frete-gratis-valor').value),
         aceitaRetirada:  el('cfg-sw-retirada').dataset.on === '1',
         retiradaMin:     parseInt(el('cfg-retirada-min').value||0),
         retiradaMax:     parseInt(el('cfg-retirada-max').value||0),
@@ -10431,10 +10486,9 @@ function cfgSalvar() {
         logo:            obj.logo,
         capa:            obj.capa,
         delivery_minimo: obj.deliveryMinimo || 0,
-        taxa_entrega:    obj.deliveryMinimo || 0,
         tempo_entrega:   obj.retiradaMax    || 40,
         tempo_retirada:  obj.retiradaMin    || 20,
-        pausada:         false,
+        pausada:         !!lojaPausada,
         dados_extras:    obj
     }, 'restaurante_id').catch(e => console.warn('Supa cfg:', e.message));
     cupToast('Configurações salvas!', '#16a34a');
@@ -10605,6 +10659,7 @@ function horCopiarParaTodos(){
     if(!seg.aberta||!seg.periodos.length){alert("Configure primeiro o hor\u00e1rio de Segunda-Feira.");return;}
     for(var i=0;i<7;i++){dias[i].aberta=true;dias[i].periodos=seg.periodos.map(function(p){return{ini:p.ini,fim:p.fim};});}
     horSaveAll(dias);horRenderLista();horRenderGrade();
+    aplicarStatusLoja();
     cupToast("Hor\u00e1rio copiado para todos os dias!","#16a34a");
 }
 
@@ -10641,14 +10696,14 @@ function fidelInit() {
     fidelSetToggle(document.getElementById('fidel-sw'), !!cfg.ativo);
     document.getElementById('fidel-corpo').style.display = cfg.ativo ? '' : 'none';
 
-    if (cfg.reaisPorPonto) document.getElementById('fidel-reais-por-ponto').value = cfg.reaisPorPonto;
+    if (cfg.reaisPorPonto) document.getElementById('fidel-reais-por-ponto').value = formatMoneyDisplay(cfg.reaisPorPonto);
     if (cfg.pontosPorReal) document.getElementById('fidel-pontos-por-real').value = cfg.pontosPorReal;
 
     const descOn = cfg.descontoAtivo !== false;
     fidelSetToggle(document.getElementById('fidel-sw-desc'), descOn);
     document.getElementById('fidel-bloco-desc').style.display = descOn ? '' : 'none';
     if (cfg.pontosDesc) document.getElementById('fidel-pontos-desc').value = cfg.pontosDesc;
-    if (cfg.reaisDesc)  document.getElementById('fidel-reais-desc').value  = cfg.reaisDesc;
+    if (cfg.reaisDesc)  document.getElementById('fidel-reais-desc').value  = formatMoneyDisplay(cfg.reaisDesc);
 
     fidelSetToggle(document.getElementById('fidel-sw-prod'), !!cfg.produtoAtivo);
     document.getElementById('fidel-bloco-prod').style.display = cfg.produtoAtivo ? '' : 'none';
@@ -10665,14 +10720,14 @@ function fidelInit() {
 }
 
 function fidelAtualizaPreviews() {
-    const rpp  = parseFloat(document.getElementById('fidel-reais-por-ponto').value) || 1;
+    const rpp  = parseMoney(document.getElementById('fidel-reais-por-ponto').value) || 1;
     const ppr  = parseFloat(document.getElementById('fidel-pontos-por-real').value) || 1;
     const ex50 = Math.floor(50 / rpp) * ppr;
     document.getElementById('fidel-txt-ganho').textContent =
         `Ex: pedido de R$ 50,00 → ${ex50} ponto${ex50 !== 1 ? 's' : ''}`;
 
     const ppd = parseFloat(document.getElementById('fidel-pontos-desc').value) || 10;
-    const rpd = parseFloat(document.getElementById('fidel-reais-desc').value)  || 1;
+    const rpd = parseMoney(document.getElementById('fidel-reais-desc').value)  || 1;
     const ex  = (100 / ppd * rpd).toFixed(2).replace('.', ',');
     document.getElementById('fidel-txt-desc').textContent = `Ex: 100 pontos = R$ ${ex} de desconto`;
 }
@@ -10759,11 +10814,11 @@ function fidelRemoveResgate(i) {
 function fidelSalvar() {
     const cfg = {
         ativo:         document.getElementById('fidel-sw').dataset.on === '1',
-        reaisPorPonto: parseFloat(document.getElementById('fidel-reais-por-ponto').value) || 1,
+        reaisPorPonto: parseMoney(document.getElementById('fidel-reais-por-ponto').value) || 1,
         pontosPorReal: parseFloat(document.getElementById('fidel-pontos-por-real').value) || 1,
         descontoAtivo: document.getElementById('fidel-sw-desc').dataset.on === '1',
         pontosDesc:    parseFloat(document.getElementById('fidel-pontos-desc').value) || 10,
-        reaisDesc:     parseFloat(document.getElementById('fidel-reais-desc').value)  || 1,
+        reaisDesc:     parseMoney(document.getElementById('fidel-reais-desc').value)  || 1,
         produtoAtivo:  document.getElementById('fidel-sw-prod').dataset.on === '1',
         resgates:      fidelResgatosTemp
     };
