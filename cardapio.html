@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cardápio</title>
+<script id="fb-pixel-base">
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+try{var _pc=localStorage.getItem('f_pixel_id');if(_pc){window.fbq('init',_pc);window.fbq('track','PageView');window._pixelPreInit=_pc;}}catch(e){}
+</script>
+<!-- Meta Pixel — script base já no head, ID preenchido via JS após carregar config -->
+<link rel="preconnect" href="https://oijcggqfcgjkgcaymjqx.supabase.co" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="dns-prefetch" href="https://oijcggqfcgjkgcaymjqx.supabase.co">
+<link rel="dns-prefetch" href="https://connect.facebook.net">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --accent:#e30613;--text:#1a1a1a;--sub:#6b6b6b;
+  --border:#e8e8e8;--bg:#f0f0f0;--white:#ffffff;
+  --card-w:680px;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100vh;}
+
+/* ── CAPA FULL WIDTH ── */
+.capa{width:100%;height:200px;background:#111;position:relative;overflow:hidden;}
+.capa-img{position:absolute;inset:0;background-size:cover;background-position:center;}
+.capa-gradient{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.45) 100%);}
+.capa-default{position:absolute;inset:0;background:linear-gradient(135deg,#1a0002,#3d0008,#c0000a);display:flex;align-items:center;justify-content:center;font-size:60px;opacity:.35;}
+
+/* ── CARD PRINCIPAL (tudo dentro dele) ── */
+.page-card{
+  width:100%;max-width:var(--card-w);
+  margin:-36px auto 40px;
+  background:var(--white);
+  border-radius:20px;
+  box-shadow:0 4px 24px rgba(0,0,0,.10);
+  overflow:hidden;
+  position:relative;z-index:10;
+}
+
+/* LOJA HEADER dentro do card */
+.loja-header{padding:20px 24px 16px;}
+.loja-top-row{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.loja-logo{width:64px;height:64px;border-radius:14px;overflow:hidden;flex-shrink:0;background:var(--bg);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:26px;}
+.loja-logo img{width:100%;height:100%;object-fit:cover;}
+.loja-txt{}
+.loja-nome{font-size:18px;font-weight:800;color:var(--text);line-height:1.2;letter-spacing:-.2px;}
+.loja-sub{font-size:12px;color:var(--sub);margin-top:3px;}
+.status-row{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.status-pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;}
+.status-open{background:#edfaf3;color:#15803d;}
+.status-closed{background:#fef2f2;color:#dc2626;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+/* INFO PILLS */
+.info-grid{display:flex;gap:8px;padding:0 24px 20px;}
+.info-grid .info-pill{flex:1;}
+.info-pill{background:#f7f7f7;border-radius:10px;padding:10px 8px;text-align:center;border:1px solid var(--border);}
+.info-val{font-size:13px;font-weight:700;color:var(--text);}
+.info-lbl{font-size:10px;color:var(--sub);margin-top:2px;font-weight:500;}
+
+/* DIVISOR */
+.card-divider{height:1px;background:var(--border);margin:0;}
+
+/* NAV CATEGORIAS — dentro do card, sticky */
+.nav-wrap{background:var(--white);position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);}
+.nav-scroll{display:flex;gap:4px;overflow-x:auto;padding:10px 24px;scrollbar-width:none;}
+.nav-scroll::-webkit-scrollbar{display:none;}
+.nav-btn{white-space:nowrap;padding:6px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;transition:all .15s;flex-shrink:0;}
+.nav-btn.active{background:var(--text);border-color:var(--text);color:var(--white);}
+
+/* CONTEÚDO dentro do card */
+.content{padding:20px 24px 32px;}
+.cat-section{margin-bottom:28px;}
+.cat-titulo{font-size:15px;font-weight:800;color:var(--text);margin-bottom:12px;letter-spacing:-.2px;}
+
+/* LISTA PRODUTOS */
+.prods-list{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.prod-card{background:var(--white);display:flex;align-items:center;gap:14px;padding:14px 16px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--border);}
+.prod-card:last-child{border-bottom:none;}
+.prod-card:active{background:#fafafa;}
+.prod-img-wrap{width:82px;height:82px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--bg);}
+.prod-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s;}
+.prod-card:hover .prod-img{transform:scale(1.06);}
+.prod-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--bg);}
+.prod-info{flex:1;min-width:0;}
+.prod-nome{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px;line-height:1.3;}
+.prod-desc{font-size:12px;color:var(--sub);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.prod-bottom{display:flex;align-items:center;justify-content:space-between;}
+.prod-preco-wrap{}
+.prod-a-partir{font-size:10px;color:var(--sub);font-weight:500;display:block;line-height:1.2;}
+.prod-preco{font-size:14px;font-weight:700;color:var(--text);}
+.prod-add{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);color:var(--text);font-size:20px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;line-height:1;}
+.prod-add:active{background:var(--text);color:var(--white);border-color:var(--text);}
+
+/* ── BARRA FECHADA ── */
+.bar-fechada{background:#1a1a1a;color:#facc15;padding:9px 16px;text-align:center;font-size:12px;font-weight:600;display:none;letter-spacing:.2px;border-radius:20px 20px 0 0;}
+.bar-fechada.show{display:block;}
+.bar-fechada.countdown{background:#1a1a1a;color:#facc15;}
+.bar-fechada .bar-timer{font-variant-numeric:tabular-nums;font-weight:800;letter-spacing:.5px;}
+
+/* ── LOADER ── */
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 20px;gap:12px;}
+.loader-spin{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-txt{font-size:13px;color:var(--sub);}
+@keyframes shimmer{0%{background-color:#f0f0f0;}50%{background-color:#e4e4e4;}100%{background-color:#f0f0f0;}}
+#skeleton-wrap div{animation:shimmer 1.4s ease-in-out infinite;}
+
+/* ── FAB ── */
+.fab{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--text);color:var(--white);border:none;border-radius:14px;padding:14px 20px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:space-between;gap:20px;box-shadow:0 6px 24px rgba(0,0,0,.25);z-index:200;min-width:280px;}
+.fab.show{display:flex;}
+.fab:active{transform:translateX(-50%) scale(.97);}
+.fab-left{display:flex;align-items:center;gap:10px;}
+.fab-count{background:var(--accent);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;}
+
+/* ── OVERLAYS / MODAIS ── */
+.overlay,.cart-overlay,.sucesso-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;align-items:flex-end;justify-content:center;}
+.overlay{align-items:center;padding:16px;}
+.overlay.open,.cart-overlay.open{display:flex;}
+.sucesso-overlay{align-items:center;z-index:800;}
+.sucesso-overlay.open{display:flex;}
+.cart-overlay{z-index:600;}
+@media(min-width:600px){.cart-overlay{align-items:center;}.cart-sheet{border-radius:20px;max-height:90vh;}}
+
+/* SHEET */
+.cart-sheet{background:var(--white);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;animation:sheetUp .26s cubic-bezier(.22,.68,0,1.2);}
+.prod-sheet{background:var(--white);border-radius:20px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;animation:popIn .22s cubic-bezier(.22,.68,0,1.2);}
+@keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.sheet-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:12px auto 0;}
+.sheet-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--bg);max-height:240px;}
+.sheet-img-placeholder{width:100%;height:160px;display:flex;align-items:center;justify-content:center;font-size:52px;background:var(--bg);}
+.sheet-body{padding:18px 20px 0;}
+.sheet-nome{font-size:20px;font-weight:800;color:var(--text);margin-bottom:5px;letter-spacing:-.3px;}
+.sheet-desc{font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:10px;}
+.sheet-preco{font-size:17px;font-weight:800;color:var(--text);margin-bottom:18px;}
+
+/* Complementos */
+.comp-group{margin-bottom:14px;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.comp-head{padding:11px 15px;background:#f9f9f9;display:flex;justify-content:space-between;align-items:center;}
+.comp-titulo{font-size:13px;font-weight:700;color:var(--text);}
+.comp-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px;}
+.badge-req{background:#fef2f2;color:#dc2626;}
+.badge-opt{background:#eff6ff;color:#2563eb;}
+.comp-opt{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-top:1px solid var(--border);cursor:pointer;transition:background .1s;}
+.comp-opt:active{background:#fafafa;}
+.comp-opt-left{flex:1;}
+.comp-opt-nome{font-size:13px;font-weight:500;color:var(--text);}
+.comp-opt-preco{font-size:11px;color:var(--sub);margin-top:2px;}
+.comp-ctrl{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:12px;transition:all .15s;}
+.comp-ctrl.check{border-radius:6px;}
+.comp-ctrl.active{border-color:var(--text);background:var(--text);}
+.comp-ctrl.active::after{content:'';width:8px;height:8px;background:var(--white);border-radius:50%;}
+.comp-ctrl.check.active::after{content:'✓';font-size:11px;border-radius:0;font-weight:900;}
+
+/* Obs */
+.obs-sec{padding:0 20px 14px;}
+.obs-lbl{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;}
+.obs-input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);resize:none;outline:none;transition:border-color .15s;}
+.obs-input:focus{border-color:var(--text);}
+
+/* Footer sheet */
+.sheet-footer{position:sticky;bottom:0;background:var(--white);padding:12px 20px 20px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.qtd-wrap{display:flex;align-items:center;gap:12px;background:#f7f7f7;border-radius:10px;padding:8px 12px;border:1px solid var(--border);}
+.qtd-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);font-size:16px;font-weight:600;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.qtd-btn:disabled{opacity:.35;cursor:default;}
+.qtd-btn:not(:disabled):active{background:var(--text);color:var(--white);border-color:var(--text);}
+.qtd-num{font-size:15px;font-weight:800;min-width:18px;text-align:center;}
+.btn-add{flex:1;background:var(--text);color:var(--white);border:none;border-radius:10px;padding:14px 16px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:background .15s;}
+.btn-add:active{background:#333;}
+
+/* CARRINHO */
+.cart-header{padding:18px 20px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--white);z-index:1;}
+.cart-titulo{font-size:18px;font-weight:800;letter-spacing:-.3px;}
+.cart-close{width:32px;height:32px;background:#f7f7f7;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;color:var(--sub);display:flex;align-items:center;justify-content:center;}
+.cart-item{display:flex;gap:12px;padding:14px 20px;border-bottom:1px solid var(--border);}
+.cart-item-info{flex:1;min-width:0;}
+.cart-item-nome{font-size:14px;font-weight:600;color:var(--text);}
+.cart-item-det{font-size:12px;color:var(--sub);margin-top:3px;line-height:1.5;}
+.cart-item-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;}
+.cart-item-price{font-size:14px;font-weight:700;color:var(--text);}
+.cart-item-qtd{display:flex;align-items:center;gap:8px;}
+.cart-q{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:var(--white);font-size:15px;font-weight:600;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;}
+
+/* CHECKOUT */
+.checkout{padding:18px 20px;}
+.sec-title{font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.tipo-row{display:flex;gap:8px;margin-bottom:18px;}
+.tipo-btn{flex:1;padding:10px 6px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;color:var(--sub);cursor:pointer;text-align:center;transition:all .15s;}
+.tipo-btn.active{background:var(--text);border-color:var(--text);color:var(--white);}
+.campo{margin-bottom:12px;}
+.campo-lbl{font-size:11px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px;}
+.campo input{width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:14px;color:var(--text);background:var(--white);outline:none;transition:border-color .15s;}
+.campo input:focus{border-color:var(--text);}
+.campo-row{display:grid;grid-template-columns:80px 1fr;gap:8px;margin-bottom:12px;}
+.campo-row .campo{margin-bottom:0;}
+.pgto-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.pgto-btn{padding:11px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;text-align:center;transition:all .15s;}
+.pgto-btn.active{background:var(--text);border-color:var(--text);color:var(--white);}
+.resumo{background:#f7f7f7;border-radius:10px;padding:13px 15px;margin-bottom:14px;border:1px solid var(--border);}
+.resumo-linha{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin-bottom:7px;}
+.resumo-linha:last-child{margin-bottom:0;}
+.resumo-total{font-size:15px;font-weight:800;color:var(--text);padding-top:9px;border-top:1px solid var(--border);margin-top:2px;margin-bottom:0;}
+.btn-finalizar{width:100%;background:var(--text);color:var(--white);border:none;border-radius:10px;padding:15px;font-family:'Inter',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:background .15s;}
+.btn-finalizar:disabled{background:#ccc;cursor:default;}
+.btn-finalizar:active{background:#333;}
+
+/* AUTOCOMPLETE */
+.campo-rel{position:relative;}
+.cep-status{font-size:11px;color:#64748b;margin-top:5px;min-height:14px;}
+.cep-status.ok{color:#15803d;}
+.cep-status.err{color:#dc2626;}
+.sug-list{position:absolute;left:0;right:0;top:100%;background:var(--white);border:1.5px solid var(--border);border-top:none;border-radius:0 0 10px 10px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:2000;max-height:220px;overflow-y:auto;}
+.sug-item{padding:10px 13px;cursor:pointer;border-bottom:1px solid var(--border);color:var(--text);}
+.sug-item:hover{background:#f7f7f7;}
+.sug-item-rua{font-size:13px;font-weight:600;color:var(--text);}
+.sug-item-sub{font-size:11px;color:var(--sub);margin-top:2px;}
+
+/* SUCESSO */
+.sucesso-box{background:var(--white);border-radius:20px;padding:38px 28px;text-align:center;max-width:320px;width:88%;animation:popIn .3s cubic-bezier(.22,.68,0,1.2);}
+@keyframes popIn{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
+.suc-ico{font-size:50px;margin-bottom:14px;}
+.suc-titulo{font-size:21px;font-weight:800;color:var(--text);margin-bottom:5px;letter-spacing:-.3px;}
+.suc-id{font-size:17px;font-weight:800;color:var(--accent);margin:10px 0;}
+.suc-msg{font-size:13px;color:var(--sub);line-height:1.6;margin-bottom:22px;}
+.btn-novo{background:var(--text);color:var(--white);border:none;border-radius:10px;padding:13px 28px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
+.btn-wpp{background:#25d366;color:#fff;border:none;border-radius:10px;padding:13px 28px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;}
+.btn-wpp:active{background:#1ebe5d;}
+.suc-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;color:var(--sub);cursor:pointer;line-height:1;padding:4px;}
+.suc-close:hover{color:var(--text);}
+/* ── FIDELIDADE ── */
+.fidel-pill{background:#edfaf3;border:1px solid #6ee7b7;border-radius:10px;padding:10px 8px;text-align:center;}
+.fidel-pill-val{font-size:12px;font-weight:800;color:#15803d;}
+.fidel-pill-lbl{font-size:10px;color:#16a34a;margin-top:2px;font-weight:500;}
+.fidel-banner{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d;border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.fidel-banner-ico{font-size:22px;flex-shrink:0;}
+.fidel-banner-txt{flex:1;font-size:12px;color:#92400e;line-height:1.5;}
+.fidel-banner-pts{font-size:15px;font-weight:800;color:#b45309;white-space:nowrap;text-align:right;}
+.fidel-resgate{border:1.5px solid #fcd34d;border-radius:10px;margin-bottom:14px;overflow:hidden;}
+.fidel-resgate-header{background:#fff8e1;padding:10px 14px;font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.4px;}
+.fidel-resgate-opt{padding:11px 14px;border-top:1px solid #fef3c7;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .1s;}
+.fidel-resgate-opt:active{background:#fef9ec;}
+.fidel-resgate-opt-info{flex:1;}
+.fidel-resgate-opt-nome{font-size:13px;font-weight:600;color:var(--text);}
+.fidel-resgate-opt-pts{font-size:11px;color:#b45309;margin-top:2px;}
+.fidel-radio{width:20px;height:20px;border-radius:50%;border:2px solid #fcd34d;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.fidel-radio.active{border-color:#b45309;background:#b45309;}
+.fidel-radio.active::after{content:'';width:8px;height:8px;background:white;border-radius:50%;}
+.resumo-linha.fidel-linha{color:#b45309;font-weight:600;}
+.suc-pontos{background:#edfaf3;border:1px solid #6ee7b7;border-radius:10px;padding:14px 16px;margin:10px 0 18px;}
+.suc-pontos-val{font-size:24px;font-weight:800;color:#15803d;}
+.suc-pontos-lbl{font-size:12px;color:#16a34a;margin-top:2px;}
+
+/* CUPOM */
+.cupom-wrap{margin-bottom:14px;}
+.cupom-row{display:flex;gap:8px;}
+.cupom-input{flex:1;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border-color .15s;text-transform:uppercase;letter-spacing:.5px;}
+.cupom-input:focus{border-color:var(--text);}
+.cupom-btn{padding:11px 16px;border:none;border-radius:10px;background:var(--text);color:var(--white);font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s;}
+.cupom-btn:active{background:#333;}
+.cupom-tag{display:flex;align-items:center;justify-content:space-between;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:9px 13px;margin-top:8px;}
+.cupom-tag-txt{font-size:12px;font-weight:700;color:#15803d;}
+.cupom-tag-rem{background:none;border:none;font-size:16px;cursor:pointer;color:#16a34a;line-height:1;padding:0;}
+.resumo-linha.cupom-linha{color:#15803d;font-weight:600;}
+</style>
+</head>
+<body>
+
+<!-- CAPA FULL WIDTH -->
+<div class="capa">
+  <div class="capa-default" id="hero-default">🔥</div>
+  <div class="capa-img" id="hero-img"></div>
+  <div class="capa-gradient"></div>
+</div>
+
+<!-- CARD PRINCIPAL -->
+<div class="page-card" id="page-card">
+
+  <!-- Barra fechada (dentro do card) -->
+  <div class="bar-fechada" id="bar-fechada">⚠️ Estamos fechados — não estamos aceitando pedidos agora</div>
+
+  <!-- Info da loja -->
+  <div class="loja-header">
+    <div class="loja-top-row">
+      <div class="loja-logo" id="loja-logo">🍔</div>
+      <div class="loja-txt">
+        <div class="loja-nome" id="loja-nome"><span id="loja-nome-skeleton" style="display:inline-block;height:18px;width:140px;background:#f0f0f0;border-radius:6px;vertical-align:middle;animation:shimmer 1.4s ease-in-out infinite;"></span></div>
+        <div class="loja-sub" id="loja-sub"></div>
+        <div class="status-row">
+          <div class="status-pill status-open" id="loja-status"><span class="status-dot"></span>Aberta agora</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info pills: Entrega | Pontos (pontos oculto se fidelidade inativa). Taxa some daqui: depende do endereço. -->
+  <div class="info-grid" id="info-grid">
+    <div class="info-pill"><div class="info-val" id="info-entrega">-- min</div><div class="info-lbl">Entrega</div></div>
+    <div class="info-pill" id="info-taxa-pill" style="display:none;">
+      <div class="info-val" id="info-taxa">R$ --</div>
+      <div class="info-lbl">Taxa</div>
+    </div>
+    <div class="info-pill fidel-pill" id="info-pontos-pill" style="display:none;">
+      <div class="fidel-pill-val" id="info-pontos-rate">R$1 = 1pt</div>
+      <div class="fidel-pill-lbl">Pontos</div>
+    </div>
+  </div>
+  <!-- Pre-init: mostra pontos instantaneamente se fidelidade já está no localStorage -->
+  <script>
+  (function(){
+    try {
+      var fc = JSON.parse(localStorage.getItem('f_fidelidade_cfg') || 'null');
+      if (fc && fc.ativo) {
+        var rpp = fc.reaisPorPonto || 1, ppr = fc.pontosPorReal || 1;
+        document.getElementById('info-pontos-rate').textContent = 'R$' + rpp + ' = ' + ppr + 'pt';
+        document.getElementById('info-pontos-pill').style.display = '';
+      }
+    } catch(e) {}
+  })();
+  </script>
+
+  <div class="card-divider"></div>
+
+  <!-- Nav categorias (sticky dentro do card) -->
+  <div class="nav-wrap" id="nav-wrap" style="display:none;">
+    <div class="nav-scroll" id="nav-scroll"></div>
+  </div>
+
+  <!-- Produtos -->
+  <div class="content" id="content">
+    <div id="skeleton-wrap">
+  <div style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:36px 20px 24px;">
+    <div style="width:34px;height:34px;border:3px solid #e8e8e8;border-top-color:#111;border-radius:50%;animation:spin .7s linear infinite;"></div>
+    <div style="font-size:13px;color:#aaa;font-weight:500;">Carregando cardápio...</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f0f0f0;">
+    <div style="flex:1;"><div style="height:14px;background:#ebebeb;border-radius:6px;margin-bottom:8px;width:70%;animation:shimmer 1.4s ease-in-out infinite;"></div><div style="height:11px;background:#ebebeb;border-radius:6px;margin-bottom:6px;width:90%;animation:shimmer 1.4s ease-in-out infinite .1s;"></div><div style="height:13px;background:#ebebeb;border-radius:6px;width:30%;animation:shimmer 1.4s ease-in-out infinite .2s;"></div></div>
+    <div style="width:82px;height:82px;border-radius:10px;background:#ebebeb;flex-shrink:0;animation:shimmer 1.4s ease-in-out infinite;"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f0f0f0;">
+    <div style="flex:1;"><div style="height:14px;background:#ebebeb;border-radius:6px;margin-bottom:8px;width:55%;animation:shimmer 1.4s ease-in-out infinite .05s;"></div><div style="height:11px;background:#ebebeb;border-radius:6px;margin-bottom:6px;width:85%;animation:shimmer 1.4s ease-in-out infinite .15s;"></div><div style="height:13px;background:#ebebeb;border-radius:6px;width:25%;animation:shimmer 1.4s ease-in-out infinite .25s;"></div></div>
+    <div style="width:82px;height:82px;border-radius:10px;background:#ebebeb;flex-shrink:0;animation:shimmer 1.4s ease-in-out infinite .05s;"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid #f0f0f0;">
+    <div style="flex:1;"><div style="height:14px;background:#ebebeb;border-radius:6px;margin-bottom:8px;width:65%;animation:shimmer 1.4s ease-in-out infinite .1s;"></div><div style="height:11px;background:#ebebeb;border-radius:6px;margin-bottom:6px;width:75%;animation:shimmer 1.4s ease-in-out infinite .2s;"></div><div style="height:13px;background:#ebebeb;border-radius:6px;width:35%;animation:shimmer 1.4s ease-in-out infinite .3s;"></div></div>
+    <div style="width:82px;height:82px;border-radius:10px;background:#ebebeb;flex-shrink:0;animation:shimmer 1.4s ease-in-out infinite .1s;"></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;">
+    <div style="flex:1;"><div style="height:14px;background:#ebebeb;border-radius:6px;margin-bottom:8px;width:50%;animation:shimmer 1.4s ease-in-out infinite .15s;"></div><div style="height:11px;background:#ebebeb;border-radius:6px;margin-bottom:6px;width:80%;animation:shimmer 1.4s ease-in-out infinite .25s;"></div><div style="height:13px;background:#ebebeb;border-radius:6px;width:28%;animation:shimmer 1.4s ease-in-out infinite .35s;"></div></div>
+    <div style="width:82px;height:82px;border-radius:10px;background:#ebebeb;flex-shrink:0;animation:shimmer 1.4s ease-in-out infinite .15s;"></div>
+  </div>
+</div>
+  </div>
+
+</div><!-- /page-card -->
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="abrirCarrinho()">
+  <div class="fab-left"><div class="fab-count" id="fab-qtd">0</div><span>Ver carrinho</span></div>
+  <span style="font-weight:800;font-size:15px;" id="fab-total">R$ 0,00</span>
+</button>
+
+<!-- MODAL PRODUTO -->
+<div class="overlay" id="overlay-prod" onclick="fecharProd(event)">
+  <div class="prod-sheet" style="position:relative;">
+    <button onclick="fecharProd()" style="position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.5);border:none;color:white;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:20;line-height:1;">✕</button>
+    <div id="sheet-img-wrap"></div>
+    <div class="sheet-body">
+      <div class="sheet-nome" id="sheet-nome"></div>
+      <div class="sheet-desc" id="sheet-desc"></div>
+      <div class="sheet-preco" id="sheet-preco"></div>
+      <div id="sheet-comps"></div>
+    </div>
+    <div class="obs-sec">
+      <label class="obs-lbl">Observação (opcional)</label>
+      <textarea class="obs-input" id="sheet-obs" rows="2" placeholder="Ex: sem cebola, bem passado..."></textarea>
+    </div>
+    <div class="sheet-footer">
+      <div class="qtd-wrap">
+        <button class="qtd-btn" id="qtd-minus" onclick="mudaQtd(-1)">−</button>
+        <span class="qtd-num" id="qtd-num">1</span>
+        <button class="qtd-btn" onclick="mudaQtd(1)">+</button>
+      </div>
+      <button class="btn-add" onclick="adicionarCarrinho()">
+        <span>Adicionar</span>
+        <span style="font-weight:800;" id="btn-preco">R$ 0,00</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CARRINHO -->
+<div class="cart-overlay" id="cart-overlay" onclick="fecharCarrinho(event)">
+  <div class="cart-sheet">
+    <div class="cart-header" style="display:flex;align-items:center;gap:8px;">
+      <button onclick="fecharCarrinho()" style="background:none;border:none;cursor:pointer;font-size:22px;color:#555;padding:2px 6px;line-height:1;flex-shrink:0;">←</button>
+      <div class="cart-titulo" style="flex:1;">Seu pedido</div>
+      <button class="cart-close" onclick="fecharCarrinho()">✕</button>
+    </div>
+    <div id="cart-itens"></div>
+    <div class="checkout">
+      <div class="sec-title">Tipo de pedido</div>
+      <div class="tipo-row">
+        <div class="tipo-btn active" onclick="setTipo('Entrega',this)">🛵 Entrega</div>
+        <div class="tipo-btn" onclick="setTipo('Retirada',this)">🛍️ Retirada</div>
+        <div class="tipo-btn" onclick="setTipo('Balcão',this)">🍽️ Balcão</div>
+      </div>
+      <div class="sec-title">Seus dados</div>
+      <div class="campo"><label class="campo-lbl">Nome</label><input id="ch-nome" type="text" placeholder="Seu nome completo"></div>
+      <div class="campo"><label class="campo-lbl">WhatsApp</label><input id="ch-tel" type="tel" placeholder="(00) 00000-0000" oninput="fidelAtualizaSaldo()"></div>
+      <div id="wrap-end">
+        <div class="sec-title" style="margin-top:6px;">Endereço</div>
+        <div class="campo">
+          <label class="campo-lbl">CEP</label>
+          <input id="ch-cep" type="tel" inputmode="numeric" placeholder="00000-000" maxlength="9" autocomplete="postal-code" oninput="onCepInput()">
+          <div class="cep-status" id="ch-cep-status">Não sabe o CEP? Digite a rua abaixo</div>
+        </div>
+        <div class="campo campo-rel">
+          <label class="campo-lbl">Rua / Avenida</label>
+          <input id="ch-rua" type="text" placeholder="Digite a rua ou avenida" oninput="buscaEnd()" onblur="onRuaBlur()" autocomplete="off">
+          <div class="sug-list" id="ch-sugs" style="display:none;"></div>
+        </div>
+        <div class="campo-row">
+          <div class="campo"><label class="campo-lbl">Nº</label><input id="ch-num" type="text" placeholder="Nº" onblur="onNumBlur()"></div>
+          <div class="campo"><label class="campo-lbl">Bairro</label><input id="ch-bairro" type="text" placeholder="Bairro"></div>
+        </div>
+        <div class="campo"><label class="campo-lbl">Complemento</label><input id="ch-comp" type="text" placeholder="Apto, casa..."></div>
+        <div class="campo"><label class="campo-lbl">Cidade</label><input id="ch-cidade" type="text" placeholder="Cidade"></div>
+      </div>
+      <div class="sec-title" style="margin-top:6px;">Pagamento</div>
+      <div class="pgto-grid">
+        <div class="pgto-btn active" onclick="setPgto('Pix',this)">📱 Pix</div>
+        <div class="pgto-btn" onclick="setPgto('Crédito',this)">💳 Crédito</div>
+        <div class="pgto-btn" onclick="setPgto('Débito',this)">💳 Débito</div>
+        <div class="pgto-btn" onclick="setPgto('Dinheiro',this)">💵 Dinheiro</div>
+      </div>
+      <div id="wrap-troco" style="display:none;" class="campo">
+        <label class="campo-lbl">Troco para quanto?</label>
+        <input id="ch-troco" type="number" placeholder="Ex: 50,00">
+      </div>
+      <!-- Cupom de desconto -->
+      <div class="cupom-wrap">
+        <div class="sec-title">Cupom de desconto</div>
+        <div class="cupom-row">
+          <input class="cupom-input" id="cupom-input" type="text" placeholder="Código do cupom" maxlength="20">
+          <button class="cupom-btn" onclick="cupomAplicar()">Aplicar</button>
+        </div>
+        <div id="cupom-tag" style="display:none;">
+          <div class="cupom-tag-txt" id="cupom-tag-txt"></div>
+          <button class="cupom-tag-rem" onclick="cupomRemover()">✕</button>
+        </div>
+      </div>
+      <!-- Resgate de pontos -->
+      <div id="fidel-wrap" style="display:none;">
+        <div class="fidel-banner">
+          <div class="fidel-banner-ico">⭐</div>
+          <div class="fidel-banner-txt"><strong>Você tem <span id="fidel-saldo-txt">0</span> pontos</strong><br>Use seus pontos para desconto ou produto grátis</div>
+        </div>
+        <div id="fidel-opcoes-wrap"></div>
+      </div>
+      <div class="resumo">
+        <div class="resumo-linha"><span>Subtotal</span><span id="res-sub">R$ 0,00</span></div>
+        <div class="resumo-linha" id="res-taxa-linha"><span>Taxa de entrega</span><span id="res-taxa">R$ 0,00</span></div>
+        <div class="resumo-linha cupom-linha" id="res-cupom-linha" style="display:none;"><span>🏷️ Cupom <span id="res-cupom-codigo"></span></span><span id="res-cupom-val">-R$ 0,00</span></div>
+        <div class="resumo-linha fidel-linha" id="res-desconto-linha" style="display:none;"><span>🎁 Desconto pontos</span><span id="res-desconto">-R$ 0,00</span></div>
+        <div class="resumo-linha resumo-total"><span>Total</span><span id="res-total">R$ 0,00</span></div>
+      </div>
+      <button class="btn-finalizar" id="btn-fin" onclick="finalizarPedido()">Fazer pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUCESSO -->
+<div class="sucesso-overlay" id="sucesso-overlay">
+  <div class="sucesso-box" style="position:relative;">
+    <button class="suc-close" onclick="novoPedido()" title="Fechar">✕</button>
+    <div class="suc-ico">🎉</div>
+    <div class="suc-titulo">Pedido enviado!</div>
+    <div class="suc-id" id="suc-id">#B-000000</div>
+    <div class="suc-msg" id="suc-msg">Seu pedido foi recebido!</div>
+    <div class="suc-pontos" id="suc-pontos-wrap" style="display:none;">
+      <div class="suc-pontos-val">+<span id="suc-pontos-val">0</span> pontos</div>
+      <div class="suc-pontos-lbl">adicionados à sua conta de fidelidade</div>
+    </div>
+    <button class="btn-wpp" onclick="enviarResumoWhatsapp()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Enviar resumo no WhatsApp
+    </button>
+  </div>
+</div>
+
+<script>
+// ── Supabase ──────────────────────────────────────────────
+const SUPA_URL = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE0NzcsImV4cCI6MjA4ODMxNzQ3N30.URV7NROQ0wAGG_GzrS2yn2Kksxaefy4v4JJ49yRW51A';
+// Servidor local (impressora / SSE) — usado só quando disponível
+const SERVIDOR = window.location.hostname==='localhost'||window.location.hostname==='127.0.0.1'
+    ? 'http://localhost:9876' : null;
+
+var db={categories:[],prods:[],comps:[],cfg:{},txCfg:{}};
+var carrinho=[],prodAtual=null,qtdAtual=1,compsAtual={},tipoAtual='Entrega',pgtoAtual='Pix',aberta=true;
+var lojaPausada=false,lojaForaHorario=false,aberturaManual=null;
+var REST_SLUG = null;
+var REST_ID   = null;
+var _statusPollTimer = null;
+var _horarioTimer = null;
+
+function montarTxCfg(raw) {
+    var _tx = raw || {};
+    var raios = Array.isArray(_tx.raios) ? _tx.raios : [];
+    var taxaPadrao = parseFloat(_tx.taxaPadrao || _tx.taxa_padrao);
+    if (isNaN(taxaPadrao)) taxaPadrao = 0;
+    var taxasRaio = raios.map(function(r){ return parseFloat(r.taxa); }).filter(function(n){ return !isNaN(n) && n >= 0; });
+    // Com raios: mostra a menor taxa (a partir de). Sem raios: taxa padrão da tela Taxas e Entrega.
+    var taxaBase = taxasRaio.length ? Math.min.apply(null, taxasRaio) : taxaPadrao;
+    return {
+        tempoEntrega:  parseInt(_tx.tempoEntrega  || _tx.tempo_entrega  || 40, 10) || 40,
+        tempoRetirada: parseInt(_tx.tempoRetirada || _tx.tempo_retirada || 20, 10) || 20,
+        taxaPadrao:    taxaPadrao,
+        raios:         raios,
+        pedidoMinimo:  parseFloat(_tx.pedidoMinimo) || 0,
+        taxaBase:      taxaBase,
+        centroLat:     parseFloat(_tx.centroLat) || null,
+        centroLng:     parseFloat(_tx.centroLng) || null
+    };
+}
+function taxaEntregaCardapio() {
+    if (tipoAtual !== 'Entrega') return 0;
+    if (_taxaCalculada) return taxaEntregaAtual;
+    return 0;
+}
+
+var taxaEntregaAtual = 0;
+var _taxaCalculada = false;
+var _cepBuscando = false;
+
+function setCepStatus(txt, tipo) {
+    var el = document.getElementById('ch-cep-status');
+    if (!el) return;
+    el.textContent = txt || '';
+    el.className = 'cep-status' + (tipo ? ' ' + tipo : '');
+}
+function setTaxaCalculada(valor) {
+    taxaEntregaAtual = parseFloat(valor) || 0;
+    _taxaCalculada = true;
+    atualizaResumo();
+}
+function aplicarTaxaPadrao() {
+    var tx = db.txCfg || {};
+    var taxa = parseFloat(tx.taxaPadrao) || 0;
+    setTaxaCalculada(taxa);
+}
+function resetTaxaCep() {
+    taxaEntregaAtual = 0;
+    _taxaCalculada = false;
+    atualizaResumo();
+}
+
+function onCepInput() {
+    var el = document.getElementById('ch-cep');
+    if (!el) return;
+    var d = String(el.value || '').replace(/\D/g, '').slice(0, 8);
+    el.value = d.length > 5 ? d.slice(0, 5) + '-' + d.slice(5) : d;
+    if (d.length < 8) {
+        if (!_cepBuscando) {
+            if (!d.length) {
+                setCepStatus('Não sabe o CEP? Digite a rua abaixo');
+            } else {
+                resetTaxaCep();
+                setCepStatus('');
+            }
+        }
+        return;
+    }
+    buscarCep(d);
+}
+
+function preencherEnderecoCep(d) {
+    var rua = document.getElementById('ch-rua');
+    var bairro = document.getElementById('ch-bairro');
+    var cidade = document.getElementById('ch-cidade');
+    if (rua && d.rua) rua.value = d.rua;
+    if (bairro && d.bairro) bairro.value = d.bairro;
+    if (cidade && d.cidade) cidade.value = d.cidade + (d.uf ? ' - ' + d.uf : '');
+    var sugs = document.getElementById('ch-sugs');
+    if (sugs) sugs.style.display = 'none';
+}
+
+function chHaversine(lat1, lng1, lat2, lng2) {
+    var R = 6371;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLng = (lng2 - lng1) * Math.PI / 180;
+    var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+            Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+            Math.sin(dLng/2)*Math.sin(dLng/2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function calcularTaxaComCoords(lat, lng) {
+    var tx = db.txCfg || {};
+    var raios = (tx.raios || []).slice().sort(function(a,b){ return parseFloat(a.km) - parseFloat(b.km); });
+    var cLat = parseFloat(tx.centroLat);
+    var cLng = parseFloat(tx.centroLng);
+    if (!raios.length || !cLat || !cLng) {
+        aplicarTaxaPadrao(raios.length ? 'Taxa padrão' : 'Taxa padrão');
+        return;
+    }
+    var dist = chHaversine(cLat, cLng, lat, lng);
+    for (var i = 0; i < raios.length; i++) {
+        if (dist <= parseFloat(raios[i].km)) {
+            var taxa = parseFloat(raios[i].taxa) || 0;
+            setTaxaCalculada(taxa);
+            return;
+        }
+    }
+    aplicarTaxaPadrao('Fora dos raios (' + dist.toFixed(1).replace('.', ',') + ' km) · taxa padrão');
+}
+
+function geocodificarEndereco() {
+    var rua = (document.getElementById('ch-rua') || {}).value || '';
+    if (!String(rua).trim()) return;
+    chGaranteLojaGeo().then(function(){
+        var num = (document.getElementById('ch-num') || {}).value || '';
+        var q = chNormalizaRua(rua) + (num ? ', ' + num : '');
+        var cidade = chCidadeLoja();
+        if (cidade) q += ', ' + cidade;
+        return Promise.all([chBuscaPhoton(q), chBuscaViaCep(rua)]);
+    }).then(function(res){
+        var photon = res[0] || [];
+        var viacep = res[1] || [];
+        if (photon[0] && photon[0].lat != null) {
+            calcularTaxaComCoords(photon[0].lat, photon[0].lng);
+            if (photon[0].cep) chPreencheCep(photon[0].cep);
+            setCepStatus('Taxa calculada pelo endereço', 'ok');
+            return;
+        }
+        if (viacep.length === 1 && viacep[0].cep) {
+            preencheEndSug(viacep[0]);
+            return;
+        }
+        if (viacep.length > 1) {
+            chMostraSugs(viacep);
+            setCepStatus('Selecione a rua na lista para calcular a taxa');
+            return;
+        }
+        setCepStatus('Não encontramos essa rua. Confira o nome ou informe o CEP.', 'err');
+    }).catch(function(){
+        setCepStatus('Não encontramos essa rua. Confira o nome ou informe o CEP.', 'err');
+    });
+}
+
+function buscarCep(cep) {
+    if (_cepBuscando) return;
+    _cepBuscando = true;
+    setCepStatus('Buscando endereço...');
+    fetch('https://brasilapi.com.br/api/cep/v2/' + cep)
+        .then(function(r){ if (!r.ok) throw new Error('cep'); return r.json(); })
+        .then(function(d){
+            preencherEnderecoCep({ rua: d.street, bairro: d.neighborhood, cidade: d.city, uf: d.state });
+            setCepStatus((d.city || '') + (d.state ? ' — ' + d.state : ''), 'ok');
+            var coords = d.location && d.location.coordinates;
+            var lat, lng;
+            if (coords) {
+                if (coords.latitude != null) { lat = coords.latitude; lng = coords.longitude; }
+                else if (Array.isArray(coords) && coords.length >= 2) { lng = coords[0]; lat = coords[1]; }
+            }
+            if (lat && lng && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lng))) {
+                calcularTaxaComCoords(parseFloat(lat), parseFloat(lng));
+            } else {
+                geocodificarEndereco();
+            }
+        })
+        .catch(function(){
+            return fetch('https://viacep.com.br/ws/' + cep + '/json/')
+                .then(function(r){ return r.json(); })
+                .then(function(d){
+                    if (d.erro) { setCepStatus('CEP não encontrado', 'err'); aplicarTaxaPadrao('CEP não encontrado · taxa padrão'); return; }
+                    preencherEnderecoCep({ rua: d.logradouro, bairro: d.bairro, cidade: d.localidade, uf: d.uf });
+                    setCepStatus((d.localidade || '') + (d.uf ? ' — ' + d.uf : ''), 'ok');
+                    geocodificarEndereco();
+                });
+        })
+        .catch(function(){ setCepStatus('Não foi possível buscar o CEP', 'err'); aplicarTaxaPadrao('Taxa padrão'); })
+        .then(function(){ _cepBuscando = false; });
+}
+
+function _horToMin(s) {
+    var p = String(s || '00:00').split(':');
+    return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+}
+function _periodoAtivo(p, minAtual) {
+    var ini = _horToMin(p.ini);
+    var fim = _horToMin(p.fim || '23:59');
+    if (fim <= ini) return minAtual >= ini || minAtual < fim; // 18:00–02:00
+    return minAtual >= ini && minAtual < fim;
+}
+function horarioAbertoAgora(horarios) {
+    if (!horarios || !horarios.length) return false;
+    var agora = new Date();
+    var diaSem = agora.getDay();
+    var minAtual = agora.getHours() * 60 + agora.getMinutes();
+    var dia = horarios[diaSem];
+    if (dia && dia.aberta && dia.periodos && dia.periodos.length) {
+        if (dia.periodos.some(function(p){ return p && !p.manual && _periodoAtivo(p, minAtual); })) return true;
+    }
+    var prev = horarios[(diaSem + 6) % 7];
+    if (prev && prev.aberta && prev.periodos && prev.periodos.length) {
+        var aindaOntem = prev.periodos.some(function(p) {
+            if (!p || p.manual) return false;
+            var ini = _horToMin(p.ini), fim = _horToMin(p.fim || '23:59');
+            return fim <= ini && minAtual < fim;
+        });
+        if (aindaOntem) return true;
+    }
+    return false;
+}
+function decidirStatusLoja(horarios, manual) {
+    var dentro = horarioAbertoAgora(horarios);
+    if (manual === false) return false;
+    if (dentro) return true;
+    return manual === true;
+}
+function calcularForaHorario(horarios) {
+    return !horarioAbertoAgora(horarios);
+}
+function parseDadosExtras(raw) {
+    if (!raw) return {};
+    if (typeof raw === 'string') {
+        try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+    }
+    return raw;
+}
+function aplicarStatusCardapio() {
+    lojaForaHorario = !horarioAbertoAgora(db.horarios);
+    lojaPausada = (aberturaManual === false);
+    aberta = decidirStatusLoja(db.horarios, aberturaManual);
+    if (window._ziraUltimoAberta !== aberta) {
+        window._ziraUltimoAberta = aberta;
+        console.log('[Zira] cardápio', aberta ? 'ABERTA' : 'FECHADA', {
+            horario: !lojaForaHorario, manual: aberturaManual
+        });
+    }
+}
+function bloquearCardapio(motivo) {
+    var el = document.getElementById('cardapio-bloqueio');
+    if (!el) return;
+    var tit = document.getElementById('cardapio-bloqueio-tit');
+    var txt = document.getElementById('cardapio-bloqueio-txt');
+    if (motivo === 'inativo') {
+        if (tit) tit.textContent = 'Cardápio indisponível';
+        if (txt) txt.textContent = 'Este restaurante não está disponível no momento.';
+    } else {
+        if (tit) tit.textContent = 'Cardápio temporariamente indisponível';
+        if (txt) txt.textContent = 'Este restaurante está fora do ar no momento. Tente novamente mais tarde.';
+    }
+    el.style.display = 'flex';
+    var content = document.getElementById('content');
+    if (content) content.innerHTML = '';
+}
+async function verificarLojaAtiva() {
+    if (!REST_ID) return false;
+    try {
+        var rows = await supaFetch('restaurantes?id=eq.' + REST_ID + '&select=ativo&limit=1');
+        if (rows && rows[0] && rows[0].ativo === false) {
+            bloquearCardapio('inativo');
+            return true;
+        }
+    } catch (e) {}
+    return false;
+}
+function iniciarSyncStatusLoja() {
+    if (!REST_ID) return;
+    if (!_horarioTimer) {
+        _horarioTimer = setInterval(function() {
+            aplicarStatusCardapio();
+            renderHeader();
+        }, 30000);
+    }
+    async function puxarStatus() {
+        try {
+            if (await verificarLojaAtiva()) return;
+            var manRows = await supaFetch('abertura_manual?restaurante_id=eq.'+REST_ID+'&select=aberta&limit=1').catch(function(){ return []; });
+            var horRows = await supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1');
+            if (horRows && horRows[0] && horRows[0].dados) db.horarios = horRows[0].dados;
+            aberturaManual = (manRows && manRows[0]) ? !!manRows[0].aberta : null;
+            aplicarStatusCardapio();
+            renderHeader();
+        } catch(e) {}
+    }
+    puxarStatus();
+    if (!_statusPollTimer) _statusPollTimer = setInterval(puxarStatus, 5000);
+}
+
+// ── CUPOM ──
+var cupomAtual = null;
+var _cuponsCache = null;
+
+async function cupomCarregar() {
+    if (_cuponsCache !== null) return _cuponsCache;
+    try {
+        // Busca todos os cupons do restaurante (filtra ativo no JS para evitar problemas de RLS)
+        const rows = await supaFetch('cupons?restaurante_id=eq.' + REST_ID + '&select=*');
+        _cuponsCache = (rows || []).filter(function(x){ return x.ativo !== false; });
+        console.log('[CUPOM] Carregados:', _cuponsCache.length, 'cupons ativos');
+    } catch(e) {
+        console.error('[CUPOM] Erro ao carregar:', e.message);
+        _cuponsCache = [];
+    }
+    return _cuponsCache;
+}
+
+async function cupomAplicar() {
+    var codigo = (document.getElementById('cupom-input').value || '').trim().toUpperCase();
+    if (!codigo) { cupomMensagem('Digite o código do cupom.', false); return; }
+    var btn = document.querySelector('.cupom-btn');
+    btn.disabled = true; btn.textContent = '...';
+    var lista = await cupomCarregar();
+    btn.disabled = false; btn.textContent = 'Aplicar';
+    console.log('[CUPOM] Buscando codigo:', codigo, '| Lista:', lista.map(function(x){return x.codigo;}));
+    var cup = lista.find(function(x){ return x.codigo === codigo; });
+    if (!cup) {
+        if (lista.length === 0) {
+            cupomMensagem('Não foi possível verificar o cupom. Tente novamente.', false);
+        } else {
+            cupomMensagem('Cupom inválido ou inativo.', false);
+        }
+        return;
+    }
+    if (cup.validade) {
+        var hoje = new Date(); hoje.setHours(0,0,0,0);
+        var val  = new Date(cup.validade + 'T00:00:00');
+        if (hoje > val) { cupomMensagem('Cupom expirado.', false); return; }
+    }
+    if (cup.usos_max && cup.usos_atual >= cup.usos_max) { cupomMensagem('Cupom esgotado.', false); return; }
+    var sub = carrinho.reduce(function(s,it){ return s + subTotal(it); }, 0);
+    if (cup.minimo && sub < cup.minimo) {
+        cupomMensagem('Mínimo de R$ ' + parseFloat(cup.minimo).toFixed(2).replace('.',',') + ' para este cupom.', false);
+        return;
+    }
+    var desconto = 0, label = '';
+    if (cup.tipo === 'percentual') {
+        desconto = parseFloat((sub * cup.valor / 100).toFixed(2));
+        label = cup.codigo + ' (' + cup.valor + '% off)';
+    } else if (cup.tipo === 'fixo') {
+        desconto = Math.min(parseFloat(cup.valor), sub);
+        label = cup.codigo + ' (-R$ ' + parseFloat(cup.valor).toFixed(2).replace('.',',') + ')';
+    } else if (cup.tipo === 'frete') {
+        desconto = 0;
+        label = cup.codigo + ' (frete grátis)';
+    } else if (cup.tipo === 'produto') {
+        desconto = 0;
+        var nomeBreinde = cup.produto_nome || cup.produtoNome || 'produto brinde';
+        label = cup.codigo + ' (🎁 ' + nomeBreinde + ' grátis)';
+    }
+    cupomAtual = {
+        codigo: cup.codigo, tipo: cup.tipo, valor: cup.valor, minimo: cup.minimo,
+        desconto: desconto, label: label,
+        produtoNome: cup.produto_nome || cup.produtoNome || '',
+        produtoId:   cup.produto_id   || cup.produtoId   || ''
+    };
+    document.getElementById('cupom-tag-txt').textContent = '✓ ' + label;
+    // Se for brinde, mostra banner especial abaixo do tag
+    var brindeDiv = document.getElementById('cupom-brinde-info');
+    if (!brindeDiv) {
+        brindeDiv = document.createElement('div');
+        brindeDiv.id = 'cupom-brinde-info';
+        brindeDiv.style.cssText = 'background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:10px 13px;margin-top:8px;font-size:13px;color:#15803d;font-weight:600;display:none;';
+        document.getElementById('cupom-tag').parentNode.appendChild(brindeDiv);
+    }
+    if (cup.tipo === 'produto' && cupomAtual.produtoNome) {
+        brindeDiv.textContent = '🎁 Você ganhou: ' + cupomAtual.produtoNome + ' grátis!';
+        brindeDiv.style.display = '';
+        // Remove brinde anterior se havia e adiciona o novo com preço 0
+        carrinho = carrinho.filter(function(it){ return !it._brinde; });
+        carrinho.push({
+            id:      cupomAtual.produtoId || 'brinde',
+            name:    cupomAtual.produtoNome,
+            price:   0,
+            qtd:     1,
+            comps:   [],
+            obs:     'Brinde cupom ' + cup.codigo,
+            _brinde: true
+        });
+        atualizaFab();
+    } else {
+        brindeDiv.style.display = 'none';
+    }
+    document.getElementById('cupom-tag').style.display = '';
+    document.getElementById('cupom-input').style.display = 'none';
+    document.querySelector('.cupom-btn').style.display = 'none';
+    renderCarrinho();
+}
+
+function cupomRemover() {
+    cupomAtual = null;
+    document.getElementById('cupom-input').value = '';
+    document.getElementById('cupom-input').style.display = '';
+    document.querySelector('.cupom-btn').style.display = '';
+    document.getElementById('cupom-tag').style.display = 'none';
+    var brindeDiv = document.getElementById('cupom-brinde-info');
+    if (brindeDiv) brindeDiv.style.display = 'none';
+    // Remove item brinde do carrinho
+    carrinho = carrinho.filter(function(it){ return !it._brinde; });
+    atualizaFab();
+    renderCarrinho();
+    if (!carrinho.length) fecharCarrinho();
+}
+
+function cupomMensagem(msg, ok) {
+    var inp = document.getElementById('cupom-input');
+    inp.style.borderColor = ok ? '#16a34a' : '#dc2626';
+    setTimeout(function(){ inp.style.borderColor = ''; }, 2500);
+    var t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:'+(ok?'#15803d':'#dc2626')+';color:white;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;white-space:nowrap;';
+    document.body.appendChild(t);
+    setTimeout(function(){ t.remove(); }, 2500);
+}
+
+function cupomGetDesconto(sub, taxa) {
+    if (!cupomAtual) return 0;
+    if (cupomAtual.tipo === 'frete') return taxa;
+    return cupomAtual.desconto || 0;
+}
+
+async function supaFetch(path) {
+    const r = await fetch(SUPA_URL + '/rest/v1/' + path, {
+        headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY}
+    });
+    if (!r.ok) throw new Error('Supa ' + r.status);
+    return r.json();
+}
+
+async function init(){
+    // Pegar slug da URL
+    const params = new URLSearchParams(window.location.search);
+    REST_SLUG = params.get('r') || null;
+    if (!REST_SLUG) {
+        var _path = (window.location.pathname || '').replace(/\/+$/, '').split('/').pop() || '';
+        if (_path && _path.indexOf('.') === -1 && _path !== 'meusistema' && _path !== 'cardapio') {
+            REST_SLUG = _path;
+        }
+    }
+    if (!REST_SLUG) {
+        window.location.replace((window.location.pathname || '/').replace(/cardapio(\.html)?$/i, '') || '/');
+        return;
+    }
+
+    // ── CACHE INSTANTÂNEO ────────────────────────────────────────
+    // Se já visitou antes, renderiza do cache imediatamente enquanto
+    // busca dados frescos em background (estratégia stale-while-revalidate)
+    const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
+    const CACHE_TTL = 120 * 60 * 1000; // 2 horas — reduz requests ao Supabase
+    const CACHE_VER = 30; // incrementar aqui invalida cache antigo em todos os clientes
+    try {
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+        const cacheValido = cached
+            && cached.ts
+            && (Date.now() - cached.ts) < CACHE_TTL
+            && cached.db
+            && (cached.ver || 0) >= CACHE_VER
+            && cached.db.fidelidadeCfg !== undefined;
+        if (cacheValido) {
+            REST_ID = cached.restId;
+            if (await verificarLojaAtiva()) return;
+            // Renderiza instantâneo do cache
+            db.categories  = cached.db.categories;
+            db.prods       = cached.db.prods;
+            db.comps       = cached.db.comps;
+            db.cfg         = cached.db.cfg;
+            db.txCfg       = cached.db.txCfg;
+            db.horarios    = cached.db.horarios;
+            db.integracoes = cached.db.integracoes;
+            aberturaManual = (cached.db.aberturaManual === true || cached.db.aberturaManual === false)
+                ? cached.db.aberturaManual : null;
+            aplicarStatusCardapio();
+            // Restaura config de fidelidade para pill aparecer corretamente desde o inicio
+            db.fidelidade = cached.db.fidelidadeCfg || null;
+            db.wppNumero  = cached.db.wppNumero || '';
+            if (db.fidelidade) {
+                try { localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade)); } catch(e) {}
+            }
+            renderHeader();
+            renderCardapio();
+            pixelInicializar(db.integracoes);
+            iniciarSyncStatusLoja();
+            return;
+        }
+        // Cache desatualizado — remove para forcar recarregamento limpo
+        if (cached) localStorage.removeItem(CACHE_KEY);
+    } catch(e) {}
+    // ── SEM CACHE: carregamento normal ───────────────────────────
+    // Tenta recuperar REST_ID do cache de slug para pular 1 roundtrip
+    try {
+        const _slugCache = JSON.parse(localStorage.getItem('zira_slug_' + REST_SLUG) || 'null');
+        if (_slugCache && _slugCache.id && _slugCache.ts && (Date.now() - _slugCache.ts) < 86400000) {
+            REST_ID = _slugCache.id;
+        }
+    } catch(e) {}
+
+    try{
+        // Se não temos REST_ID em cache, buscar restaurante pelo slug
+        let restRows;
+        if (!REST_ID) {
+            if (REST_SLUG) {
+                restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
+            } else {
+                restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1&order=id.asc');
+            }
+            if (!restRows || !restRows[0]) throw new Error('Restaurante não encontrado');
+            REST_ID = restRows[0].id;
+            // Salva REST_ID no cache por 24h para pular esse roundtrip na próxima visita
+            try { localStorage.setItem('zira_slug_' + REST_SLUG, JSON.stringify({id: REST_ID, ts: Date.now()})); } catch(e) {}
+        }
+        if (!restRows) {
+            restRows = await supaFetch('restaurantes?id=eq.' + REST_ID + '&select=id,nome,slug,ativo&limit=1');
+        }
+        if (!restRows || !restRows[0]) throw new Error('Restaurante não encontrado');
+        const rest = restRows[0];
+        if (rest.ativo === false) {
+            bloquearCardapio('inativo');
+            return;
+        }
+
+        // Verificação de pagamento + cardápio em paralelo (não mais sequencial)
+        const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows, wppRows, manRows] = await Promise.all([
+            supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
+            supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
+            supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
+            supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=*'),
+            supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
+            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('whatsapp_config?restaurante_id=eq.'+REST_ID+'&select=numero_restaurante&limit=1'),
+            supaFetch('abertura_manual?restaurante_id=eq.'+REST_ID+'&select=aberta&limit=1').catch(function(){ return []; })
+        ]);
+
+        // Verifica pagamento com os dados que já vieram no Promise.all
+        if (pgtoRows && pgtoRows[0]) {
+            const pgto = pgtoRows[0];
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
+            const status = pgto.status_pgto;
+            if (status === 'inadimplente' || status === 'cancelado' ||
+                (status === 'trial' && venc && hoje > venc)) {
+                bloquearCardapio('pagamento');
+                return;
+            }
+        }
+
+        db.categories = (cats||[]).map(c => ({id: c.id, name: c.nome, active: true}));
+        db.prods      = (prods||[]).map(p => {
+            const priceVal = typeof p.preco === 'string' ? parseFloat(p.preco.replace(',', '.')) : parseFloat(p.preco);
+            return {
+                id: p.id, name: p.nome, price: isNaN(priceVal) ? 0 : priceVal, category: p.categoria_nome,
+                desc: p.descricao || '', img: p.imagem || '', comps: p.complementos||[], active: true
+            };
+        });
+        db.comps      = (comps||[]).map(c => ({id: c.id, title: c.titulo || c.nome || '', type: c.tipo || 'check', options: (c.opcoes || [])}));
+
+        const cfg = (cfgRows&&cfgRows[0]) || {};
+        db.cfg    = {
+            nomeMarca: cfg.nome_marca || rest.nome,
+            nomeUnidade: cfg.nome_unidade || rest.nome,
+            cidade: cfg.cidade || '',
+            logo: cfg.logo || '',
+            capa: cfg.capa || '',
+            minPedido: parseFloat(cfg.valor_minimo || cfg.delivery_minimo) || 0
+        };
+        // Fonte da taxa: tela Taxas e Entrega (tabela taxas_entrega)
+        var _tx = (txRows&&txRows[0]) ? (txRows[0].dados || txRows[0]) : {};
+        db.txCfg  = montarTxCfg(_tx);
+        db.horarios    = (horRows && horRows[0] && horRows[0].dados) ? horRows[0].dados : [];
+        db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados || {}) : {};
+        pixelInicializar(db.integracoes);
+
+        // Salvar numero_restaurante do WhatsApp em db
+        db.wppNumero = (wppRows && wppRows[0] && wppRows[0].numero_restaurante) ? wppRows[0].numero_restaurante.replace(/\D/g,'') : '';
+        if (db.wppNumero.length === 10 || db.wppNumero.length === 11) db.wppNumero = '55' + db.wppNumero;
+
+        // Salvar fidelidade em db (igual à taxa) e localStorage
+        if (fidRows && fidRows[0]) {
+            const fr = fidRows[0];
+            db.fidelidade = {
+                ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
+                descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
+                produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
+            };
+            localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade));
+        } else {
+            db.fidelidade = null;
+        }
+
+        aberturaManual = (manRows && manRows[0]) ? !!manRows[0].aberta : null;
+        aplicarStatusCardapio();
+
+        renderHeader(); renderCardapio();
+
+        // Salva cache para próxima visita instantânea
+        try {
+            const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
+            localStorage.setItem(_cacheKey2, JSON.stringify({
+                ts: Date.now(),
+                ver: 30,
+                restId: REST_ID,
+                db: {
+                    categories: db.categories,
+                    prods: db.prods,
+                    comps: db.comps,
+                    cfg: db.cfg,
+                    txCfg: db.txCfg,
+                    horarios: db.horarios,
+                    integracoes: db.integracoes,
+                    lojaPausada: lojaPausada,
+                    lojaForaHorario: lojaForaHorario,
+                    aberturaManual: aberturaManual,
+                    fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined,
+                    wppNumero: db.wppNumero || ''
+                }
+            }));
+        } catch(e) {}
+
+        // Polling de pausa/horário — o cache não pode congelar o status
+        iniciarSyncStatusLoja();
+
+        // Servidor local (9876) é só impressão/pedido — não define se a loja está aberta.
+
+    }catch(e){
+        document.getElementById('content').innerHTML='<div class="loader"><div style="font-size:44px">😕</div><div class="loader-txt"><b>Cardápio indisponível</b><br>'+e.message+'</div></div>';
+    }
+}
+
+// Atualização em background — roda após renderizar do cache
+async function _initBackground(cacheKey) {
+    try {
+        var restRows = null;
+        // REST_ID já está carregado do init principal — não precisa buscar de novo
+        if (!REST_ID) {
+            if (REST_SLUG) {
+                restRows = await supaFetch('restaurantes?slug=eq.' + encodeURIComponent(REST_SLUG) + '&select=id,nome,slug,ativo');
+            } else {
+                restRows = await supaFetch('restaurantes?select=id,nome,slug,ativo&limit=1&order=id.asc');
+            }
+            if (!restRows || !restRows[0]) return;
+            REST_ID = restRows[0].id;
+        }
+
+        const [pgtoRows, cats, prods, comps, cfgRows, txRows, horRows, intRows, fidRows, wppRows, manRows] = await Promise.all([
+            supaFetch('pagamentos?restaurante_id=eq.'+REST_ID+'&select=status_pgto,vencimento&limit=1'),
+            supaFetch('categorias?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
+            supaFetch('produtos?restaurante_id=eq.'+REST_ID+'&ativo=eq.true&order=ordem.asc&select=*'),
+            supaFetch('complementos?restaurante_id=eq.'+REST_ID+'&select=*'),
+            supaFetch('configuracoes?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('taxas_entrega?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('horarios?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('integracoes?restaurante_id=eq.'+REST_ID+'&select=dados&limit=1'),
+            supaFetch('fidelidade_config?restaurante_id=eq.'+REST_ID+'&select=*&limit=1'),
+            supaFetch('whatsapp_config?restaurante_id=eq.'+REST_ID+'&select=numero_restaurante&limit=1'),
+            supaFetch('abertura_manual?restaurante_id=eq.'+REST_ID+'&select=aberta&limit=1').catch(function(){ return []; })
+        ]);
+
+        if (await verificarLojaAtiva()) return;
+        // Verifica bloqueio
+        if (pgtoRows && pgtoRows[0]) {
+            const pgto = pgtoRows[0];
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
+            const status = pgto.status_pgto;
+            if (status === 'inadimplente' || status === 'cancelado' ||
+                (status === 'trial' && venc && hoje > venc)) {
+                bloquearCardapio('pagamento');
+                return;
+            }
+        }
+
+        // Atualiza db e re-renderiza se houve mudança
+        const rest = (restRows && restRows[0]) ? restRows[0] : { nome: (db.cfg && db.cfg.nomeMarca) || '' };
+        const cfg  = (cfgRows && cfgRows[0]) || {};
+        db.categories  = (cats||[]).map(c => ({id: c.id, name: c.nome, active: true}));
+        db.prods       = (prods||[]).map(p => {
+            const priceVal = typeof p.preco === 'string' ? parseFloat(p.preco.replace(',','.')) : parseFloat(p.preco);
+            return { id: p.id, name: p.nome, price: isNaN(priceVal) ? 0 : priceVal, category: p.categoria_nome,
+                     desc: p.descricao||'', img: p.imagem||'', comps: p.complementos||[], active: true };
+        });
+        db.comps       = (comps||[]).map(c => ({id: c.id, title: c.titulo||c.nome||'', type: c.tipo||'check', options: c.opcoes||[]}));
+        db.cfg         = { nomeMarca: cfg.nome_marca||rest.nome, nomeUnidade: cfg.nome_unidade||rest.nome,
+                           cidade: cfg.cidade||'', logo: cfg.logo||'', capa: cfg.capa||'',
+                           minPedido: parseFloat(cfg.valor_minimo||cfg.delivery_minimo)||0 };
+        var _tx2 = (txRows&&txRows[0]) ? (txRows[0].dados || txRows[0]) : {};
+        db.txCfg = montarTxCfg(_tx2);
+        db.horarios    = (horRows && horRows[0] && horRows[0].dados) ? horRows[0].dados : [];
+        db.integracoes = (intRows&&intRows[0]) ? (intRows[0].dados||{}) : {};
+        pixelInicializar(db.integracoes);
+        // Atualiza numero do restaurante no WhatsApp
+        if (wppRows && wppRows[0] && wppRows[0].numero_restaurante) {
+            var _n = wppRows[0].numero_restaurante.replace(/\D/g,'');
+            db.wppNumero = (_n.length === 10 || _n.length === 11) ? '55' + _n : _n;
+        }
+        if (fidRows && fidRows[0]) {
+            const fr = fidRows[0];
+            db.fidelidade = {
+                ativo: fr.ativo, reaisPorPonto: fr.reais_por_ponto, pontosPorReal: fr.pontos_por_real,
+                descontoAtivo: fr.desconto_ativo, pontosDesc: fr.pontos_desc, reaisDesc: fr.reais_desc,
+                produtoAtivo: fr.produto_ativo, resgates: fr.resgates || []
+            };
+            localStorage.setItem('f_fidelidade_cfg', JSON.stringify(db.fidelidade));
+        } else {
+            db.fidelidade = null;
+        }
+        aberturaManual = (manRows && manRows[0]) ? !!manRows[0].aberta : null;
+        aplicarStatusCardapio();
+        renderHeader(); renderCardapio();
+        // Salva cache atualizado
+        try {
+            localStorage.setItem(cacheKey, JSON.stringify({
+                ts: Date.now(), ver: 30, restId: REST_ID,
+                db: { categories: db.categories, prods: db.prods, comps: db.comps,
+                      cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
+                      integracoes: db.integracoes, lojaPausada, lojaForaHorario,
+                      aberturaManual,
+                      fidelidadeCfg: db.fidelidade !== undefined ? db.fidelidade : undefined,
+                      wppNumero: db.wppNumero || '' }
+            }));
+        } catch(e) {}
+    } catch(e) { console.warn('[BG] Erro na atualização em background:', e.message); }
+}
+
+function money(v){return 'R$ '+parseFloat(v||0).toFixed(2).replace('.',',');}
+
+// ── CONTAGEM REGRESSIVA — próxima abertura ──────────────────────────────
+var _contagemInterval = null;
+
+function calcularProximaAbertura() {
+    // Retorna o timestamp (ms) da próxima abertura com base em db.horarios
+    if (!db.horarios || !db.horarios.length) return null;
+    var agora = new Date();
+    var diaIdx = agora.getDay();
+    var minAgora = agora.getHours()*60 + agora.getMinutes()*1 + agora.getSeconds()/60;
+
+    // Verifica os próximos 7 dias
+    for (var d = 0; d < 7; d++) {
+        var idx = (diaIdx + d) % 7;
+        var dia = db.horarios[idx];
+        if (!dia || !dia.aberta || !dia.periodos || !dia.periodos.length) continue;
+        var periodos = dia.periodos.slice().sort(function(a,b){
+            return parseInt(a.ini)*60 - parseInt(b.ini)*60;
+        });
+        for (var p = 0; p < periodos.length; p++) {
+            var per = periodos[p];
+            var ah = parseInt((per.ini||'00:00').split(':')[0]);
+            var am = parseInt((per.ini||'00:00').split(':')[1]);
+            var minAbre = ah*60 + am;
+            if (d === 0 && minAbre <= minAgora) continue; // já passou hoje
+            // Calcula a data real de abertura
+            var dataAbertura = new Date(agora);
+            dataAbertura.setDate(agora.getDate() + d);
+            dataAbertura.setHours(ah, am, 0, 0);
+            return dataAbertura.getTime();
+        }
+    }
+    return null;
+}
+
+function atualizarContagem() {
+    var bar = document.getElementById('bar-fechada');
+    if (!bar) return;
+
+    var alvo = calcularProximaAbertura();
+    if (!alvo) {
+        bar.innerHTML = '⚠️ Abrimos em breve';
+        return;
+    }
+
+    var diff = Math.max(0, alvo - Date.now());
+    var horas = Math.floor(diff / 3600000);
+    var mins  = Math.floor((diff % 3600000) / 60000);
+    var segs  = Math.floor((diff % 60000) / 1000);
+
+    var txt = '🕐 Abrimos em ';
+    if (horas > 0) txt += horas + 'h ';
+    txt += (horas > 0 || mins > 0 ? (String(mins).padStart(2,'0') + 'min ') : '');
+    txt += String(segs).padStart(2,'0') + 's';
+
+    bar.innerHTML = txt;
+
+    // Inicia o interval de 1s se ainda não existe
+    if (!_contagemInterval) {
+        _contagemInterval = setInterval(function() {
+            if (!lojaForaHorario || lojaPausada) {
+                clearInterval(_contagemInterval);
+                _contagemInterval = null;
+                return;
+            }
+            atualizarContagem();
+        }, 1000);
+    }
+}
+
+function renderHeader(){
+    var c=db.cfg||{},tx=db.txCfg||{};
+    var nome=c.nomeMarca||c.nome||'Restaurante';
+    document.getElementById('loja-nome').textContent=nome;
+    var sk=document.getElementById('loja-nome-skeleton');if(sk)sk.remove();
+    document.title=nome;
+    if(c.nomeUnidade)document.getElementById('loja-sub').textContent=c.nomeUnidade;
+    if(c.logo)document.getElementById('loja-logo').innerHTML='<img src="'+c.logo+'" alt="logo">';
+    if(c.capa){document.getElementById('hero-default').style.display='none';document.getElementById('hero-img').style.backgroundImage='url('+c.capa+')';}
+    var st=document.getElementById('loja-status');
+    var bar=document.getElementById('bar-fechada');
+    if(aberta){
+        st.className='status-pill status-open';
+        st.innerHTML='<span class="status-dot"></span>Aberta agora';
+        bar.classList.remove('show');
+        bar.classList.remove('countdown');
+    } else if(lojaPausada) {
+        st.className='status-pill status-closed';
+        st.innerHTML='<span class="status-dot"></span>Fechada no momento';
+        bar.classList.remove('countdown');
+        bar.textContent='⚠️ Estamos fechados — não estamos aceitando pedidos agora';
+        bar.classList.add('show');
+    } else {
+        // Fora do horário — mostra contagem regressiva
+        st.className='status-pill status-closed';
+        st.innerHTML='<span class="status-dot"></span>Fechada no momento';
+        bar.classList.add('show');
+        bar.classList.add('countdown');
+        atualizarContagem();
+    }
+    document.getElementById('info-entrega').textContent=(tx.tempoEntrega||40)+' min';
+    var taxaPill = document.getElementById('info-taxa-pill');
+    if (taxaPill) taxaPill.style.display = 'none';
+    var fidCfg = db.fidelidade || fidelGetCfg();
+    if(fidCfg && fidCfg.ativo){
+        var rpp=fidCfg.reaisPorPonto||1, ppr=fidCfg.pontosPorReal||1;
+        document.getElementById('info-pontos-rate').textContent='R$'+rpp+' = '+ppr+'pt';
+        document.getElementById('info-pontos-pill').style.display='';
+    } else {
+        document.getElementById('info-pontos-pill').style.display='none';
+    }
+}
+
+function renderCardapio(){
+    var sk=document.getElementById('skeleton-wrap');if(sk)sk.remove();
+    var cats=db.categories.filter(function(c){return c.active!==false;});
+    var nav=document.getElementById('nav-scroll'),cont=document.getElementById('content');
+    if(!cats.length){cont.innerHTML='<div class="loader"><div style="font-size:44px">🍽️</div><div class="loader-txt">Nenhum produto disponível</div></div>';return;}
+    nav.innerHTML=cats.map(function(c,i){return'<button class="nav-btn'+(i===0?' active':'')+'" id="nav-'+c.id+'" onclick="goSec(\'sec-'+c.id+'\')">'+c.name+'</button>';}).join('');
+    document.getElementById('nav-wrap').style.display='';
+    cont.innerHTML=cats.map(function(cat){
+        var prods=db.prods.filter(function(p){return p.category===cat.name&&p.active!==false;});
+        if(!prods.length)return'';
+        return'<section class="cat-section" id="sec-'+cat.id+'"><div class="cat-titulo">'+cat.name+'</div><div class="prods-list">'+prods.map(prodCard).join('')+'</div></section>';
+    }).join('')||'<div class="loader"><div style="font-size:44px">🍽️</div><div class="loader-txt">Nenhum produto disponível</div></div>';
+    initObs();
+}
+
+function prodCard(p){
+    var temImg=p.img&&p.img.indexOf('placeholder')<0;
+    var imgH=temImg?'<div class="prod-img-wrap"><img class="prod-img" src="'+p.img+'" loading="lazy"></div>':'<div class="prod-img-wrap"><div class="prod-img-placeholder">🍔</div></div>';
+    var temC=p.comps&&p.comps.length>0;
+    var descH=(p.desc&&p.desc!=='DESCRIÇÃO DO PRODUTO')?'<div class="prod-desc">'+p.desc+'</div>':'';
+    return'<div class="prod-card" onclick="abrirProd(\''+p.id+'\')">'+imgH+'<div class="prod-info"><div class="prod-nome">'+p.name+'</div>'+descH+'<div class="prod-bottom"><div class="prod-preco-wrap"><span class="prod-a-partir">'+(temC?'A partir de':'')+'</span><span class="prod-preco">R$ '+parseFloat(p.price||0).toFixed(2).replace('.',',')+'</span></div><button class="prod-add" onclick="event.stopPropagation();abrirProd(\''+p.id+'\')">+</button></div></div></div>';
+}
+
+function goSec(id){var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});}
+
+function initObs(){
+    var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id.replace('sec-','');document.querySelectorAll('.nav-btn').forEach(function(b){b.classList.remove('active');});var btn=document.getElementById('nav-'+id);if(btn){btn.classList.add('active');}}});},{rootMargin:'-20% 0px -70% 0px'});
+    document.querySelectorAll('.cat-section').forEach(function(s){obs.observe(s);});
+}
+
+function abrirProd(id){
+    if(!aberta){alert('A loja está fechada no momento.');return;}
+    prodAtual=db.prods.find(function(p){return String(p.id)===String(id);});
+    if(!prodAtual)return;
+    qtdAtual=1;compsAtual={};
+    var temImg=prodAtual.img&&prodAtual.img.indexOf('placeholder')<0;
+    document.getElementById('sheet-img-wrap').innerHTML=temImg?'<img class="sheet-img" src="'+prodAtual.img+'">':'<div class="sheet-img-placeholder">🍔</div>';
+    document.getElementById('sheet-nome').textContent=prodAtual.name;
+    document.getElementById('sheet-desc').textContent=(prodAtual.desc&&prodAtual.desc!=='DESCRIÇÃO DO PRODUTO')?prodAtual.desc:'';
+    document.getElementById('sheet-preco').textContent='R$ '+parseFloat(prodAtual.price||0).toFixed(2).replace('.',',');
+    document.getElementById('sheet-obs').value='';
+    var compsEl=document.getElementById('sheet-comps');
+    compsEl.innerHTML=(prodAtual.comps||[]).map(function(gid){
+        var g=db.comps.find(function(c){return String(c.id)===String(gid);});
+        if(!g)return'';
+        var isR=g.type==='radio';
+        return'<div class="comp-group"><div class="comp-head"><span class="comp-titulo">'+g.title+'</span><span class="comp-badge '+(isR?'badge-req':'badge-opt')+'\">'+(isR?'Obrigatório':'Opcional')+'</span></div>'+g.options.map(function(op,oi){var opId=gid+'_'+oi;var pr=parseFloat(op.p||0);var pS=pr>0?'+R$ '+pr.toFixed(2).replace('.',','):'Grátis';var tp=isR?'radio':'check';return'<div class="comp-opt" onclick="selComp(\''+gid+'\','+oi+',\''+g.type+'\')"><div class="comp-opt-left"><div class="comp-opt-nome">'+op.n+'</div><div class="comp-opt-preco">'+pS+'</div></div><div class="comp-ctrl '+tp+'" id="cc-'+opId+'"></div></div>';}).join('')+'</div>';
+    }).join('');
+    atualizaBtnAdd();
+    document.getElementById('overlay-prod').classList.add('open');
+    document.body.style.overflow='hidden';
+    pixelViewContent(prodAtual); // Pixel: cliente visualizou produto
+}
+
+function selComp(gid,oi,tipo){
+    var opId=gid+'_'+oi;
+    if(tipo==='radio'){var g=db.comps.find(function(c){return String(c.id)===String(gid);});if(g)g.options.forEach(function(_,i){var el=document.getElementById('cc-'+gid+'_'+i);if(el)el.classList.remove('active');});compsAtual[gid]=opId;}
+    else{if(!compsAtual[gid])compsAtual[gid]=[];var idx=compsAtual[gid].indexOf(opId);if(idx>=0)compsAtual[gid].splice(idx,1);else compsAtual[gid].push(opId);}
+    var ctrl=document.getElementById('cc-'+opId);if(ctrl)ctrl.classList.toggle('active');
+    atualizaBtnAdd();
+}
+
+function calcPreco(p,comps,qtd){var total=parseFloat(p.price||0);Object.values(comps).forEach(function(v){(Array.isArray(v)?v:[v]).forEach(function(opId){var parts=String(opId).split('_');var g=db.comps.find(function(c){return String(c.id)===String(parts[0]);});if(g&&g.options[parseInt(parts[1])])total+=parseFloat(g.options[parseInt(parts[1])].p||0);});});return total*(qtd||1);}
+
+function atualizaBtnAdd(){var p=calcPreco(prodAtual,compsAtual,qtdAtual);document.getElementById('btn-preco').textContent='R$ '+p.toFixed(2).replace('.',',');document.getElementById('qtd-num').textContent=qtdAtual;document.getElementById('qtd-minus').disabled=qtdAtual<=1;}
+function mudaQtd(d){qtdAtual=Math.max(1,qtdAtual+d);atualizaBtnAdd();}
+function fecharProd(e){if(!e||e.target===document.getElementById('overlay-prod')){document.getElementById('overlay-prod').classList.remove('open');document.body.style.overflow='';}}
+
+function adicionarCarrinho(){
+    for(var i=0;i<(prodAtual.comps||[]).length;i++){var gid=prodAtual.comps[i];var g=db.comps.find(function(c){return String(c.id)===String(gid);});if(g&&g.type==='radio'&&!compsAtual[gid]){alert('Selecione: '+g.title);return;}}
+    var arr=[];Object.keys(compsAtual).forEach(function(gid){var g=db.comps.find(function(c){return String(c.id)===String(gid);});if(!g)return;(Array.isArray(compsAtual[gid])?compsAtual[gid]:[compsAtual[gid]]).forEach(function(opId){var oi=parseInt(String(opId).split('_')[1]);if(g.options[oi])arr.push({name:g.options[oi].n,price:parseFloat(g.options[oi].p||0)});});});
+    var itemPreco = calcPreco(prodAtual, compsAtual, qtdAtual);
+    carrinho.push({id:prodAtual.id,name:prodAtual.name,price:parseFloat(prodAtual.price||0),qtd:qtdAtual,comps:arr,obs:document.getElementById('sheet-obs').value.trim()});
+    pixelAddToCart(prodAtual, itemPreco); // Pixel: cliente adicionou ao carrinho
+    atualizaFab();fecharProd();
+}
+
+function subTotal(it){return(it.price+it.comps.reduce(function(s,c){return s+(c.price||0);},0))*it.qtd;}
+function atualizaFab(){var qtd=carrinho.reduce(function(s,it){return s+it.qtd;},0),tot=carrinho.reduce(function(s,it){return s+subTotal(it);},0);document.getElementById('fab-qtd').textContent=qtd;document.getElementById('fab-total').textContent='R$ '+tot.toFixed(2).replace('.',',');document.getElementById('fab').classList.toggle('show',qtd>0);}
+function abrirCarrinho(){
+    _cuponsCache=null;
+    renderCarrinho();
+    fidelIniciarCarrinho();
+    chGaranteLojaGeo().then(function(){
+        var cid=document.getElementById('ch-cidade');
+        if(cid && !cid.value.trim()){
+            var c=chCidadeLoja(), uf=chUfLoja();
+            if(c) cid.value=c+(uf?' - '+uf:'');
+        }
+    });
+    document.getElementById('cart-overlay').classList.add('open');
+    document.body.style.overflow='hidden';
+}
+function fecharCarrinho(e){if(!e||e.target===document.getElementById('cart-overlay')){document.getElementById('cart-overlay').classList.remove('open');document.body.style.overflow='';}}
+
+function renderCarrinho(){
+    var el=document.getElementById('cart-itens');
+    if(!carrinho.length){el.innerHTML='<div class="loader"><div style="font-size:40px">🛒</div><div class="loader-txt">Carrinho vazio</div></div>';return;}
+    el.innerHTML=carrinho.map(function(it,idx){
+        var det=it.comps.map(function(c){return c.name;}).join(', ')+(it.obs?'\nObs: '+it.obs:'');
+        var precoHtml = it._brinde
+            ? '<div class="cart-item-price" style="color:#16a34a;">🎁 Grátis</div>'
+            : '<div class="cart-item-price">R$ '+subTotal(it).toFixed(2).replace('.',',')+'</div>';
+        var ctrlHtml = it._brinde
+            ? '<div style="font-size:10px;color:#16a34a;font-weight:700;background:#f0fdf4;border-radius:6px;padding:3px 7px;">BRINDE</div>'
+            : '<div class="cart-item-qtd"><button class="cart-q" onclick="ajustaCarrinho('+idx+',-1)">−</button><span style="font-weight:700;font-size:14px;">'+it.qtd+'</span><button class="cart-q" onclick="ajustaCarrinho('+idx+',1)">+</button></div>';
+        return '<div class="cart-item">'
+            +'<div class="cart-item-info"><div class="cart-item-nome">'+it.name+'</div>'+(det?'<div class="cart-item-det">'+det+'</div>':'')+'</div>'
+            +'<div class="cart-item-right">'+precoHtml+ctrlHtml+'</div>'
+            +'</div>';
+    }).join('');
+    atualizaResumo();
+}
+
+function ajustaCarrinho(idx,d){
+    if(carrinho[idx] && carrinho[idx]._brinde) return; // brinde não pode ser removido manualmente
+    carrinho[idx].qtd=Math.max(0,carrinho[idx].qtd+d);
+    if(!carrinho[idx].qtd)carrinho.splice(idx,1);
+    atualizaFab();renderCarrinho();if(!carrinho.length)fecharCarrinho();
+}
+function atualizaResumo(){
+    var sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0);
+    var taxa=tipoAtual==='Entrega'?taxaEntregaCardapio():0;
+    var desc=fidelGetDesconto();
+    var descCupom=cupomGetDesconto(sub,taxa);
+    var taxaDisplay=(cupomAtual&&cupomAtual.tipo==='frete')?0:taxa;
+    var total=Math.max(0,sub+taxaDisplay-desc-descCupom);
+    document.getElementById('res-sub').textContent='R$ '+sub.toFixed(2).replace('.',',');
+    document.getElementById('res-taxa').textContent='R$ '+taxaDisplay.toFixed(2).replace('.',',');
+    document.getElementById('res-total').textContent='R$ '+total.toFixed(2).replace('.',',');
+    document.getElementById('res-taxa-linha').style.display=tipoAtual==='Entrega'?'':'none';
+    var dlinha=document.getElementById('res-desconto-linha');
+    if(desc>0){dlinha.style.display='';document.getElementById('res-desconto').textContent='-R$ '+desc.toFixed(2).replace('.',',');}
+    else{dlinha.style.display='none';}
+    var clinha=document.getElementById('res-cupom-linha');
+    if(cupomAtual&&cupomAtual.tipo==='frete'){
+        clinha.style.display='';
+        document.getElementById('res-cupom-codigo').textContent=cupomAtual.codigo;
+        document.getElementById('res-cupom-val').textContent='Grátis';
+    } else if(descCupom>0){
+        clinha.style.display='';
+        document.getElementById('res-cupom-codigo').textContent=cupomAtual?cupomAtual.codigo:'';
+        document.getElementById('res-cupom-val').textContent='-R$ '+descCupom.toFixed(2).replace('.',',');
+    } else { clinha.style.display='none'; }
+}
+function setTipo(tipo,el){tipoAtual=tipo;document.querySelectorAll('.tipo-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');document.getElementById('wrap-end').style.display=tipo==='Entrega'?'':'none';if(tipo!=='Entrega'){taxaEntregaAtual=0;_taxaCalculada=false;}atualizaResumo();}
+function setPgto(pgto,el){pgtoAtual=pgto;document.querySelectorAll('.pgto-btn').forEach(function(b){b.classList.remove('active');});el.classList.add('active');document.getElementById('wrap-troco').style.display=pgto==='Dinheiro'?'':'none';}
+
+var _endT=null;
+var _endSugs=[];
+var _endEscolhendo=false;
+var _lojaGeo={cidade:'',uf:'',ok:false,buscando:false};
+var _UF_MAP={acre:'AC',alagoas:'AL',amapa:'AP',amazonas:'AM',bahia:'BA',ceara:'CE','distrito federal':'DF','espirito santo':'ES',goias:'GO',maranhao:'MA','mato grosso':'MT','mato grosso do sul':'MS','minas gerais':'MG',para:'PA',paraiba:'PB',parana:'PR',pernambuco:'PE',piaui:'PI','rio de janeiro':'RJ','rio grande do norte':'RN','rio grande do sul':'RS',rondonia:'RO',roraima:'RR','santa catarina':'SC','sao paulo':'SP',sergipe:'SE',tocantins:'TO'};
+
+function chUfDeEstado(est){
+    var s=String(est||'').trim();
+    if(/^[A-Za-z]{2}$/.test(s)) return s.toUpperCase();
+    var k=s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return _UF_MAP[k]||'';
+}
+function chCidadeLoja(){
+    var el=document.getElementById('ch-cidade');
+    var typed=el&&el.value?String(el.value).replace(/\s*[-–]\s*[A-Za-z]{2}\s*$/,'').trim():'';
+    if(typed) return typed;
+    if(db.cfg&&db.cfg.cidade) return String(db.cfg.cidade).replace(/\s*[-–]\s*[A-Za-z]{2}\s*$/,'').trim();
+    return _lojaGeo.cidade||'';
+}
+function chUfLoja(){
+    var el=document.getElementById('ch-cidade');
+    var v=(el&&el.value)||(db.cfg&&db.cfg.cidade)||'';
+    var m=String(v).match(/[-–\s]([A-Za-z]{2})\s*$/);
+    if(m) return m[1].toUpperCase();
+    return _lojaGeo.uf||'';
+}
+function chNormalizaRua(s){
+    return String(s||'')
+        .replace(/^\s*(av\.?|avenida)\s+/i,'Avenida ')
+        .replace(/^\s*(r\.?|rua)\s+/i,'Rua ')
+        .replace(/^\s*(al\.?|alameda)\s+/i,'Alameda ')
+        .replace(/^\s*(tv\.?|travessa)\s+/i,'Travessa ')
+        .replace(/^\s*(p[cç]\.?|pra[cç]a)\s+/i,'Praça ')
+        .trim();
+}
+function chEscHtml(s){
+    return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function chPreencheCep(cep){
+    var el=document.getElementById('ch-cep');
+    var d=String(cep||'').replace(/\D/g,'');
+    if(el && d.length===8) el.value=d.slice(0,5)+'-'+d.slice(5);
+}
+function chGaranteLojaGeo(){
+    if(_lojaGeo.ok) return Promise.resolve();
+    if(_lojaGeo.buscando){
+        return new Promise(function(resolve){
+            var n=0, t=setInterval(function(){ if(_lojaGeo.ok||++n>20){ clearInterval(t); resolve(); } },100);
+        });
+    }
+    var tx=db.txCfg||{};
+    if(!tx.centroLat||!tx.centroLng){ _lojaGeo.ok=true; return Promise.resolve(); }
+    _lojaGeo.buscando=true;
+    return fetch('https://photon.komoot.io/reverse?lon='+tx.centroLng+'&lat='+tx.centroLat)
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+            var p=(d.features&&d.features[0]&&d.features[0].properties)||{};
+            if(!_lojaGeo.cidade) _lojaGeo.cidade=p.city||p.town||p.village||'';
+            _lojaGeo.uf=chUfDeEstado(p.state);
+            _lojaGeo.ok=true; _lojaGeo.buscando=false;
+        })
+        .catch(function(){ _lojaGeo.ok=true; _lojaGeo.buscando=false; });
+}
+function chBuscaPhoton(q){
+    var url='https://photon.komoot.io/api/?limit=8&q='+encodeURIComponent(q);
+    var tx=db.txCfg||{};
+    if(tx.centroLat&&tx.centroLng) url+='&lat='+tx.centroLat+'&lon='+tx.centroLng;
+    return fetch(url).then(function(r){ return r.json(); }).then(function(data){
+        var feats=(data&&data.features)||[];
+        var lista=feats.map(function(f){
+            var p=f.properties||{};
+            var c=(f.geometry&&f.geometry.coordinates)||[];
+            var lat=c.length>=2?c[1]:null, lng=c.length>=2?c[0]:null;
+            return {
+                fonte:'photon',
+                rua:p.street||p.name||'',
+                bairro:p.district||p.neighbourhood||p.locality||'',
+                cidade:p.city||p.town||p.village||'',
+                uf:chUfDeEstado(p.state),
+                cep:String(p.postcode||'').replace(/\D/g,''),
+                lat:lat, lng:lng
+            };
+        }).filter(function(s){ return s.rua; });
+        if(tx.centroLat&&tx.centroLng){
+            lista.forEach(function(s){
+                s._dist=(s.lat!=null)?chHaversine(tx.centroLat,tx.centroLng,s.lat,s.lng):999;
+            });
+            lista.sort(function(a,b){ return a._dist-b._dist; });
+            var perto=lista.filter(function(s){ return s._dist<=30; });
+            if(perto.length) lista=perto;
+        }
+        return lista;
+    }).catch(function(){ return []; });
+}
+function chBuscaViaCep(rua){
+    var uf=chUfLoja(), cidade=chCidadeLoja();
+    if(!uf||!cidade) return Promise.resolve([]);
+    function consultar(log){
+        if(!log||log.length<3) return Promise.resolve([]);
+        var url='https://viacep.com.br/ws/'+encodeURIComponent(uf)+'/'+encodeURIComponent(cidade)+'/'+encodeURIComponent(log)+'/json/';
+        return fetch(url).then(function(r){ return r.json(); }).then(function(data){
+            if(!Array.isArray(data)) data=(data&&!data.erro)?[data]:[];
+            return data.filter(function(d){ return d&&d.logradouro&&!d.erro; }).map(function(d){
+                return {
+                    fonte:'viacep',
+                    rua:d.logradouro,
+                    bairro:d.bairro||'',
+                    cidade:d.localidade||'',
+                    uf:d.uf||'',
+                    cep:String(d.cep||'').replace(/\D/g,''),
+                    lat:null, lng:null
+                };
+            });
+        }).catch(function(){ return []; });
+    }
+    var log=chNormalizaRua(rua);
+    return consultar(log).then(function(lista){
+        if(lista.length) return lista;
+        var semTipo=log.replace(/^(Rua|Avenida|Alameda|Travessa|Praça)\s+/i,'');
+        if(semTipo!==log && semTipo.length>=3) return consultar(semTipo);
+        return lista;
+    });
+}
+function chDedupaSugs(lista){
+    var seen={};
+    return lista.filter(function(s){
+        var k=(s.cep||'')+'|'+(s.rua||'').toLowerCase()+'|'+(s.bairro||'').toLowerCase();
+        if(seen[k]) return false;
+        seen[k]=1;
+        return true;
+    });
+}
+function chMostraSugs(lista){
+    _endSugs=lista||[];
+    var s=document.getElementById('ch-sugs');
+    if(!s) return;
+    if(!_endSugs.length){ s.style.display='none'; return; }
+    s.innerHTML=_endSugs.map(function(d,i){
+        var sub=[d.bairro, d.cidade, d.uf].filter(Boolean).join(' · ');
+        if(d.cep&&d.cep.length===8) sub+=(sub?' · ':'')+d.cep.slice(0,5)+'-'+d.cep.slice(5);
+        return '<div class="sug-item" onmousedown="preencheEndIdx('+i+');return false;">'+
+            '<div class="sug-item-rua">'+chEscHtml(d.rua)+'</div>'+
+            (sub?'<div class="sug-item-sub">'+chEscHtml(sub)+'</div>':'')+
+            '</div>';
+    }).join('');
+    s.style.display='block';
+}
+function buscaEnd(){
+    clearTimeout(_endT);
+    var v=(document.getElementById('ch-rua').value||'').trim();
+    var s=document.getElementById('ch-sugs');
+    if(_taxaCalculada){ taxaEntregaAtual=0; _taxaCalculada=false; atualizaResumo(); }
+    if(v.length<3){ if(s) s.style.display='none'; return; }
+    _endT=setTimeout(function(){
+        setCepStatus('Buscando rua...');
+        chGaranteLojaGeo().then(function(){
+            var q=chNormalizaRua(v);
+            var cidade=chCidadeLoja();
+            if(cidade) q+=', '+cidade;
+            return Promise.all([chBuscaViaCep(v), chBuscaPhoton(q)]);
+        }).then(function(res){
+            var lista=chDedupaSugs((res[0]||[]).concat(res[1]||[])).slice(0,8);
+            chMostraSugs(lista);
+            if(!lista.length) setCepStatus('Não encontramos essa rua. Tente o nome completo ou o CEP.', 'err');
+            else setCepStatus('Selecione a rua na lista para calcular a taxa');
+        }).catch(function(){
+            setCepStatus('Não encontramos essa rua. Tente o nome completo ou o CEP.', 'err');
+        });
+    },350);
+}
+function preencheEndSug(d){
+    if(!d) return;
+    _endEscolhendo=true;
+    document.getElementById('ch-rua').value=d.rua||'';
+    if(d.bairro) document.getElementById('ch-bairro').value=d.bairro;
+    var cidEl=document.getElementById('ch-cidade');
+    if(cidEl && d.cidade) cidEl.value=d.cidade+(d.uf?' - '+d.uf:'');
+    if(d.cep) chPreencheCep(d.cep);
+    var sugs=document.getElementById('ch-sugs');
+    if(sugs) sugs.style.display='none';
+    if(d.lat!=null && d.lng!=null){
+        calcularTaxaComCoords(parseFloat(d.lat), parseFloat(d.lng));
+        setCepStatus('Taxa calculada pelo endereço', 'ok');
+    } else if(d.cep && d.cep.length===8){
+        buscarCep(d.cep);
+    } else {
+        geocodificarEndereco();
+    }
+    setTimeout(function(){ _endEscolhendo=false; },400);
+}
+function preencheEndIdx(i){ preencheEndSug(_endSugs[i]); }
+function onRuaBlur(){
+    setTimeout(function(){
+        if(_endEscolhendo) return;
+        var s=document.getElementById('ch-sugs');
+        var v=(document.getElementById('ch-rua')||{}).value||'';
+        if(v.trim().length>=3 && !_taxaCalculada){
+            if(_endSugs.length===1){ preencheEndIdx(0); return; }
+            if(s) s.style.display='none';
+            geocodificarEndereco();
+            return;
+        }
+        if(s) s.style.display='none';
+    },220);
+}
+function onNumBlur(){
+    var v=(document.getElementById('ch-rua')||{}).value||'';
+    if(v.trim().length>=3) geocodificarEndereco();
+}
+
+async function finalizarPedido(){
+    console.log('[PEDIDO] Iniciando finalizarPedido...');
+    console.log('[PEDIDO] REST_ID atual:', REST_ID);
+    
+    var nome=document.getElementById('ch-nome').value.trim(),tel=document.getElementById('ch-tel').value.trim();
+    if(!nome){alert('Informe seu nome.');return;}if(!tel){alert('Informe seu celular.');return;}
+    if(tipoAtual==='Entrega'){
+        if(!document.getElementById('ch-rua').value.trim()){alert('Informe o CEP ou o nome da rua.');return;}
+        if(!_taxaCalculada){alert('Selecione o endereço na lista ou informe o CEP para calcular a taxa de entrega.');return;}
+    }
+    
+    // ✅ VERIFICAR SE REST_ID ESTÁ CARREGADO
+    if (!REST_ID) {
+        console.warn('[PEDIDO] ❌ REST_ID não está carregado!');
+        alert('⚠️ Restaurante não carregado ainda. Aguarde um momento e tente novamente.');
+        return;
+    }
+    
+    console.log('[PEDIDO] ✅ REST_ID validado, prosseguindo...');
+    var cfg=db.cfg||{},tx=db.txCfg||{},sub=carrinho.reduce(function(s,it){return s+subTotal(it);},0),taxa=tipoAtual==='Entrega'?taxaEntregaCardapio():0,troco=pgtoAtual==='Dinheiro'?parseFloat(document.getElementById('ch-troco').value||0):0;
+    var desc=fidelGetDesconto();
+    var taxaFinal=tipoAtual==='Entrega'?(cupomAtual&&cupomAtual.tipo==='frete'?0:taxa):0;
+    var descCupom=cupomGetDesconto(sub,taxa);
+    var _totalFinal = Math.max(0, sub + taxaFinal - desc - descCupom);
+    var cepVal=tipoAtual==='Entrega'?((document.getElementById('ch-cep')||{}).value||''):'';
+    var pedido={client:nome,phone:tel,tipo:tipoAtual,pagamento:pgtoAtual,troco:troco,address:tipoAtual==='Entrega'?(document.getElementById('ch-rua').value.trim()+' '+document.getElementById('ch-num').value+(cepVal?' · CEP '+cepVal:'')).trim():'',bairro:tipoAtual==='Entrega'?document.getElementById('ch-bairro').value.trim():'',complemento:tipoAtual==='Entrega'?document.getElementById('ch-comp').value.trim():'',cidade:tipoAtual==='Entrega'?((document.getElementById('ch-cidade')||{}).value||cfg.cidade||''):(cfg.cidade||''),cep:cepVal,subtotal:sub,taxaEntrega:taxaFinal,descontoPontos:desc,descontoCupom:descCupom,cupom:cupomAtual?cupomAtual.codigo:'',produtoBrindeNome:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoNome:''),produtoBrindeId:(cupomAtual&&cupomAtual.tipo==='produto'?cupomAtual.produtoId:''),resgPontos:fidelResgSel,total:_totalFinal,items:carrinho.slice()};
+    var btn=document.getElementById('btn-fin');btn.disabled=true;btn.textContent='Enviando...';
+    // Gerar número do pedido localmente
+    const _numPed = 'B-' + Math.floor(100000 + Math.random() * 900000);
+    pedido.id = _numPed;
+    pedido.restaurante_id = REST_ID;
+
+    // Tentar servidor local primeiro
+    let _enviado = false;
+    if (SERVIDOR) {
+        try {
+            var r=await fetch(SERVIDOR+'/pedido/novo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pedido)});
+            var d=await r.json();
+            if(d.ok){ pedido.id = d.id || _numPed; _enviado = true; }
+        } catch(e) { console.warn('[Local Server] Não disponível:', e.message); }
+    }
+    
+    // Se não conseguiu enviar para servidor local, tentar Supabase
+    if (!_enviado) {
+        try {
+            const bodyObj = {
+                restaurante_id: REST_ID, 
+                numero: pedido.id,
+                cliente: pedido.client, 
+                telefone: pedido.phone,
+                tipo: pedido.tipo, 
+                endereco: pedido.address,
+                bairro: pedido.bairro||'', 
+                complemento: pedido.complemento||'',
+                cidade: pedido.cidade||'', 
+                pagamento: pedido.pagamento,
+                troco: pedido.troco||0, 
+                itens: JSON.stringify(pedido.items||[]),
+                subtotal: parseFloat(pedido.subtotal||pedido.total), 
+                taxa_entrega: parseFloat(pedido.taxaEntrega||0),
+                desconto_pontos: parseFloat(pedido.descontoPontos||0),
+                desconto_cupom: parseFloat(pedido.descontoCupom||0),
+                cupom: pedido.cupom||'',
+                total: parseFloat(pedido.total), 
+                status: 'analise',
+                impresso: false,
+                resg_pontos: pedido.resgPontos ? JSON.stringify(pedido.resgPontos) : null,
+                produto_brinde_nome: pedido.produtoBrindeNome || null,
+                produto_brinde_id:   pedido.produtoBrindeId   || null
+            };
+            
+            // Garantir que desconto_pontos e desconto_cupom nunca sejam null
+            if (isNaN(bodyObj.desconto_pontos)) bodyObj.desconto_pontos = 0;
+            if (isNaN(bodyObj.desconto_cupom))  bodyObj.desconto_cupom  = 0;
+            
+            console.log('[DEBUG] Enviando para Supabase:', bodyObj);
+            
+            const sr = await fetch(SUPA_URL+'/rest/v1/pedidos', {
+                method:'POST',
+                headers:{
+                    'apikey': SUPA_KEY,
+                    'Authorization': 'Bearer '+SUPA_KEY,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
+                },
+                body: JSON.stringify(bodyObj)
+            });
+            
+            const respText = await sr.text();
+            console.log('[DEBUG] Status Supabase:', sr.status);
+            console.log('[DEBUG] Resposta:', respText);
+            
+            if (!sr.ok) { 
+                throw new Error('HTTP '+sr.status+': '+respText); 
+            }
+            console.log('[SUCCESS] Pedido salvo com sucesso!');
+            // Debitar pontos resgatados no Supabase
+            if (pedido.resgPontos && pedido.resgPontos.pts > 0 && pedido.phone) {
+                fidelDebitarPontosResgate(pedido.phone, pedido.client, pedido.resgPontos.pts);
+            }
+            _enviado = true;
+        } catch(e) { 
+            console.error('[ERROR]', e);
+            alert('❌ Não foi possível enviar o pedido.\n\nErro: ' + e.message + '\n\nVerifique se:\n1. Sua chave de API do Supabase está correta\n2. A tabela "pedidos" existe e está acessível\n3. RLS está desativado OU tem policies de INSERT públicas');
+            btn.disabled=false; 
+            btn.textContent='Fazer pedido'; 
+            return; 
+        }
+    }
+    
+    fecharCarrinho();
+    _pedidoAtualResumo = pedido;
+    document.getElementById('suc-id').textContent=pedido.id;
+    var msgs={Entrega:'Pedido recebido! Tempo estimado: ~'+(tx.tempoEntrega||40)+' min.',Retirada:'Pedido recebido! Retire em ~'+(tx.tempoRetirada||20)+' min.',Balcão:'Pedido registrado! Em breve ficará pronto.'};
+    document.getElementById('suc-msg').textContent=msgs[tipoAtual]||'Pedido recebido!';
+    fidelMostrarSucesso(pedido.total);
+    // Disparar evento de compra no Pixel da Meta
+    pixelPurchase(pedido);
+    document.getElementById('sucesso-overlay').classList.add('open');
+    btn.disabled=false;btn.textContent='Fazer pedido';
+}
+
+function novoPedido(){carrinho=[];cupomRemover();atualizaFab();document.getElementById('sucesso-overlay').classList.remove('open');document.body.style.overflow='';_pedidoAtualResumo=null;}
+
+var _pedidoAtualResumo = null;
+
+function enviarResumoWhatsapp() {
+    var p = _pedidoAtualResumo;
+    if (!p) { novoPedido(); return; }
+
+    var cfg = db.cfg || {};
+    var nomeLoja = (cfg.nomeMarca || cfg.nomeUnidade || 'Restaurante').toUpperCase();
+    var nomeCliente = p.client || 'Cliente';
+    var nl = '%0A';
+    var sep = nl + '------------------------------';
+
+    // Monta itens
+    var linhasItens = '';
+    (p.items || []).forEach(function(item) {
+        linhasItens += nl + '*' + (item.name || '') + '*';
+        var comps = item.comps || [];
+        comps.forEach(function(c) {
+            if (c.name) linhasItens += nl + '1x ' + c.name + (c.price > 0 ? ' - R$' + parseFloat(c.price).toFixed(2).replace('.',',') : '');
+        });
+        if (item.obs) linhasItens += nl + 'OBS: ' + item.obs;
+        linhasItens += nl + 'Quantidade: ' + (item.qtd || item.qty || 1);
+        linhasItens += nl + 'Valor: R$' + parseFloat((item.price||0) * (item.qtd||item.qty||1)).toFixed(2).replace('.',',');
+        linhasItens += sep;
+    });
+
+    // Endereço
+    var endLine = '';
+    if (p.tipo === 'Entrega') {
+        var parts = [p.address, p.bairro, p.cidade].filter(Boolean);
+        endLine = parts.join(', ');
+        if (p.complemento) endLine += ', Compl: ' + p.complemento;
+    } else {
+        endLine = p.tipo || 'Retirada';
+    }
+
+    var partes = [];
+    partes.push(nomeCliente + ' !');
+    partes.push('Seu pedido na *' + nomeLoja + '* foi recebido. \u{1F389}');
+    partes.push('Meu pedido #' + (p.id||''));
+    partes.push('------------------------------');
+    partes.push(linhasItens.replace(/%0A/g, '\n'));
+    partes.push('Nome: ' + nomeCliente);
+    partes.push('------------------------------');
+    partes.push('Celular: ' + (p.phone||''));
+    partes.push('------------------------------');
+    partes.push('Forma de Pagamento: ' + (p.pagamento||''));
+    partes.push('------------------------------');
+    partes.push('Endereco: ' + endLine);
+    partes.push('------------------------------');
+    partes.push('Subtotal: R$' + parseFloat(p.subtotal||p.total||0).toFixed(2).replace('.',','));
+    if (parseFloat(p.taxaEntrega||0) > 0) {
+        partes.push('Taxa de entrega: R$' + parseFloat(p.taxaEntrega).toFixed(2).replace('.',','));
+    }
+    var totalReal = parseFloat(p.total || 0);
+    if (totalReal === 0 && parseFloat(p.subtotal || 0) > 0) {
+        totalReal = Math.max(0, parseFloat(p.subtotal||0) + parseFloat(p.taxaEntrega||0) - parseFloat(p.descontoPontos||0) - parseFloat(p.descontoCupom||0));
+    }
+    partes.push('Valor Total: R$' + totalReal.toFixed(2).replace('.',','));
+
+    var msg = encodeURIComponent(partes.join('\n'));
+
+    // Usa número do restaurante buscado do Supabase no init
+    var enviarPara = db.wppNumero || '';
+    window.open('https://wa.me/' + enviarPara + '?text=' + msg, '_blank');
+    novoPedido();
+}
+
+init();
+
+
+// ════════════════════════════════════════════════════
+// PIXEL DA META — Facebook Pixel + Conversions API
+// ════════════════════════════════════════════════════
+var _pixelId    = null;
+var _pixelToken = null; // Token para Conversions API (server-side via fetch direto)
+var _pixelReady = false;
+
+function pixelInicializar(integracoes) {
+    var cfg = integracoes && integracoes.pixel;
+    if (!cfg || !cfg.ativo || !cfg.valor) return;
+
+    _pixelId    = cfg.valor.trim();
+    _pixelToken = (cfg.valor2 || '').trim();
+
+    // Salva no cache para pre-init instantâneo na próxima visita
+    try { localStorage.setItem('f_pixel_id', _pixelId); } catch(e) {}
+
+    // fbevents.js já está no <head> — só chamar init se o pre-init não rodou ainda
+    if (window._pixelPreInit === _pixelId) {
+        _pixelReady = true;
+        console.log('[Pixel] ✅ Pre-init já disparou PageView:', _pixelId);
+        return;
+    }
+
+    // Primeira visita (sem cache ainda): init e PageView agora
+    window.fbq('init', _pixelId);
+    window.fbq('track', 'PageView');
+    _pixelReady = true;
+    console.log('[Pixel] Inicializado pela primeira vez:', _pixelId);
+}
+
+function pixelPurchase(pedido) {
+    if (!_pixelReady || !_pixelId) return;
+    var valor  = parseFloat(pedido.total) || 0;
+    var orderId = String(pedido.id || '');
+
+    // Evento browser-side (padrão)
+    try {
+        window.fbq('track', 'Purchase', {
+            value:        valor,
+            currency:     'BRL',
+            content_type: 'product',
+            content_ids:  (pedido.items||[]).map(function(i){ return String(i.id||i.name||''); }),
+            order_id:     orderId
+        });
+        console.log('[Pixel] Purchase disparado:', valor, 'BRL');
+    } catch(e) { console.warn('[Pixel] Erro browser:', e); }
+
+    // Conversions API (server-side via fetch do browser — sem precisar de servidor próprio)
+    // Isso contorna AdBlockers e melhora a qualidade do sinal enviado à Meta
+    if (_pixelToken) {
+        try {
+            var eventId = orderId + '_' + Date.now(); // ID único para deduplicação
+            var payload = {
+                data: [{
+                    event_name:       'Purchase',
+                    event_time:       Math.floor(Date.now() / 1000),
+                    event_id:         eventId,
+                    event_source_url: window.location.href,
+                    action_source:    'website',
+                    user_data: {
+                        client_user_agent: navigator.userAgent,
+                        client_ip_address: '' // preenchido automaticamente pela Meta
+                    },
+                    custom_data: {
+                        value:        valor,
+                        currency:     'BRL',
+                        order_id:     orderId,
+                        content_type: 'product',
+                        content_ids:  (pedido.items||[]).map(function(i){ return String(i.id||i.name||''); })
+                    }
+                }],
+                test_event_code: '' // deixe vazio em produção
+            };
+            fetch('https://graph.facebook.com/v19.0/'+_pixelId+'/events?access_token='+_pixelToken, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(payload)
+            }).then(function(r){ return r.json(); }).then(function(d){
+                console.log('[Pixel] Conversions API:', d.events_received, 'evento(s) recebido(s)');
+            }).catch(function(e){ console.warn('[Pixel] Conversions API erro:', e); });
+        } catch(e) { console.warn('[Pixel] Conversions API erro:', e); }
+    }
+}
+
+// ViewContent: disparado quando cliente abre detalhes de um produto
+function pixelViewContent(produto) {
+    if (!_pixelReady || !_pixelId) return;
+    try {
+        window.fbq('track', 'ViewContent', {
+            content_name: produto.name || produto.nome || '',
+            content_ids:  [String(produto.id || '')],
+            content_type: 'product',
+            value:        parseFloat(produto.price || produto.preco) || 0,
+            currency:     'BRL'
+        });
+    } catch(e) {}
+}
+
+// AddToCart: disparado quando cliente adiciona item ao carrinho
+function pixelAddToCart(produto, valor) {
+    if (!_pixelReady || !_pixelId) return;
+    try {
+        window.fbq('track', 'AddToCart', {
+            content_name: produto.name || produto.nome || '',
+            content_ids:  [String(produto.id || '')],
+            content_type: 'product',
+            value:        parseFloat(valor || produto.price || 0),
+            currency:     'BRL'
+        });
+    } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════
+// FIDELIDADE — cliente
+// ════════════════════════════════════════════════════
+const IDX_FIDEL_KEY     = 'f_fidelidade_cfg';
+const IDX_FIDEL_CLI_KEY = 'f_fidelidade_cli';
+
+// Debita pontos resgatados do cliente no localStorage e Supabase
+async function fidelDebitarPontosResgate(phone, nome, ptsDebitar) {
+    try {
+        const norm = phone.replace(/\D/g, '');
+        if (!norm || !ptsDebitar || !REST_ID) return;
+        // Busca saldo atual direto do Supabase para garantir consistência
+        const rows = await supaFetch('fidelidade_clientes?restaurante_id=eq.' + REST_ID + '&telefone=eq.' + norm + '&select=pontos,nome&limit=1');
+        const atual = (rows && rows[0]) ? parseInt(rows[0].pontos || 0) : fidelGetSaldo(norm);
+        const novoSaldo = Math.max(0, atual - ptsDebitar);
+        // Atualiza localStorage
+        const clientes = fidelGetClientes();
+        const idx = clientes.findIndex(c => c.phone === norm);
+        if (idx >= 0) {
+            clientes[idx].pontos = novoSaldo;
+        } else {
+            clientes.push({ phone: norm, nome: nome || 'Cliente', pontos: novoSaldo, ultimo: new Date().toLocaleDateString('pt-BR') });
+        }
+        localStorage.setItem(IDX_FIDEL_CLI_KEY, JSON.stringify(clientes));
+        // Upsert no Supabase (cobre caso de cliente novo E existente)
+        const upsertResp = await fetch(SUPA_URL + '/rest/v1/fidelidade_clientes', {
+            method: 'POST',
+            headers: {
+                'apikey': SUPA_KEY,
+                'Authorization': 'Bearer ' + SUPA_KEY,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal,resolution=merge-duplicates'
+            },
+            body: JSON.stringify({
+                restaurante_id: REST_ID,
+                telefone: norm,
+                nome: nome || 'Cliente',
+                pontos: novoSaldo,
+                ultimo_pedido: new Date().toISOString()
+            })
+        });
+        console.log('[Fidelidade] Débito status:', upsertResp.status, '| Pontos debitados:', ptsDebitar, '→ saldo:', novoSaldo);
+    } catch(e) {
+        console.warn('[Fidelidade] Erro ao debitar pontos:', e.message);
+    }
+}
+
+var fidelCfg       = {};
+var fidelSaldoPts  = 0;
+var fidelResgSel   = null;  // { tipo:'desconto'|'produto', idx, pts, desconto }
+
+function fidelGetCfg() {
+    try { return JSON.parse(localStorage.getItem('f_fidelidade_cfg')) || {}; } catch(e){ return {}; }
+}
+function fidelGetClientes() {
+    try { return JSON.parse(localStorage.getItem(IDX_FIDEL_CLI_KEY)) || []; } catch(e){ return []; }
+}
+function fidelGetSaldo(phone) {
+    if (!phone) return 0;
+    const norm = phone.replace(/\D/g,'');
+    const cli  = fidelGetClientes().find(c => c.phone === norm);
+    return cli ? (cli.pontos || 0) : 0;
+}
+
+// Chamado ao abrir o carrinho — lê o tel já preenchido se houver
+function fidelIniciarCarrinho() {
+    fidelCfg    = fidelGetCfg();
+    fidelResgSel = null;
+    if (!fidelCfg.ativo) {
+        document.getElementById('fidel-wrap').style.display = 'none';
+        return;
+    }
+    const tel = (document.getElementById('ch-tel').value || '').replace(/\D/g,'');
+    fidelSaldoPts = fidelGetSaldo(tel);
+    fidelRenderCarrinho();
+    // Sempre busca saldo real do Supabase ao abrir o carrinho (não depende do localStorage)
+    if (tel.length >= 10) fidelAtualizaSaldo();
+}
+
+// Atualiza saldo quando o cliente digita o telefone
+async function fidelAtualizaSaldo() {
+    // Garante que fidelCfg está carregado mesmo antes de abrir o carrinho
+    if (!fidelCfg.ativo) fidelCfg = fidelGetCfg();
+    if (!fidelCfg.ativo) return;
+    const tel = (document.getElementById('ch-tel').value || '').replace(/\D/g,'');
+    // Primeiro mostra saldo do localStorage (rápido)
+    fidelSaldoPts = fidelGetSaldo(tel);
+    fidelResgSel  = null;
+    fidelRenderCarrinho();
+    atualizaResumo();
+    // Depois busca saldo real do Supabase (atualizado)
+    if (tel.length >= 10 && REST_ID) {
+        try {
+            const rows = await supaFetch('fidelidade_clientes?restaurante_id=eq.' + REST_ID + '&telefone=eq.' + tel + '&select=pontos,nome&limit=1');
+            if (rows && rows[0]) {
+                const saldoReal = parseInt(rows[0].pontos || 0);
+                // Atualiza localStorage com valor real
+                const clientes = fidelGetClientes();
+                const idx = clientes.findIndex(c => c.phone === tel);
+                if (idx >= 0) { clientes[idx].pontos = saldoReal; }
+                else { clientes.push({ phone: tel, nome: rows[0].nome || '', pontos: saldoReal, ultimo: '' }); }
+                localStorage.setItem(IDX_FIDEL_CLI_KEY, JSON.stringify(clientes));
+                fidelSaldoPts = saldoReal;
+                fidelResgSel  = null;
+                fidelRenderCarrinho();
+                atualizaResumo();
+            }
+        } catch(e) { console.warn('[Fidelidade] Erro ao buscar saldo:', e.message); }
+    }
+}
+
+function fidelRenderCarrinho() {
+    const wrap = document.getElementById('fidel-wrap');
+    const opts = document.getElementById('fidel-opcoes-wrap');
+    if (!wrap) return; // carrinho ainda não está no DOM visível
+    if (!fidelCfg.ativo || fidelSaldoPts <= 0) {
+        wrap.style.display = 'none';
+        return;
+    }
+    wrap.style.display = '';
+    document.getElementById('fidel-saldo-txt').textContent = fidelSaldoPts.toLocaleString('pt-BR');
+
+    let html = '';
+
+    // Opção desconto
+    if (fidelCfg.descontoAtivo !== false) {
+        const ppd = fidelCfg.pontosDesc || 10;
+        const rpd = fidelCfg.reaisDesc  || 1;
+        const maxDesc = parseFloat(((fidelSaldoPts / ppd) * rpd).toFixed(2));
+        const maxPts  = fidelSaldoPts;
+        const selDesc = fidelResgSel && fidelResgSel.tipo === 'desconto';
+        html += `<div class="fidel-resgate">
+            <div class="fidel-resgate-header">💸 Usar pontos como desconto</div>
+            <div class="fidel-resgate-opt" onclick="fidelSelecionarDesconto()">
+                <div class="fidel-resgate-opt-info">
+                    <div class="fidel-resgate-opt-nome">Usar todos os ${maxPts.toLocaleString('pt-BR')} pontos</div>
+                    <div class="fidel-resgate-opt-pts">= R$ ${maxDesc.toFixed(2).replace('.',',')} de desconto</div>
+                </div>
+                <div class="fidel-radio ${selDesc ? 'active' : ''}"></div>
+            </div>
+        </div>`;
+    }
+
+    // Opção produto
+    if (fidelCfg.produtoAtivo && fidelCfg.resgates && fidelCfg.resgates.length) {
+        const disponiveis = fidelCfg.resgates.filter(r => fidelSaldoPts >= r.pontos);
+        if (disponiveis.length) {
+            html += `<div class="fidel-resgate">
+                <div class="fidel-resgate-header">🎁 Trocar por produto</div>`;
+            disponiveis.forEach((r, i) => {
+                const selProd = fidelResgSel && fidelResgSel.tipo === 'produto' && fidelResgSel.idx === i;
+                html += `<div class="fidel-resgate-opt" onclick="fidelSelecionarProduto(${i})">
+                    <div class="fidel-resgate-opt-info">
+                        <div class="fidel-resgate-opt-nome">${r.nome}</div>
+                        <div class="fidel-resgate-opt-pts">${r.pontos.toLocaleString('pt-BR')} pontos</div>
+                    </div>
+                    <div class="fidel-radio ${selProd ? 'active' : ''}"></div>
+                </div>`;
+            });
+            html += `</div>`;
+        }
+    }
+
+    opts.innerHTML = html;
+}
+
+function fidelSelecionarDesconto() {
+    if (fidelResgSel && fidelResgSel.tipo === 'desconto') {
+        fidelResgSel = null;  // deseleciona
+    } else {
+        const ppd    = fidelCfg.pontosDesc || 10;
+        const rpd    = fidelCfg.reaisDesc  || 1;
+        const desconto = parseFloat(((fidelSaldoPts / ppd) * rpd).toFixed(2));
+        fidelResgSel = { tipo: 'desconto', pts: fidelSaldoPts, desconto };
+    }
+    fidelRenderCarrinho();
+    atualizaResumo();
+}
+
+function fidelSelecionarProduto(i) {
+    const r = (fidelCfg.resgates || [])[i];
+    if (!r) return;
+    if (fidelResgSel && fidelResgSel.tipo === 'produto' && fidelResgSel.idx === i) {
+        fidelResgSel = null;
+    } else {
+        fidelResgSel = { tipo: 'produto', idx: i, pts: r.pontos, nome: r.nome, desconto: 0 };
+    }
+    fidelRenderCarrinho();
+    atualizaResumo();
+}
+
+// Retorna o valor de desconto monetário do resgate selecionado
+function fidelGetDesconto() {
+    if (!fidelResgSel) return 0;
+    return fidelResgSel.desconto || 0;
+}
+
+// Mostra pontos ganhos na tela de sucesso
+function fidelMostrarSucesso(total) {
+    const cfg = fidelGetCfg();
+    if (!cfg.ativo) { document.getElementById('suc-pontos-wrap').style.display = 'none'; return; }
+    const rpp = cfg.reaisPorPonto || 1;
+    const ppr = cfg.pontosPorReal || 1;
+    const pts = Math.floor(total / rpp) * ppr;
+    if (pts > 0) {
+        document.getElementById('suc-pontos-val').textContent = pts.toLocaleString('pt-BR');
+        document.getElementById('suc-pontos-wrap').style.display = '';
+    } else {
+        document.getElementById('suc-pontos-wrap').style.display = 'none';
+    }
+}
+
+
+// Verificar se restaurante tem pagamento ativo
+async function verificarPagamentoCardapio(restId) {
+    try {
+        REST_ID = REST_ID || restId;
+        if (await verificarLojaAtiva()) return;
+        const r = await supaFetch('pagamentos?restaurante_id=eq.' + restId + '&select=status_pgto,vencimento&limit=1');
+        if (!r || r.length === 0) return; // sem registro = libera
+        const pgto = r[0];
+        const hoje = new Date(); hoje.setHours(0,0,0,0);
+        const venc = pgto.vencimento ? new Date(pgto.vencimento + 'T00:00:00') : null;
+        const status = pgto.status_pgto;
+        if (status === 'inadimplente' || status === 'cancelado') {
+            bloquearCardapio('pagamento');
+            return;
+        }
+        if (status === 'trial' && venc && hoje > venc) {
+            bloquearCardapio('pagamento');
+            return;
+        }
+    } catch(e) { console.warn('Erro verificação pagamento:', e); }
+}
+</script>
+
+<!-- TELA DE BLOQUEIO CARDÁPIO -->
+<div id="cardapio-bloqueio" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.6);backdrop-filter:blur(8px) brightness(0.5);-webkit-backdrop-filter:blur(8px) brightness(0.5);align-items:center;justify-content:center;font-family:inherit;">
+  <div style="background:#fff;border-radius:20px;padding:40px 32px;max-width:420px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+    <div style="width:64px;height:64px;border-radius:50%;background:#fff5f5;border:2px solid #fecaca;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 20px;">🔒</div>
+    <div id="cardapio-bloqueio-tit" style="font-size:20px;font-weight:800;color:#111;margin-bottom:10px;">Cardápio temporariamente indisponível</div>
+    <p id="cardapio-bloqueio-txt" style="font-size:14px;color:#6b7280;line-height:1.6;margin-bottom:0;">Este restaurante está fora do ar no momento. Tente novamente mais tarde.</p>
+  </div>
+</div>
+</body>
+</html>

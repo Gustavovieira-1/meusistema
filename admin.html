@@ -441,6 +441,14 @@ input.input-money::-webkit-inner-spin-button {
     transition:border-color .15s;
 }
 .login-campo input:focus { border-color:#e30613; }
+.senha-wrap { position:relative; }
+.senha-wrap input { padding-right:44px !important; }
+.senha-toggle {
+    position:absolute; right:8px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer; color:#94a3b8;
+    padding:6px 8px; font-size:15px; line-height:1;
+}
+.senha-toggle:hover { color:#475569; }
 .login-btn {
     width:100%; padding:14px; background:#e30613; color:white; border:none;
     border-radius:10px; font-size:15px; font-weight:800; font-family:inherit;
@@ -530,15 +538,15 @@ input.input-money::-webkit-inner-spin-button {
 <div id="tela-bloqueio">
     <div class="bloqueio-card">
         <div class="bloqueio-icon">🔒</div>
-        <div class="bloqueio-titulo">Seu acesso foi suspenso</div>
-        <p class="bloqueio-sub">
+        <div class="bloqueio-titulo" id="bloqueio-titulo">Seu acesso foi suspenso</div>
+        <p class="bloqueio-sub" id="bloqueio-sub">
             Seu período de teste gratuito encerrou ou há uma pendência no seu plano.<br>
             Assine agora para continuar usando o sistema.
         </p>
         <div class="bloqueio-badge">
             <span>⏰</span> <span id="bloqueio-msg">Trial encerrado</span>
         </div>
-        <a href="#" class="bloqueio-btn" onclick="irParaPlanos()">
+        <a href="#" class="bloqueio-btn" id="bloqueio-btn-assinar" onclick="irParaPlanos()">
             🚀 Assinar agora
         </a>
         <button class="bloqueio-btn-sec" onclick="authFazerLogout()">
@@ -564,8 +572,11 @@ input.input-money::-webkit-inner-spin-button {
     </div>
     <div class="login-campo">
       <label>Senha</label>
-      <input id="login-senha" type="password" placeholder="••••••••"
-             onkeydown="if(event.key==='Enter')authFazerLogin()">
+      <div class="senha-wrap">
+        <input id="login-senha" type="password" placeholder="••••••••"
+               onkeydown="if(event.key==='Enter')authFazerLogin()">
+        <button type="button" class="senha-toggle" onclick="toggleVerSenha('login-senha',this)" title="Mostrar senha" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
+      </div>
     </div>
     <button class="login-btn" id="login-btn" onclick="authFazerLogin()">Entrar</button>
     <div class="login-erro" id="login-erro"></div>
@@ -1948,18 +1959,27 @@ input.input-money::-webkit-inner-spin-button {
                 </div>
                 <div style="margin-bottom:14px;">
                     <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;">Senha Atual</label>
-                    <input id="cfg-senha-atual" type="password" placeholder="Digite sua senha atual"
-                        style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                    <div class="senha-wrap">
+                        <input id="cfg-senha-atual" type="password" placeholder="Digite sua senha atual"
+                            style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                        <button type="button" class="senha-toggle" onclick="toggleVerSenha('cfg-senha-atual',this)" title="Mostrar senha" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 <div style="margin-bottom:14px;">
                     <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;">Nova Senha</label>
-                    <input id="cfg-senha-nova" type="password" placeholder="Mínimo 6 caracteres"
-                        style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                    <div class="senha-wrap">
+                        <input id="cfg-senha-nova" type="password" placeholder="Mínimo 6 caracteres"
+                            style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                        <button type="button" class="senha-toggle" onclick="toggleVerSenha('cfg-senha-nova',this)" title="Mostrar senha" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 <div style="margin-bottom:18px;">
                     <label style="font-size:11px; font-weight:700; color:#475569; display:block; margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px;">Confirmar Nova Senha</label>
-                    <input id="cfg-senha-confirma" type="password" placeholder="Repita a nova senha"
-                        style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                    <div class="senha-wrap">
+                        <input id="cfg-senha-confirma" type="password" placeholder="Repita a nova senha"
+                            style="width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; outline:none; box-sizing:border-box;">
+                        <button type="button" class="senha-toggle" onclick="toggleVerSenha('cfg-senha-confirma',this)" title="Mostrar senha" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
+                    </div>
                 </div>
                 <div id="cfg-senha-msg" style="display:none; padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:14px;"></div>
                 <button onclick="cfgAlterarSenha()" style="padding:11px 24px; background:#1e293b; color:white; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:8px;">
@@ -3291,9 +3311,9 @@ async function verificarBloqueio() {
         const data = await pgtoRes.json();
         const restData = await restRes.json();
 
-        // Verifica se restaurante está desativado pelo superadmin
+        // Superadmin marcou Inativo — painel e cardápio param
         if (restData && restData[0] && restData[0].ativo === false) {
-            mostrarBloqueio('Acesso suspenso');
+            mostrarBloqueio('Fale com o suporte para reativar', 'inativo');
             return true;
         }
 
@@ -3314,9 +3334,32 @@ async function verificarBloqueio() {
         return false;
     } catch(e) { console.warn('Erro bloqueio:', e); return false; }
 }
-function mostrarBloqueio(msg) {
-    document.getElementById('bloqueio-msg').textContent = msg;
+var _watchBloqueio = null;
+function iniciarWatchBloqueio() {
+    if (_watchBloqueio) return;
+    _watchBloqueio = setInterval(function() {
+        verificarBloqueio();
+    }, 20000);
+}
+function mostrarBloqueio(msg, tipo) {
+    tipo = tipo || 'pagamento';
+    var titulo = document.getElementById('bloqueio-titulo');
+    var sub = document.getElementById('bloqueio-sub');
+    var btn = document.getElementById('bloqueio-btn-assinar');
+    var badge = document.getElementById('bloqueio-msg');
+    if (badge) badge.textContent = msg || '';
+    if (tipo === 'inativo') {
+        if (titulo) titulo.textContent = 'Loja inativa';
+        if (sub) sub.innerHTML = 'O acesso a esta loja foi desativado.<br>Para voltar a usar o sistema, fale com o suporte da Zira.';
+        if (btn) btn.style.display = 'none';
+    } else {
+        if (titulo) titulo.textContent = 'Seu acesso foi suspenso';
+        if (sub) sub.innerHTML = 'Seu período de teste gratuito encerrou ou há uma pendência no seu plano.<br>Assine agora para continuar usando o sistema.';
+        if (btn) btn.style.display = 'block';
+    }
     document.getElementById('tela-bloqueio').classList.add('ativo');
+    var wrap = document.getElementById('app-wrapper');
+    if (wrap) wrap.style.display = 'none';
 }
 // ── MEU PLANO ──────────────────────────────────────────────
 var _meuPlanoDados = null; // cache { status, plano, vencimento, diasRestantes }
@@ -3454,16 +3497,17 @@ async function tutoriaisInicializar() {
 async function iniciarApp() {
     const temSessao = await authVerificarSessao();
     if (temSessao) {
-        esconderTelaLogin();
+        document.getElementById('tela-login').style.display = 'none';
         const bloqueado = await verificarBloqueio();
-        if (!bloqueado) {
-            inicializarSistema();
-            supaCarregarCardapio();
-            supaCarregarConfigs();
-            wppCarregarSupabase();
-            meuPlanoCarregar().then(function(dados){ meuPlanoRenderPilula(dados); });
-            supaCarregarPedidos().then(function(){ return supaCarregarConfigs(); }).then(function(){ supaCarregarFinalizadosKanban(); });
-        }
+        if (bloqueado) return;
+        esconderTelaLogin();
+        inicializarSistema();
+        supaCarregarCardapio();
+        supaCarregarConfigs();
+        wppCarregarSupabase();
+        meuPlanoCarregar().then(function(dados){ meuPlanoRenderPilula(dados); });
+        supaCarregarPedidos().then(function(){ return supaCarregarConfigs(); }).then(function(){ return supaCarregarFinalizadosKanban(); }).then(function(){ cfgAplicarLimpeza(); });
+        iniciarWatchBloqueio();
     } else {
         mostrarTelaLogin();
     }
@@ -3476,8 +3520,11 @@ if (document.readyState === "complete" || document.readyState === "interactive")
 }
 
 // ── STATUS DA LOJA ─────────────────────────────────────────
-// lojaPausada = operador fechou manualmente (sobrepõe horário)
-var lojaPausada = JSON.parse(localStorage.getItem('f_loja_pausada') || 'false');
+// aberturaManual: true = abriu na mão | false = fechou na mão | null = só horário
+var aberturaManual = null;
+var lojaPausada = false;
+var lojaAbertaManual = false;
+var lojaAbertaManualAte = '';
 // IDs de pedidos fechados manualmente — polling ignora enquanto fechado_em não confirmar no Supabase
 var _idsFechados = new Set();
 // lojaAberta mantido por compatibilidade
@@ -3495,9 +3542,16 @@ function horPeriodoAtivo(p, minAtual) {
     return minAtual >= ini && minAtual < fim;
 }
 
+function horDiasLocais() {
+    try {
+        var dias = JSON.parse(localStorage.getItem('f_horarios') || 'null');
+        if (dias && dias.length) return dias;
+    } catch (e) {}
+    return null;
+}
 function horDentroDoHorario() {
     try {
-        var dias = JSON.parse(localStorage.getItem('f_horarios'));
+        var dias = horDiasLocais();
         if (!dias || !dias.length) return null;
         var agora    = new Date();
         var diaSem   = agora.getDay();
@@ -3520,6 +3574,68 @@ function horDentroDoHorario() {
     } catch(e) { return null; }
 }
 
+function horarioAbertoAgoraAdmin() {
+    return horDentroDoHorario() === true;
+}
+function decidirStatusLojaAdmin() {
+    var dentro = horarioAbertoAgoraAdmin();
+    if (aberturaManual === false) return false;
+    if (dentro) return true;
+    return aberturaManual === true;
+}
+function aberturaManualAtiva() {
+    return aberturaManual === true;
+}
+function lojaEstaAberta() {
+    return decidirStatusLojaAdmin();
+}
+function proximoInicioHorarioISO() {
+    try {
+        var dias = horDiasLocais();
+        var agora = new Date();
+        if (!dias || !dias.length) return new Date(agora.getTime() + 12 * 3600000).toISOString();
+        for (var add = 0; add < 8; add++) {
+            var dt = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + add);
+            var dia = dias[dt.getDay()];
+            if (!dia || !dia.aberta || !dia.periodos) continue;
+            for (var i = 0; i < dia.periodos.length; i++) {
+                var ini = horStrToMin(dia.periodos[i].ini);
+                var cand = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), Math.floor(ini / 60), ini % 60, 0, 0);
+                if (cand.getTime() > agora.getTime() + 60000) return cand.toISOString();
+            }
+        }
+    } catch (e) {}
+    return new Date(Date.now() + 12 * 3600000).toISOString();
+}
+function parseDadosExtrasLoja(raw) {
+    if (!raw) return {};
+    if (typeof raw === 'string') {
+        try { return JSON.parse(raw) || {}; } catch (e) { return {}; }
+    }
+    if (typeof raw === 'object') return raw;
+    return {};
+}
+function gravarAberturaManual(aberta) {
+    aberturaManual = !!aberta;
+    lojaPausada = !aberta;
+    if (!REST_ID) return Promise.resolve();
+    var payload = { aberta: !!aberta, atualizado_em: new Date().toISOString() };
+    var p = (typeof supaUpsert === 'function')
+        ? supaUpsert('abertura_manual', payload, 'restaurante_id')
+        : Promise.reject(new Error('sem upsert'));
+    return p.catch(function() {
+        return supaReq('PATCH', 'abertura_manual?restaurante_id=eq.' + REST_ID, payload);
+    }).catch(function(e) {
+        console.warn('[Loja] abertura_manual:', e && e.message);
+        if (typeof cupToast === 'function') {
+            cupToast('Não salvou. Rode o SQL abertura_manual.sql no Supabase.', '#dc2626');
+        }
+    });
+}
+function gravarStatusLojaSupa() {
+    return gravarAberturaManual(aberturaManual !== false && decidirStatusLojaAdmin());
+}
+
 function aplicarStatusLoja() {
     var dot    = document.getElementById('sidebar-status-dot');
     var text   = document.getElementById('sidebar-status-text');
@@ -3528,10 +3644,11 @@ function aplicarStatusLoja() {
     var btnPau = document.getElementById('btn-pausar-loja');
     if (!dot || !text || !box) return;
 
-    var dentro = horDentroDoHorario(); // true | false | null(sem config)
+    var dentro = horarioAbertoAgoraAdmin();
+    var abertaAgora = decidirStatusLojaAdmin();
+    lojaPausada = !abertaAgora;
 
     if (lojaPausada) {
-        // Operador fechou manualmente
         dot.style.background  = '#ef4444';
         dot.style.boxShadow   = '0 0 0 3px rgba(239,68,68,0.2)';
         text.textContent      = 'Loja fechada';
@@ -3539,22 +3656,11 @@ function aplicarStatusLoja() {
         box.style.background  = '#fff5f5';
         box.style.borderColor = '#fecaca';
         if (icon)   icon.style.color = '#dc2626';
-        if (btnPau) { btnPau.textContent = '▶ Reativar Loja'; btnPau.style.background = '#16a34a'; }
-    } else if (dentro === false) {
-        // Fora do horário configurado
-        dot.style.background  = '#f59e0b';
-        dot.style.boxShadow   = '0 0 0 3px rgba(245,158,11,0.25)';
-        text.textContent      = 'Fora do horário';
-        text.style.color      = '#b45309';
-        box.style.background  = '#fffbeb';
-        box.style.borderColor = '#fde68a';
-        if (icon)   icon.style.color = '#b45309';
-        if (btnPau) { btnPau.textContent = '⏸ Pausar Loja'; btnPau.style.background = '#dc2626'; }
+        if (btnPau) { btnPau.textContent = '▶ Abrir loja'; btnPau.style.background = '#16a34a'; }
     } else {
-        // Dentro do horário (ou sem horários configurados)
         dot.style.background  = '#22c55e';
         dot.style.boxShadow   = '0 0 0 3px rgba(34,197,94,0.2)';
-        text.textContent      = 'Loja aberta';
+        text.textContent      = (dentro === true) ? 'Loja aberta' : 'Aberta agora';
         text.style.color      = '#15803d';
         box.style.background  = '#f0fdf4';
         box.style.borderColor = '#bbf7d0';
@@ -3562,21 +3668,133 @@ function aplicarStatusLoja() {
         if (btnPau) { btnPau.textContent = '⏸ Pausar Loja'; btnPau.style.background = '#dc2626'; }
     }
 
-    lojaAberta = !lojaPausada && dentro !== false;
+    lojaAberta = abertaAgora;
+}
+
+function padHor(n) { return String(n).padStart(2, '0'); }
+function hhmmAgora() {
+    var a = new Date();
+    return padHor(a.getHours()) + ':' + padHor(a.getMinutes());
+}
+function proximoInicioHorarioInfo() {
+    try {
+        var dias = horDiasLocais();
+        var agora = new Date();
+        if (!dias || !dias.length) return null;
+        for (var add = 0; add < 8; add++) {
+            var dt = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + add);
+            var dia = dias[dt.getDay()];
+            if (!dia || !dia.aberta || !dia.periodos) continue;
+            for (var i = 0; i < dia.periodos.length; i++) {
+                if (dia.periodos[i].manual) continue;
+                var ini = horStrToMin(dia.periodos[i].ini);
+                var cand = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), Math.floor(ini / 60), ini % 60, 0, 0);
+                if (cand.getTime() > agora.getTime() + 60000) {
+                    return { add: add, hhmm: padHor(Math.floor(ini / 60)) + ':' + padHor(ini % 60) };
+                }
+            }
+        }
+    } catch (e) {}
+    return null;
+}
+function horariosSemManual(dias) {
+    (dias || []).forEach(function(d) {
+        if (d && d.periodos) d.periodos = d.periodos.filter(function(p) { return !p.manual; });
+    });
+    return dias;
+}
+function fimExpedienteHoje() {
+    try {
+        var dias = horDiasLocais();
+        var dia = dias && dias[new Date().getDay()];
+        var fim = '23:59';
+        if (dia && dia.periodos) {
+            dia.periodos.forEach(function(p) {
+                if (p.manual) return;
+                if (p.fim) fim = p.fim;
+            });
+        }
+        return fim;
+    } catch (e) { return '23:59'; }
+}
+function persistirHorarios(dias) {
+    localStorage.setItem('f_horarios', JSON.stringify(dias));
+    if (!REST_ID || typeof supaReq !== 'function') {
+        if (typeof horSaveAll === 'function') horSaveAll(dias);
+        return;
+    }
+    var payload = { dados: dias };
+    var enviar = function() {
+        if (typeof supaReq !== 'function') {
+            if (typeof horSaveAll === 'function') horSaveAll(dias);
+            return Promise.resolve();
+        }
+        return supaReq('PATCH', 'horarios?restaurante_id=eq.' + REST_ID, payload)
+            .then(function() {
+                return supaReq('GET', 'horarios?restaurante_id=eq.' + REST_ID + '&select=id');
+            })
+            .then(function(rows) {
+                if (rows && rows.length) {
+                    return Promise.all(rows.map(function(r) {
+                        return supaReq('PATCH', 'horarios?id=eq.' + r.id + '&restaurante_id=eq.' + REST_ID, payload);
+                    }));
+                }
+                return typeof supaUpsert === 'function'
+                    ? supaUpsert('horarios', payload, 'restaurante_id')
+                    : Promise.resolve();
+            });
+    };
+    enviar().catch(function() {
+        if (typeof horSaveAll === 'function') horSaveAll(dias);
+    });
+}
+function marcarDiaAbertoAgora(dias) {
+    if (!dias || !dias.length) return null;
+    try { dias = JSON.parse(JSON.stringify(dias)); } catch (e) { return null; }
+    horariosSemManual(dias);
+    dias.forEach(function(d) { if (d) d.forcarAberta = false; });
+    var diaSem = new Date().getDay();
+    dias[diaSem] = dias[diaSem] || { nome: '', aberta: true, periodos: [] };
+    dias[diaSem].aberta = true;
+    dias[diaSem].forcarAberta = true;
+    var originais = (dias[diaSem].periodos || []).filter(function(p) { return p && !p.manual; });
+    // Período o dia inteiro: o cardápio só lê expediente — assim ele abre de verdade
+    dias[diaSem].periodos = [{ ini: '00:00', fim: '23:59', manual: true }].concat(originais);
+    persistirHorarios(dias);
+    return dias;
+}
+function aplicarPeriodoAberturaManual() {
+    var dias = horDiasLocais();
+    if (marcarDiaAbertoAgora(dias)) return;
+    if (!REST_ID || typeof supaReq !== 'function') return;
+    supaReq('GET', 'horarios?restaurante_id=eq.' + REST_ID + '&select=dados&limit=1')
+        .then(function(rows) {
+            var d = rows && rows[0] && rows[0].dados;
+            if (typeof d === 'string') {
+                try { d = JSON.parse(d); } catch (e) { d = null; }
+            }
+            marcarDiaAbertoAgora(d);
+        })
+        .catch(function(e) { console.warn('[Loja] Buscar horários:', e && e.message); });
+}
+function removerPeriodoAberturaManual() {
+    var dias = horDiasLocais();
+    if (!dias || !dias.length) return;
+    horariosSemManual(dias);
+    dias.forEach(function(d) { if (d) d.forcarAberta = false; });
+    persistirHorarios(dias);
 }
 
 function toggleLojaStatus() {
-    lojaPausada = !lojaPausada;
-    localStorage.setItem('f_loja_pausada', JSON.stringify(lojaPausada));
+    var vaiAbrir = !decidirStatusLojaAdmin();
+    gravarAberturaManual(vaiAbrir);
     aplicarStatusLoja();
-    // Grava pausada no Supabase para o cardápio (index.html) ler
-    if (REST_ID) {
-        supaUpsert('configuracoes', { pausada: lojaPausada }, 'restaurante_id')
-            .catch(function(e) { console.warn('[Loja] Erro ao salvar status:', e.message); });
+    if (typeof cupToast === 'function') {
+        cupToast(vaiAbrir ? 'Loja aberta no cardápio.' : 'Loja fechada.', vaiAbrir ? '#16a34a' : '#dc2626');
     }
 }
 
-// Reavalia a cada minuto automaticamente
+aplicarStatusLoja();
 setInterval(aplicarStatusLoja, 60000);
 
 function abrirCardapioOnline(e) {
@@ -7708,19 +7926,7 @@ async function supaCarregarFinalizadosKanban() {
 
         var agora = new Date();
 
-        // Calcula o limiar de limpeza (se ativo)
-        var limiarMs = 0;
-        if (cfg.limparAtivado) {
-            var partes = (cfg.limparHorario || '00:00').split(':');
-            var hLimpar = parseInt(partes[0]) * 60 + parseInt(partes[1] || 0);
-            var hAgora  = agora.getHours() * 60 + agora.getMinutes();
-            if (hAgora >= hLimpar) {
-                limiarMs = new Date(
-                    agora.getFullYear(), agora.getMonth(), agora.getDate(),
-                    parseInt(partes[0]), parseInt(partes[1] || 0), 0, 0
-                ).getTime();
-            }
-        }
+        var limiarMs = cfgLimiarLimpezaMs();
 
         // Início do dia de hoje em ISO para filtrar no Supabase
         var inicioDia = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 0, 0, 0, 0).toISOString();
@@ -7743,13 +7949,11 @@ async function supaCarregarFinalizadosKanban() {
             var idPedido = r.numero || r.id;
             if (idsEmMemoria.has(idPedido)) return; // já está em memória
 
-            // Verifica regra de limpeza: se já passou o limiar, não mostra
-            // Exceção: pedidos com fechado_em IS NULL nunca foram fechados manualmente —
-            // o dono precisa vê-los mesmo que sejam de dias anteriores (ex: troca de computador)
-            if (limiarMs > 0 && r.fechado_em) {
+            // Limpeza automática: finalizados antes do horário sumiram do painel e não voltam no polling
+            if (limiarMs > 0 && r.status === 'finalizado') {
                 var finTs = r.finalizado_em ? parseDateUTC(r.finalizado_em) : parseDateUTC(r.criado_em);
                 var finMs = finTs ? finTs.getTime() : 0;
-                if (finMs > 0 && finMs < limiarMs) return; // seria removido pela limpeza
+                if (finMs > 0 && finMs < limiarMs) return;
             }
 
             var itens = r.itens || [];
@@ -7924,6 +8128,7 @@ function fecharTodosCards() {
     localStorage.setItem('f_ultimo_fechamento', agora);
     orders = [];
     localStorage.setItem('f_orders', JSON.stringify(orders));
+    localStorage.removeItem(cfgChaveUltimaLimpeza());
     localStorage.removeItem('f_ultima_limpeza');
     renderOrders();
     cupToast('✅ ' + total + ' cards fechados!', '#16a34a');
@@ -8005,6 +8210,7 @@ async function supaRecarregarFinalizadosHoje() {
         orders = orders.concat(novos);
 
         localStorage.removeItem('f_ultimo_fechamento');
+        localStorage.removeItem(cfgChaveUltimaLimpeza());
         localStorage.removeItem('f_ultima_limpeza');
         localStorage.setItem('f_orders', JSON.stringify(orders));
         renderOrders();
@@ -8296,6 +8502,19 @@ async function authVerificarSessao() {
     } catch(e) { return false; }
 }
 
+function toggleVerSenha(id, btn) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var mostrar = el.type === 'password';
+    el.type = mostrar ? 'text' : 'password';
+    var ico = btn && btn.querySelector('i');
+    if (ico) ico.className = mostrar ? 'fas fa-eye-slash' : 'fas fa-eye';
+    if (btn) {
+        btn.title = mostrar ? 'Ocultar senha' : 'Mostrar senha';
+        btn.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+    }
+}
+
 async function authFazerLogin() {
     const email = document.getElementById('login-email').value.trim();
     const senha = document.getElementById('login-senha').value;
@@ -8340,11 +8559,15 @@ async function authFazerLogin() {
         localStorage.removeItem('f_last_sec');
         localStorage.setItem('f_rest_id_ativo', REST_ID);
 
+        document.getElementById('tela-login').style.display = 'none';
+        const bloqueado = await verificarBloqueio();
+        if (bloqueado) return;
         esconderTelaLogin();
         inicializarSistema();
         supaCarregarCardapio();
         supaCarregarConfigs();
-        supaCarregarPedidos().then(function(){ return supaCarregarConfigs(); }).then(function(){ supaCarregarFinalizadosKanban(); });
+        supaCarregarPedidos().then(function(){ return supaCarregarConfigs(); }).then(function(){ return supaCarregarFinalizadosKanban(); }).then(function(){ cfgAplicarLimpeza(); });
+        iniciarWatchBloqueio();
     } catch(e) {
         erro.textContent = e.message;
         erro.style.display = 'block';
@@ -8374,29 +8597,32 @@ function esconderTelaLogin() {
 
 async function supaCarregarConfigs() {
     try {
-        const [cfgRows, horRows, fidRows, cliRows, cupRows, txRows, intRows] = await Promise.all([
+        const [cfgRows, horRows, fidRows, cliRows, cupRows, txRows, intRows, manRows] = await Promise.all([
             supaGet('configuracoes', ''),
             supaGet('horarios', ''),
             supaGet('fidelidade_config', ''),
             supaGet('fidelidade_clientes', ''),
             supaGet('cupons', ''),
             supaGet('taxas_entrega', ''),
-            supaGet('integracoes', '')
+            supaGet('integracoes', ''),
+            supaGet('abertura_manual', 'limit=1').catch(function(){ return []; })
         ]);
-        if (cfgRows && cfgRows[0]) {
-            lojaPausada = !!cfgRows[0].pausada;
-            localStorage.setItem('f_loja_pausada', JSON.stringify(lojaPausada));
-            aplicarStatusLoja();
+        if (manRows && manRows[0] && manRows[0].aberta !== undefined) {
+            aberturaManual = !!manRows[0].aberta;
+            lojaPausada = !aberturaManual;
+        } else {
+            aberturaManual = null;
         }
+        aplicarStatusLoja();
         if (cfgRows && cfgRows[0] && cfgRows[0].dados_extras) {
-            var _cfgCarregada = Object.assign({}, cfgRows[0].dados_extras);
+            var _cfgCarregada = Object.assign({}, parseDadosExtrasLoja(cfgRows[0].dados_extras));
             // Injeta link_cardapio do restaurante no linkSlug (fonte de verdade)
             // Faz GET separado apenas para ler a coluna link_cardapio
             if (REST_ID) {
                 try {
                     var _rr = await supaReq('GET', 'restaurantes?id=eq.' + REST_ID + '&select=link_cardapio,slug&limit=1');
                     if (_rr && _rr[0]) {
-                        var _lc = _rr[0].link_cardapio || (_rr[0].slug ? 'https://zirafood.com.br?r=' + _rr[0].slug : '');
+                        var _lc = _rr[0].link_cardapio || (_rr[0].slug ? 'https://zirafood.com.br/cardapio.html?r=' + _rr[0].slug : '');
                         if (_lc) _cfgCarregada.linkSlug = _lc;
                     }
                 } catch(e) {}
@@ -10340,7 +10566,7 @@ function cfgInicializar() {
         supaReq('GET', 'restaurantes?id=eq.' + REST_ID + '&select=link_cardapio,slug&limit=1')
         .then(function(rows) {
             if (!rows || !rows[0]) return;
-            var _lc = rows[0].link_cardapio || (rows[0].slug ? 'https://zirafood.com.br?r=' + rows[0].slug : '');
+            var _lc = rows[0].link_cardapio || (rows[0].slug ? 'https://zirafood.com.br/cardapio.html?r=' + rows[0].slug : '');
             if (_lc) { el('cfg-link-slug').value = _lc; cfgAtualizarPreviewLink(); }
         }).catch(function(){});
     }
@@ -10468,7 +10694,9 @@ function cfgSalvar() {
         retiradaMax:     parseInt(el('cfg-retirada-max').value||0),
         aceitaBalcao:    el('cfg-sw-balcao').dataset.on === '1',
         limparAtivado:   el('cfg-limpar-ativado').checked || false,
-        limparHorario:   el('cfg-limpar-horario').value || '00:00'
+        limparHorario:   el('cfg-limpar-horario').value || '00:00',
+        abertaManual:    !!lojaAbertaManual,
+        abertaManualAte: lojaAbertaManualAte || ''
     };
     cfgSaveConfig(obj);
 
@@ -10506,52 +10734,53 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() { cfgCarregarLimpeza(); }, 500);
 });
 
+function cfgChaveUltimaLimpeza() {
+    return 'f_ultima_limpeza' + (REST_ID ? '_' + REST_ID : '');
+}
+
+// Timestamp do horário de limpeza de hoje, ou 0 se ainda não chegou / está desligada
+function cfgLimiarLimpezaMs() {
+    var cfg = cfgGetConfig() || {};
+    if (!cfg.limparAtivado) return 0;
+    var partes = String(cfg.limparHorario || '00:00').split(':');
+    var h = parseInt(partes[0], 10);
+    var min = parseInt(partes[1] || '0', 10);
+    if (isNaN(h) || isNaN(min) || h < 0 || h > 23 || min < 0 || min > 59) return 0;
+    var agora = new Date();
+    if ((agora.getHours() * 60 + agora.getMinutes()) < (h * 60 + min)) return 0;
+    return new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), h, min, 0, 0).getTime();
+}
+
 // Auto-limpeza de pedidos finalizados
 function cfgAplicarLimpeza() {
     var cfg = cfgGetConfig() || {};
-    if (!cfg.limparAtivado) return;
+    var limparApartirDeMs = cfgLimiarLimpezaMs();
+    if (!limparApartirDeMs) return;
 
     var agora = new Date();
-    var partes = (cfg.limparHorario || '00:00').split(':');
-    var hLimpar = parseInt(partes[0]) * 60 + parseInt(partes[1] || 0);
-    var hAgora  = agora.getHours() * 60 + agora.getMinutes();
-
-    // Só executa se JÁ PASSOU o horário configurado HOJE
-    if (hAgora < hLimpar) return;
-
-    // ── PROTEÇÃO ANTI-VIRADA DE DIA ──────────────────────────────────────────
-    // Só roda UMA VEZ POR DIA. Guarda a data da última execução.
     var hoje = agora.getFullYear() + '-' +
                String(agora.getMonth() + 1).padStart(2, '0') + '-' +
                String(agora.getDate()).padStart(2, '0');
-    var ultimaLimpeza = localStorage.getItem('f_ultima_limpeza') || '';
-    if (ultimaLimpeza === hoje) return; // já rodou hoje, não repete
+    var chave = cfgChaveUltimaLimpeza();
 
-    // Timestamp do horário de limpeza de HOJE
-    var limparApartirDeMs = new Date(
-        agora.getFullYear(), agora.getMonth(), agora.getDate(),
-        parseInt(partes[0]), parseInt(partes[1] || 0), 0, 0
-    ).getTime();
-
-    // Remove apenas finalizados ANTES do horário de limpeza de hoje
     var paraRemover = orders.filter(function(o) {
         if (o.status !== 'finalizado') return false;
         var finTs = (parseDateUTC(o.finalizadoEm || o.timestamp) || new Date(0)).getTime();
         return finTs < limparApartirDeMs;
     });
 
-    // Marca que rodou hoje (mesmo sem remover nada)
-    localStorage.setItem('f_ultima_limpeza', hoje);
+    if (paraRemover.length === 0) {
+        localStorage.setItem(chave, hoje);
+        return;
+    }
 
-    if (paraRemover.length === 0) return;
-
-    // Salva no histórico ANTES de remover
     paraRemover.forEach(function(o) { histRegistrar(o); });
 
     var idsRemover = new Set(paraRemover.map(function(o){ return o.id; }));
     orders = orders.filter(function(o) { return !idsRemover.has(o.id); });
 
-    console.log('[Limpeza] Removidos ' + paraRemover.length + ' pedidos. Próxima limpeza: amanhã às ' + cfg.limparHorario);
+    localStorage.setItem(chave, hoje);
+    console.log('[Limpeza] Removidos ' + paraRemover.length + ' pedidos. Próxima limpeza: amanhã às ' + (cfg.limparHorario || '00:00'));
 
     localStorage.setItem('f_orders', JSON.stringify(orders));
     renderOrders();

@@ -1,5 +1,17 @@
 {
   "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/",
+      "has": [{ "type": "query", "key": "r" }],
+      "destination": "/cardapio.html"
+    },
+    {
+      "source": "/index.html",
+      "has": [{ "type": "query", "key": "r" }],
+      "destination": "/cardapio.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

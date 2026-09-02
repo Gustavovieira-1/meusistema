@@ -171,6 +171,14 @@ body {
   box-shadow: 0 0 0 3px rgba(201,168,76,.08);
 }
 .l-campo input::placeholder { color: var(--muted); }
+.senha-wrap { position: relative; }
+.senha-wrap input { padding-right: 44px !important; }
+.senha-toggle {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--muted);
+  padding: 6px 8px; font-size: 15px; line-height: 1;
+}
+.senha-toggle:hover { color: var(--text2, #cbd5e1); }
 
 .login-btn {
   width: 100%; padding: 14px;
@@ -926,8 +934,11 @@ tr:hover td { background: rgba(255,255,255,.015); }
       </div>
       <div class="l-campo">
         <label>Senha</label>
-        <input id="login-senha" type="password" placeholder="••••••••"
-               onkeydown="if(event.key==='Enter')saLogin()">
+        <div class="senha-wrap">
+          <input id="login-senha" type="password" placeholder="••••••••"
+                 onkeydown="if(event.key==='Enter')saLogin()">
+          <button type="button" class="senha-toggle" onclick="toggleVerSenha('login-senha',this)" title="Mostrar senha" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
+        </div>
       </div>
       <button class="login-btn" id="login-btn" onclick="saLogin()">
         <i class="fas fa-arrow-right-to-bracket"></i> Entrar no Painel
@@ -1362,17 +1373,24 @@ ON CONFLICT (id) DO NOTHING;</pre>
       <input id="m-nome" placeholder="Ex: Fogueiro Burguer" oninput="saAutoSlug()">
     </div>
     <div class="campo"><label>Slug (URL) *</label>
-      <input id="m-slug" placeholder="Ex: fogueiro-burguer" oninput="m_slug_manual=true">
+      <input id="m-slug" placeholder="Ex: fogueiro-burguer" oninput="saOnSlugInput()">
+      <div id="m-slug-status" style="font-size:12px;margin-top:6px;color:#94a3b8;"></div>
     </div>
     <div class="campo" id="wrap-email"><label>E-mail de Acesso *</label>
       <input id="m-email" type="email" placeholder="dono@restaurante.com.br">
     </div>
     <div class="campo-row" id="wrap-senhas">
       <div class="campo" style="margin-bottom:0"><label>Senha *</label>
-        <input id="m-senha" type="password" placeholder="Mínimo 6 caracteres">
+        <div class="senha-wrap">
+          <input id="m-senha" type="password" placeholder="Mínimo 6 caracteres">
+          <button type="button" class="senha-toggle" onclick="toggleVerSenha('m-senha',this)" title="Mostrar senha" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
+        </div>
       </div>
       <div class="campo" style="margin-bottom:0"><label>Confirmar Senha *</label>
-        <input id="m-senha2" type="password" placeholder="Repita a senha">
+        <div class="senha-wrap">
+          <input id="m-senha2" type="password" placeholder="Repita a senha">
+          <button type="button" class="senha-toggle" onclick="toggleVerSenha('m-senha2',this)" title="Mostrar senha" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
+        </div>
       </div>
     </div>
     <div class="campo-row">
@@ -1419,10 +1437,16 @@ ON CONFLICT (id) DO NOTHING;</pre>
     </div>
     <div class="campo-row" id="mu-wrap-senhas">
       <div class="campo" style="margin-bottom:0"><label>Senha *</label>
-        <input id="mu-senha" type="password" placeholder="Mínimo 6 caracteres">
+        <div class="senha-wrap">
+          <input id="mu-senha" type="password" placeholder="Mínimo 6 caracteres">
+          <button type="button" class="senha-toggle" onclick="toggleVerSenha('mu-senha',this)" title="Mostrar senha" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
+        </div>
       </div>
       <div class="campo" style="margin-bottom:0"><label>Confirmar Senha *</label>
-        <input id="mu-senha2" type="password" placeholder="Repita a senha">
+        <div class="senha-wrap">
+          <input id="mu-senha2" type="password" placeholder="Repita a senha">
+          <button type="button" class="senha-toggle" onclick="toggleVerSenha('mu-senha2',this)" title="Mostrar senha" aria-label="Mostrar senha"><i class="fas fa-eye"></i></button>
+        </div>
       </div>
     </div>
     <div class="campo-row">
@@ -1701,12 +1725,51 @@ const _PLANO_LABELS = {
 };
 function _planoLabel(v) { return _PLANO_LABELS[v] || (v ? v.charAt(0).toUpperCase() + v.slice(1) : '—'); }
 
+function saNormalizaSlug(s) {
+    return String(s || '').trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+}
 function saAutoSlug() {
     if (m_slug_manual) return;
     const nome = document.getElementById('m-nome').value;
-    document.getElementById('m-slug').value = nome.toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+    document.getElementById('m-slug').value = saNormalizaSlug(nome);
+    saAgendarChecagemSlug();
+}
+function saOnSlugInput() {
+    m_slug_manual = true;
+    saAgendarChecagemSlug();
+}
+function saMostrarSlugStatus(msg, tipo) {
+    var el = document.getElementById('m-slug-status');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.style.color = tipo === 'err' ? '#dc2626' : (tipo === 'ok' ? '#16a34a' : '#94a3b8');
+}
+var _slugCheckT = null;
+function saAgendarChecagemSlug() {
+    clearTimeout(_slugCheckT);
+    var slug = saNormalizaSlug((document.getElementById('m-slug') || {}).value);
+    if (slug.length < 2) { saMostrarSlugStatus(''); return; }
+    saMostrarSlugStatus('Verificando slug...');
+    _slugCheckT = setTimeout(function() {
+        saSlugEmUso(slug, _editRestId).then(function(usado) {
+            if (usado) saMostrarSlugStatus('Este slug já existe e não pode ser repetido. Use outro, por exemplo ' + slug + '-2.', 'err');
+            else saMostrarSlugStatus('Slug disponível', 'ok');
+        });
+    }, 350);
+}
+async function saSlugEmUso(slug, exceptId) {
+    slug = saNormalizaSlug(slug);
+    if (!slug) return false;
+    var local = (_restaurantes || []).find(function(r) {
+        return (r.slug || '').toLowerCase() === slug && r.id !== exceptId;
+    });
+    if (local) return true;
+    try {
+        var rows = await saFetch('GET', 'restaurantes?slug=eq.' + encodeURIComponent(slug) + '&select=id&limit=1');
+        return !!(rows && rows[0] && rows[0].id !== exceptId);
+    } catch (e) { return false; }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -1755,6 +1818,19 @@ async function authRenovarToken() {
 // ══════════════════════════════════════════════════════════════
 // LOGIN / SESSÃO
 // ══════════════════════════════════════════════════════════════
+function toggleVerSenha(id, btn) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var mostrar = el.type === 'password';
+    el.type = mostrar ? 'text' : 'password';
+    var ico = btn && btn.querySelector('i');
+    if (ico) ico.className = mostrar ? 'fas fa-eye-slash' : 'fas fa-eye';
+    if (btn) {
+        btn.title = mostrar ? 'Ocultar senha' : 'Mostrar senha';
+        btn.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+    }
+}
+
 async function saLogin() {
     const email = document.getElementById('login-email').value.trim();
     const senha = document.getElementById('login-senha').value;
@@ -2194,6 +2270,8 @@ function saAbrirModalRest(id) {
     }
     document.getElementById('modal-rest-erro').style.display = 'none';
     document.getElementById('modal-rest-ok').style.display   = 'none';
+    saMostrarSlugStatus('');
+    if (id) saAgendarChecagemSlug();
     modal.classList.add('open');
 }
 
@@ -2218,13 +2296,20 @@ async function saSalvarRest() {
     erro.style.display = 'none'; ok.style.display = 'none';
 
     const nome  = document.getElementById('m-nome').value.trim();
-    const slug  = document.getElementById('m-slug').value.trim().toLowerCase().replace(/\s+/g,'-');
+    const slug  = saNormalizaSlug(document.getElementById('m-slug').value);
     const plano = document.getElementById('m-plano').value;
     const valor = parseFloat(document.getElementById('m-valor').value) || 0;
     const obs   = document.getElementById('m-obs').value.trim();
 
     if (!nome) { erro.textContent = 'Informe o nome do restaurante.'; erro.style.display='block'; return; }
     if (!slug) { erro.textContent = 'Informe o slug.'; erro.style.display='block'; return; }
+    if (await saSlugEmUso(slug, _editRestId)) {
+        var msgSlug = 'Este slug já existe e não pode ser repetido. Use outro, por exemplo ' + slug + '-2.';
+        erro.textContent = msgSlug;
+        erro.style.display = 'block';
+        saMostrarSlugStatus(msgSlug, 'err');
+        return;
+    }
 
     btn.disabled = true;
 
@@ -2295,6 +2380,9 @@ async function saSalvarRest() {
     } catch(e) {
         let msg = e.message;
         try { const p = JSON.parse(msg); msg = p.message || p.error_description || p.msg || msg; } catch {}
+        if (String(msg).includes('23505') || String(msg).toLowerCase().includes('unique')) {
+            msg = 'Este slug já existe e não pode ser repetido. Escolha outro.';
+        }
         erro.textContent = msg;
         erro.style.display = 'block';
     } finally {
@@ -2318,7 +2406,7 @@ async function saDeletarRest(id, nome) {
 
 function saAbrirCardapio(slug) {
     if (!slug) { toast('Slug não configurado.', false); return; }
-    window.open(window.location.origin + '?r=' + slug, '_blank');
+    window.open(window.location.origin + '/cardapio.html?r=' + slug, '_blank');
 }
 
 function saVerDetalhe(id) {
