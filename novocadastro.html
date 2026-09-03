@@ -838,7 +838,7 @@ async function criarConta() {
     try {
       await fetch(SB_URL + '/functions/v1/resend-email', {
         method: 'POST',
-        headers: { 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY, 'Content-Type': 'application/json' },
+        headers: { 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: 'Zira <noreply@zirafood.com.br>',
           to: [email],
