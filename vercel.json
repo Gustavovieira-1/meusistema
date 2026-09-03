@@ -1,5 +1,9 @@
 {
   "cleanUrls": true,
+  "redirects": [
+    { "source": "/cadastro", "destination": "/novocadastro", "permanent": true },
+    { "source": "/cadastro.html", "destination": "/novocadastro", "permanent": true }
+  ],
   "rewrites": [
     {
       "source": "/",

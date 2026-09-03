@@ -1,5 +1,11 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  RewriteRule ^cadastro(\.html)?$ novocadastro.html [R=301,L]
+  RewriteRule ^privacidade/?$ privacidade.html [L]
+  RewriteRule ^termos/?$ termos.html [L]
+  RewriteRule ^cookies/?$ cookies.html [L]
+  RewriteRule ^dados-google/?$ dados-google.html [L]
+  RewriteRule ^exclusao-conta/?$ exclusao-conta.html [L]
   RewriteCond %{QUERY_STRING} (^|&)r=
   RewriteRule ^(index\.html)?$ cardapio.html [L]
 </IfModule>

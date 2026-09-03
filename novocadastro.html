@@ -473,7 +473,7 @@ body {
           <i class="fas fa-rocket"></i> <span id="btn-criar-txt">Criar minha conta grátis</span>
         </button>
         <p style="text-align:center;font-size:11px;color:var(--muted2);margin-top:12px;line-height:1.5;">
-          Ao criar sua conta você concorda com os <a href="#" style="color:var(--muted);">Termos de Uso</a>.
+          Ao criar sua conta você concorda com os <a href="termos.html" style="color:var(--muted);">Termos de Uso</a> e a <a href="privacidade.html" style="color:var(--muted);">Privacidade</a>.
         </p>
       </div>
 
@@ -508,7 +508,7 @@ body {
 </div>
 
 <footer class="rodape">
-  © 2026 Zira · <a href="#">Termos de uso</a> · <a href="#">Privacidade</a>
+  © 2026 Zira · <a href="termos.html">Termos de uso</a> · <a href="privacidade.html">Privacidade</a> · <a href="cookies.html">Cookies</a> · <a href="exclusao-conta.html">Excluir conta</a>
 </footer>
 
 <script>
@@ -518,7 +518,6 @@ body {
 const SB_URL         = 'https://oijcggqfcgjkgcaymjqx.supabase.co';
 const SB_KEY         = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NDE0NzcsImV4cCI6MjA4ODMxNzQ3N30.URV7NROQ0wAGG_GzrS2yn2Kksxaefy4v4JJ49yRW51A';
 const SB_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9pamNnZ3FmY2dqa2djYXltanF4Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Mjc0MTQ3NywiZXhwIjoyMDg4MzE3NDc3fQ.hmY5Z4nIPefMUq-Q0AlBgRWzqhnEm18CVHqXwpOdO-E';
-const RESEND_KEY     = 're_TETXg5yb_QEKaZ8i5U515QwmJDgYxb6WY';
 const BASE_URL       = 'https://zirafood.com.br';
 
 // ══════════════════════════════════════
@@ -580,10 +579,35 @@ function gerarSlug(nome) {
 }
 
 function gerarSenha() {
-  const c = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
-  let s = '';
-  for (let i = 0; i < 10; i++) s += c[Math.floor(Math.random() * c.length)];
-  return s;
+  const upper = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+  const lower = 'abcdefghjkmnpqrstuvwxyz';
+  const num = '23456789';
+  const spec = '@#!';
+  const all = upper + lower + num + spec;
+  const pick = function(s){ return s[Math.floor(Math.random() * s.length)]; };
+  const chars = [pick(upper), pick(lower), pick(num), pick(spec)];
+  for (let i = chars.length; i < 12; i++) chars.push(pick(all));
+  return chars.sort(function(){ return Math.random() - 0.5; }).join('');
+}
+
+function hdrAnon(extra) {
+  return Object.assign({ 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' }, extra || {});
+}
+function hdrAdmin(extra) {
+  return Object.assign({ 'apikey': SB_SERVICE_KEY, 'Authorization': 'Bearer ' + SB_SERVICE_KEY, 'Content-Type': 'application/json' }, extra || {});
+}
+function msgErroApi(e) {
+  if (!e) return '';
+  return (e.msg || e.message || e.error_description || e.error || '').toString();
+}
+
+async function emailJaCadastrado(email) {
+  try {
+    const r = await fetch(SB_URL + '/rest/v1/usuarios?email=eq.' + encodeURIComponent(email) + '&select=id&limit=1', { headers: hdrAnon() });
+    const rows = await r.json();
+    if (rows && rows[0]) return true;
+  } catch (err) {}
+  return false;
 }
 
 function selecionarFat(el, val) {
@@ -670,64 +694,83 @@ async function criarConta() {
   btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando restaurante...';
 
   try {
+    if (await emailJaCadastrado(email)) {
+      throw new Error('Este e-mail já está cadastrado. Use outro e-mail ou entre no painel admin.');
+    }
+
     // 1 — Criar restaurante
-    const urlCardapio = BASE_URL + '?r=' + slug;
+    const urlCardapio = BASE_URL + '/cardapio.html?r=' + slug;
     const restR = await fetch(SB_URL + '/rest/v1/restaurantes', {
       method: 'POST',
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      headers: hdrAnon({ 'Prefer': 'return=representation' }),
       body: JSON.stringify({ nome: nomeRest, slug, ativo: true, link_cardapio: urlCardapio, obs: `${cidade}/${estado} | ${FAT_LABELS[_fat]||_fat} | ${tel}` })
     });
     if (!restR.ok) {
-      const e = await restR.json();
-      if (e.code === '23505') throw new Error('Já existe um restaurante com esse nome. Tente um nome diferente ou adicione algo único.');
-      throw new Error(e.message || 'Erro ao criar restaurante.');
+      const e = await restR.json().catch(function(){ return {}; });
+      if (e.code === '23505') throw new Error('Já existe uma loja com esse nome. Use um nome diferente, por exemplo "' + nomeRest + ' 2".');
+      throw new Error(msgErroApi(e) || 'Erro ao criar restaurante.');
     }
     const restId = (await restR.json())[0].id;
 
-    // 2 — Criar usuário no Auth
-    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando usuário...';
-    const authR = await fetch(SB_URL + '/auth/v1/admin/users', {
-      method: 'POST',
-      headers: { 'apikey': SB_SERVICE_KEY, 'Authorization': 'Bearer ' + SB_SERVICE_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: senha, email_confirm: true, user_metadata: { nome, restaurante_id: restId } })
-    });
-    if (!authR.ok) {
-      const e = await authR.json();
-      if ((e.message||'').toLowerCase().includes('already')) throw new Error('Este e-mail já está cadastrado. Use outro e-mail ou acesse sua conta.');
-      throw new Error(e.message || 'Erro ao criar usuário.');
-    }
-    const userId = (await authR.json()).id;
-
-    // 3 — Vincular usuário
-    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Configurando acesso...';
-    await fetch(SB_URL + '/rest/v1/usuarios', {
-      method: 'POST',
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: userId, restaurante_id: restId, nome, email, role: 'admin', ativo: true, senha: senha })
-    });
-
-    // 4 — Registrar trial 15 dias
+    // 2 — Trial 15 dias (grava na hora, mesmo se o usuário falhar depois)
     const venc = new Date();
     venc.setDate(venc.getDate() + 15);
     const vencStr = venc.toISOString().split('T')[0];
-    await fetch(SB_URL + '/rest/v1/pagamentos', {
+    const pgtoR = await fetch(SB_URL + '/rest/v1/pagamentos', {
       method: 'POST',
-      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY, 'Content-Type': 'application/json' },
+      headers: hdrAdmin({ 'Prefer': 'return=representation' }),
       body: JSON.stringify({ restaurante_id: restId, plano: 'trial', status_pgto: 'trial', vencimento: vencStr, valor: 0, obs: 'Trial via cadastro self-service' })
     });
+    if (!pgtoR.ok) {
+      await fetch(SB_URL + '/rest/v1/pagamentos', {
+        method: 'POST',
+        headers: hdrAnon({ 'Prefer': 'return=representation' }),
+        body: JSON.stringify({ restaurante_id: restId, plano: 'trial', status_pgto: 'trial', vencimento: vencStr, valor: 0, obs: 'Trial via cadastro self-service' })
+      });
+    }
 
-    // 5 — Enviar e-mail via Resend
+    // 3 — Criar usuário no Auth
+    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Criando usuário...';
+    const authR = await fetch(SB_URL + '/auth/v1/admin/users', {
+      method: 'POST',
+      headers: hdrAdmin(),
+      body: JSON.stringify({ email: email, password: senha, email_confirm: true, user_metadata: { nome: nome, restaurante_id: restId } })
+    });
+    let userId = null;
+    if (authR.ok) {
+      userId = (await authR.json()).id;
+    } else {
+      const eAuth = await authR.json().catch(function(){ return {}; });
+      const msgAuth = msgErroApi(eAuth);
+      if (/already|registered|exists/i.test(msgAuth)) {
+        throw new Error('Este e-mail já está cadastrado. Use outro e-mail ou entre no painel admin.');
+      }
+      const su = await fetch(SB_URL + '/auth/v1/signup', {
+        method: 'POST',
+        headers: hdrAnon(),
+        body: JSON.stringify({ email: email, password: senha, data: { nome: nome, restaurante_id: restId } })
+      });
+      if (!su.ok) {
+        const eSu = await su.json().catch(function(){ return {}; });
+        throw new Error(msgAuth || msgErroApi(eSu) || 'Erro ao criar usuário.');
+      }
+      const suData = await su.json();
+      userId = suData.user && suData.user.id ? suData.user.id : (suData.id || null);
+      if (!userId) throw new Error(msgAuth || 'Erro ao criar usuário.');
+    }
+
+    // 4 — Vincular usuário à loja
+    btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Configurando acesso...';
+    await fetch(SB_URL + '/rest/v1/usuarios', {
+      method: 'POST',
+      headers: hdrAdmin(),
+      body: JSON.stringify({ id: userId, restaurante_id: restId, nome: nome, email: email, role: 'admin', ativo: true, senha: senha })
+    });
+
+    // 5 — E-mail via Edge Function (Resend não aceita chamada do navegador)
     btn.innerHTML = '<i class="fas fa-circle-notch spin"></i> Enviando e-mail...';
     const urlAdmin = BASE_URL + '/admin.html';
-
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + RESEND_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: 'Zira <noreply@zirafood.com.br>',
-        to: [email],
-        subject: `🎉 Seus acessos estão prontos, ${nome.split(' ')[0]}!`,
-        html: `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"></head>
+    const htmlEmail = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#f4f4f8;font-family:'Segoe UI',Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f8;padding:32px 16px;">
 <tr><td align="center">
@@ -791,9 +834,21 @@ async function criarConta() {
 </td></tr>
 </table>
 </td></tr></table>
-</body></html>`
-      })
-    });
+</body></html>`;
+    try {
+      await fetch(SB_URL + '/functions/v1/resend-email', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + SB_KEY, 'apikey': SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'Zira <noreply@zirafood.com.br>',
+          to: [email],
+          subject: 'Seus acessos estão prontos, ' + nome.split(' ')[0] + '!',
+          html: htmlEmail
+        })
+      });
+    } catch (errEmail) {
+      console.warn('E-mail não enviado:', errEmail);
+    }
 
     // Pixel: CompleteRegistration — conta criada com sucesso
     cadPixelTrack('CompleteRegistration', {
