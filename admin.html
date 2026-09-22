@@ -3797,19 +3797,45 @@ function toggleLojaStatus() {
 aplicarStatusLoja();
 setInterval(aplicarStatusLoja, 60000);
 
-function abrirCardapioOnline(e) {
-    e.preventDefault();
-    try {
-        var cfg  = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
-        var link = (cfg.linkSlug || '').trim();
-        if (link) {
-            if (!/^https?:\/\//i.test(link)) link = 'https://' + link;
-            window.open(link, '_blank');
-        } else {
-            alert('Configure o link do cardápio em Administrar Loja → Configurações.');
+function montarUrlCardapio(link, slug) {
+    var r = (slug || '').toString().trim();
+    var raw = (link || '').toString().trim();
+    if (raw) {
+        var m = raw.match(/[?&]r=([^&#]+)/);
+        if (m) {
+            try { r = decodeURIComponent(m[1]); } catch (err) { r = m[1]; }
         }
-    } catch(err) {
-        alert('Configure o link do cardápio em Administrar Loja → Configurações.');
+    }
+    if (!r) return '';
+    var base = 'https://zirafood.com.br/';
+    if (typeof location !== 'undefined' && location.origin) {
+        base = location.origin + (location.pathname || '/').replace(/[^/]+$/, '');
+    }
+    return base + 'cardapio.html?r=' + encodeURIComponent(r);
+}
+
+function abrirCardapioOnline(e) {
+    if (e) e.preventDefault();
+    function abrir(url) {
+        if (url) window.open(url, '_blank');
+        else alert('Configure o link do cardápio em Administrar Loja → Configurações.');
+    }
+    try {
+        var cfg = JSON.parse(localStorage.getItem('f_cfg_loja') || '{}');
+        var url = montarUrlCardapio(cfg.linkSlug, cfg.slug);
+        if (url) { abrir(url); return; }
+        if (typeof REST_ID !== 'undefined' && REST_ID && typeof supaReq === 'function') {
+            supaReq('GET', 'restaurantes?id=eq.' + REST_ID + '&select=link_cardapio,slug&limit=1')
+                .then(function(rows) {
+                    var row = (rows && rows[0]) ? rows[0] : {};
+                    abrir(montarUrlCardapio(row.link_cardapio, row.slug));
+                })
+                .catch(function(){ abrir(''); });
+            return;
+        }
+        abrir('');
+    } catch (err) {
+        abrir('');
     }
 }
 
@@ -8622,7 +8648,7 @@ async function supaCarregarConfigs() {
                 try {
                     var _rr = await supaReq('GET', 'restaurantes?id=eq.' + REST_ID + '&select=link_cardapio,slug&limit=1');
                     if (_rr && _rr[0]) {
-                        var _lc = _rr[0].link_cardapio || (_rr[0].slug ? 'https://zirafood.com.br/cardapio.html?r=' + _rr[0].slug : '');
+                        var _lc = montarUrlCardapio(_rr[0].link_cardapio, _rr[0].slug);
                         if (_lc) _cfgCarregada.linkSlug = _lc;
                     }
                 } catch(e) {}
@@ -10566,7 +10592,7 @@ function cfgInicializar() {
         supaReq('GET', 'restaurantes?id=eq.' + REST_ID + '&select=link_cardapio,slug&limit=1')
         .then(function(rows) {
             if (!rows || !rows[0]) return;
-            var _lc = rows[0].link_cardapio || (rows[0].slug ? 'https://zirafood.com.br/cardapio.html?r=' + rows[0].slug : '');
+            var _lc = montarUrlCardapio(rows[0].link_cardapio, rows[0].slug);
             if (_lc) { el('cfg-link-slug').value = _lc; cfgAtualizarPreviewLink(); }
         }).catch(function(){});
     }
