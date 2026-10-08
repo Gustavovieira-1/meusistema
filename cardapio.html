@@ -801,6 +801,30 @@ function iniciarSyncStatusLoja() {
     if (!_statusPollTimer) _statusPollTimer = setInterval(puxarStatus, 5000);
 }
 
+var _cardapioPollTimer = null;
+var _cardapioBgBusy = false;
+function snapshotCardapio() {
+    return JSON.stringify({
+        c: db.categories, p: db.prods, k: db.comps,
+        cfg: db.cfg, tx: db.txCfg, f: db.fidelidade
+    });
+}
+function cardapioSheetAberto() {
+    return !!document.querySelector('.overlay.open, .cart-overlay.open');
+}
+function iniciarSyncCardapio() {
+    if (_cardapioPollTimer) return;
+    var key = 'zira_cache_' + (REST_SLUG || 'default');
+    function puxar() {
+        if (document.hidden || _cardapioBgBusy) return;
+        _initBackground(key);
+    }
+    _cardapioPollTimer = setInterval(puxar, 20000);
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) puxar();
+    });
+}
+
 // ── CUPOM ──
 var cupomAtual = null;
 var _cuponsCache = null;
@@ -935,7 +959,7 @@ function cupomGetDesconto(sub, taxa) {
 
 async function supaFetch(path) {
     const r = await fetch(SUPA_URL + '/rest/v1/' + path, {
-        headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY}
+        headers: {'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache'}
     });
     if (!r.ok) throw new Error('Supa ' + r.status);
     return r.json();
@@ -960,8 +984,8 @@ async function init(){
     // Se já visitou antes, renderiza do cache imediatamente enquanto
     // busca dados frescos em background (estratégia stale-while-revalidate)
     const CACHE_KEY = 'zira_cache_' + (REST_SLUG || 'default');
-    const CACHE_TTL = 120 * 60 * 1000; // 2 horas — reduz requests ao Supabase
-    const CACHE_VER = 30; // incrementar aqui invalida cache antigo em todos os clientes
+    const CACHE_TTL = 120 * 60 * 1000; // 2 horas — só para o 1º paint; o fundo sempre busca fresco
+    const CACHE_VER = 31; // incrementar aqui invalida cache antigo em todos os clientes
     try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
         const cacheValido = cached
@@ -994,6 +1018,8 @@ async function init(){
             renderCardapio();
             pixelInicializar(db.integracoes);
             iniciarSyncStatusLoja();
+            _initBackground(CACHE_KEY);
+            iniciarSyncCardapio();
             return;
         }
         // Cache desatualizado — remove para forcar recarregamento limpo
@@ -1113,7 +1139,7 @@ async function init(){
             const _cacheKey2 = 'zira_cache_' + (REST_SLUG || 'default');
             localStorage.setItem(_cacheKey2, JSON.stringify({
                 ts: Date.now(),
-                ver: 30,
+                ver: 31,
                 restId: REST_ID,
                 db: {
                     categories: db.categories,
@@ -1134,6 +1160,7 @@ async function init(){
 
         // Polling de pausa/horário — o cache não pode congelar o status
         iniciarSyncStatusLoja();
+        iniciarSyncCardapio();
 
         // Servidor local (9876) é só impressão/pedido — não define se a loja está aberta.
 
@@ -1144,7 +1171,10 @@ async function init(){
 
 // Atualização em background — roda após renderizar do cache
 async function _initBackground(cacheKey) {
+    if (_cardapioBgBusy) return;
+    _cardapioBgBusy = true;
     try {
+        var antes = snapshotCardapio();
         var restRows = null;
         // REST_ID já está carregado do init principal — não precisa buscar de novo
         if (!REST_ID) {
@@ -1221,11 +1251,13 @@ async function _initBackground(cacheKey) {
         }
         aberturaManual = (manRows && manRows[0]) ? !!manRows[0].aberta : null;
         aplicarStatusCardapio();
-        renderHeader(); renderCardapio();
+        if (!cardapioSheetAberto() && snapshotCardapio() !== antes) {
+            renderHeader(); renderCardapio();
+        }
         // Salva cache atualizado
         try {
             localStorage.setItem(cacheKey, JSON.stringify({
-                ts: Date.now(), ver: 30, restId: REST_ID,
+                ts: Date.now(), ver: 31, restId: REST_ID,
                 db: { categories: db.categories, prods: db.prods, comps: db.comps,
                       cfg: db.cfg, txCfg: db.txCfg, horarios: db.horarios,
                       integracoes: db.integracoes, lojaPausada, lojaForaHorario,
@@ -1235,6 +1267,7 @@ async function _initBackground(cacheKey) {
             }));
         } catch(e) {}
     } catch(e) { console.warn('[BG] Erro na atualização em background:', e.message); }
+    finally { _cardapioBgBusy = false; }
 }
 
 function money(v){return 'R$ '+parseFloat(v||0).toFixed(2).replace('.',',');}
